@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="preference_values">
+        <item>Download</item>
+        <item>View Online</item>
+        <item>Share</item>
+        <item>Report</item>
+    </string-array>
+    <string-array name="preference_values_downloaded">
+        <item>Open</item>
+        <item>Share</item>
+        <item>Report</item>
+    </string-array>
+</resources>
