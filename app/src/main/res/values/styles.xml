@@ -25,4 +25,16 @@
         <item name="cpd_initialAngle">270</item>
     </style>
 
+    <style name="RightLink" parent="Widget.AppCompat.Button.Small">
+        <item name="android:background">@drawable/open_button</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:layout_height">10dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:paddingLeft">2dp</item>
+        <item name="android:paddingRight">2dp</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
 </resources>

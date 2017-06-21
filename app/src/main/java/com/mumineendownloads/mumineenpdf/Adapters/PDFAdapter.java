@@ -30,10 +30,10 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.CallBack;
 import com.aspsine.multithreaddownload.DownloadException;
 import com.aspsine.multithreaddownload.DownloadRequest;
-import com.eralp.circleprogressview.CircleProgressView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.itextpdf.text.pdf.PdfReader;
+import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Constants;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFDialogFragment;
@@ -41,6 +41,7 @@ import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
+import com.rey.material.widget.Button;
 import com.rey.material.widget.ProgressView;
 
 import java.io.File;
@@ -61,6 +62,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
     private MyViewHolder holder;
     private final Handler myHandler = new Handler();
+    private String pagesString;
 
 
     public void removeFromDownload(int pid) {
@@ -77,14 +79,25 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         editor.apply();
     }
 
+    public String getPagesString(int filePages) {
+        if(filePages==0){
+            return "";
+        }
+        if(filePages>1){
+            return filePages + " pages • ";
+        }
+        return filePages + " page • ";
+    }
+
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        public ProgressView progressBarDownload;
+        public CircularProgressBar progressBarDownload;
         ImageView imageView;
         TextView title;
         public TextView size;
         RelativeLayout mainView;
-        public ImageView ticked;
+        ProgressView loading;
+        Button button;
 
         MyViewHolder(View view) {
             super(view);
@@ -92,8 +105,9 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             size = (TextView) view.findViewById(R.id.size);
             mainView = (RelativeLayout) view.findViewById(R.id.mainView);
             imageView = (ImageView) view.findViewById(R.id.imageView);
-            ticked = (ImageView) view.findViewById(R.id.isDownloaded);
-            progressBarDownload = (ProgressView) view.findViewById(R.id.spv);
+            button = (Button) view.findViewById(R.id.openButton);
+            progressBarDownload = (CircularProgressBar) view.findViewById(R.id.spv);
+            loading = (ProgressView) view.findViewById(R.id.loading);
         }
     }
 
@@ -104,25 +118,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         String json = sharedPrefs.getString(TAG, null);
         Type type = new TypeToken<ArrayList<Integer>>() {}.getType();
         return gson.fromJson(json, type);
-    }
-
-    private boolean checkIfDownloading(int pid) {
-        return getDownloadIds() != null && getDownloadIds().contains(pid);
-
-    }
-
-    public void addDownloadId(int downloadId){
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        Gson gson = new Gson();
-        ArrayList<Integer> arrayList = getDownloadIds();
-        if(arrayList==null){
-            arrayList = new ArrayList<Integer>();
-        }
-        arrayList.add(downloadId);
-        String json = gson.toJson(arrayList);
-        editor.putString(TAG, json);
-        editor.apply();
     }
 
     public void filter(ArrayList<PDF.PdfBean>newList)
@@ -152,18 +147,18 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
     public int getFilePages(PDF.PdfBean pdf){
         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getTitle() + ".pdf");
-        Log.e("Pages", String.valueOf(file.exists()));
         int count = 0;
         try {
             PdfReader pdfReader = new PdfReader(String.valueOf(file));
             count = pdfReader.getNumberOfPages();
-        } catch (IOException e) {
-            e.printStackTrace();
+            return count;
+        } catch (IOException ignored) {
+            return 0;
+        } catch (NoClassDefFoundError ignored){
+            return 0;
         }
-        return count;
+
     }
-
-
 
 
     @Override
@@ -171,40 +166,57 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         this.holder = holder;
         final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
         holder.title.setText(pdf.getTitle());
-        Float size = Float.valueOf(pdf.getSize()) / 1024;
-        holder.size.setText(new DecimalFormat("##.##").format(size) + " MB");
+        String t;
+        if (Integer.parseInt(pdf.getSize()) < 1024) {
+            t = pdf.getSize() + " KB";
+        } else {
+            Float size = Float.valueOf(pdf.getSize()) / 1024;
+            t = new DecimalFormat("##.##").format(size) + " MB";
+        }
+        holder.size.setText(t);
 
-        if(pdf.getStatus()==Constants.STATUS_LOADING){
+        if (pdf.getStatus() == Constants.STATUS_LOADING) {
+            holder.imageView.setVisibility(View.GONE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.size.setText("Downloading");
+            holder.loading.setVisibility(View.VISIBLE);
+        } else if (pdf.getStatus() == Constants.STATUS_DOWNLOADING) {
             holder.imageView.setVisibility(View.GONE);
             holder.progressBarDownload.setVisibility(View.VISIBLE);
-            holder.ticked.setVisibility(View.GONE);
-        }
-        else if(pdf.getStatus()==Constants.STATUS_DOWNLOADING){
-            holder.imageView.setVisibility(View.GONE);
-            holder.progressBarDownload.setVisibility(View.VISIBLE);
-            holder.ticked.setVisibility(View.GONE);
-        }
-        else if(pdf.getStatus()==Constants.STATUS_DOWNLOADED){
+            holder.button.setVisibility(View.GONE);
+            holder.loading.setVisibility(View.GONE);
+        } else if (pdf.getStatus() == Constants.STATUS_DOWNLOADED) {
             holder.imageView.setVisibility(View.VISIBLE);
             holder.imageView.setImageResource(R.drawable.pdf_downloaded);
             holder.progressBarDownload.setVisibility(View.GONE);
-            holder.size.setText(getFilePages(pdf) + " pages • " + new DecimalFormat("##.##").format(size) + " MB");
-            holder.ticked.setVisibility(View.VISIBLE);
-            holder.ticked.setImageResource(R.drawable.checked);
-        }
-        else {
+            String pages = getPagesString(getFilePages(pdf));
+            holder.size.setText(pages + t) ;
+            holder.button.setVisibility(View.VISIBLE);
+            holder.loading.setVisibility(View.GONE);
+        } else {
             holder.imageView.setVisibility(View.VISIBLE);
             holder.progressBarDownload.setVisibility(View.GONE);
             holder.imageView.setImageResource(R.drawable.pdf);
-            holder.ticked.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.loading.setVisibility(View.GONE);
         }
+
+        holder.button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+                intent.putExtra("title", pdf.getTitle());
+                pdfListFragment.startActivity(intent);
+            }
+        });
 
 
         holder.mainView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int array = R.array.preference_values;
-                if(pdf.getStatus()==Constants.STATUS_DOWNLOADED){
+                if (pdf.getStatus() == Constants.STATUS_DOWNLOADED) {
                     array = R.array.preference_values_downloaded;
                 }
                 new MaterialDialog.Builder(holder.mainView.getContext())
@@ -212,21 +224,13 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                         .itemsCallback(new MaterialDialog.ListCallback() {
                             @Override
                             public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-                                if(text.equals("Download")){
-                                    startDownload(pdf,position,holder);
-                                }
-                                if(text.equals("Open")){
-                                    Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
-                                    intent.putExtra("title",pdf.getTitle());
-                                    pdfListFragment.startActivity(intent);
-                                }
-                                else if(text.equals("View Online")){
+                                if (text.equals("Download")) {
+                                    startDownload(pdf, position, holder);
+                                } else if (text.equals("View Online")) {
                                     Toast.makeText(context, "Viewing online..", Toast.LENGTH_SHORT).show();
-                                }
-                                else if(text.equals("Share")){
+                                } else if (text.equals("Share")) {
                                     Toast.makeText(context, "Sharing..", Toast.LENGTH_SHORT).show();
-                                }
-                                else if(text.equals("Report")){
+                                } else if (text.equals("Report")) {
                                     Toast.makeText(context, "Reporting...", Toast.LENGTH_SHORT).show();
                                 }
                             }

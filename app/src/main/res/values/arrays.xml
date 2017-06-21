@@ -7,7 +7,6 @@
         <item>Report</item>
     </string-array>
     <string-array name="preference_values_downloaded">
-        <item>Open</item>
         <item>Share</item>
         <item>Report</item>
     </string-array>

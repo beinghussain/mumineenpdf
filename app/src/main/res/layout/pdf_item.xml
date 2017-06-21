@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
@@ -20,8 +21,8 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:text="Test Title"
-        android:textColor="@color/colorGrey"
-        android:textSize="16dp"
+        android:textColor="#212121"
+        android:textSize="13dp"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/frameLayout"
         android:layout_toEndOf="@+id/frameLayout" />
@@ -30,21 +31,23 @@
         android:id="@+id/size"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#9E9E9E"
+        android:textColor="#616161"
         android:text="2017 KB"
         android:textSize="12sp"
-        android:layout_marginTop="3dp"
+        android:layout_marginTop="0dp"
         android:layout_alignParentBottom="true"
         android:layout_alignLeft="@+id/title"
         android:layout_alignStart="@+id/title" />
 
-    <ImageView
-        android:id="@+id/isDownloaded"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
+    <com.rey.material.widget.Button
+        android:id="@+id/openButton"
+        style="@style/RightLink"
+        android:layout_width="70dp"
+        android:layout_height="35dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true" />
+        android:layout_centerVertical="true"
+        android:text="Open" />
 
     <FrameLayout
         android:layout_alignParentLeft="true"
@@ -65,14 +68,23 @@
             android:contentDescription="@string/hello" />
 
         <com.rey.material.widget.ProgressView
-            android:id="@+id/spv"
+            android:id="@+id/loading"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center"
             app:pv_autostart="true"
             app:pv_circular="true"
             app:pv_progressMode="indeterminate"
             app:pv_progressStyle="@style/CircularProgressOrange" />
+
+        <com.mikhaellopez.circularprogressbar.CircularProgressBar
+            android:id="@+id/spv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cpb_background_progressbar_color="#ddd"
+            app:cpb_background_progressbar_width="4dp"
+            app:cpb_progressbar_color="@color/colorPrimary"
+            app:cpb_progressbar_width="4dp" />
 
     </FrameLayout>
 

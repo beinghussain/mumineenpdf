@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -44,8 +45,10 @@ import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
+import com.rey.material.widget.ProgressView;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class PDFListFragment extends Fragment {
@@ -56,28 +59,40 @@ public class PDFListFragment extends Fragment {
     private PDFAdapter mPDFAdapter;
     private SwipeRefreshLayout mSwipeListener;
     private String tag = "MumineenPDF";
-    private Parcelable layoutManagerSavedState;
+    private ProgressView progressView;
 
-    public PDFListFragment() {
+    public PDFListFragment(int position) {
+        switch (position){
+            case 0:
+                album = "Marasiya";
+                break;
+            case 1:
+                album = "Madeh";
+                break;
+            case 2:
+                album = "Rasa";
+                break;
+            case 3:
+                album = "Other";
+                break;
+            case 4:
+                album = "Quran30";
+                break;
+        }
     }
-
-    public PDFListFragment(String album) {
-        this.album = album;
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_pdflist, container, false);
+        final PDFHelper mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
 
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        PDFHelper mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
-        arrayList = mPDFHelper.getAllPDFS(album);
-        mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
         mSwipeListener = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainer);
+
+        progressView = (ProgressView) rootView.findViewById(R.id.progress);
 
         mSwipeListener.setColorSchemeColors(
                 Color.RED, Color.GREEN, Color.BLUE, Color.CYAN);
@@ -93,7 +108,30 @@ public class PDFListFragment extends Fragment {
 
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        mRecyclerView.setAdapter(mPDFAdapter);
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                arrayList = mPDFHelper.getAllPDFS(album);
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
+                        mRecyclerView.setAdapter(mPDFAdapter);
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressView.setVisibility(View.GONE);
+                                mRecyclerView.setVisibility(View.VISIBLE);
+                            }
+                        }, 500);
+
+                    }
+                });
+            }
+        });
+
         return rootView;
     }
 
@@ -142,17 +180,8 @@ public class PDFListFragment extends Fragment {
         });
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelable(SAVED_LAYOUT_MANAGER, mRecyclerView.getLayoutManager().onSaveInstanceState());
-    }
+    public void updateAlbum(String album){
 
-    @Override
-    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            layoutManagerSavedState = savedInstanceState.getParcelable(SAVED_LAYOUT_MANAGER);
-        }
-        super.onViewStateRestored(savedInstanceState);
     }
 
     private void search(SearchView searchView) {
@@ -186,18 +215,32 @@ public class PDFListFragment extends Fragment {
     public void updateProgressBar(final int progress, int position, long finished, long total) {
         final PDFAdapter.MyViewHolder holder= getViewHolder(position);
         final Handler handler = new Handler();
+        String f, t;
+        int sizeF = (int) (finished/1024);
+        int sizeT = (int) (total/1024);
         new Thread(new Runnable() {
             @Override
             public void run () {
-                final float bmi = (float)progress/100;
                 handler.post(new Runnable() {
                     @Override
                     public void run () {
-                        holder.progressBarDownload.setProgress(bmi);
+                        holder.progressBarDownload.setProgress(progress);
                     }
                 });
             }
         }).start();
-        holder.size.setText((finished/1024) + " KB / " + (total/1024) + "KB");
+        if(total<1000000){
+            t = finished/1024 + "KB ";
+        } else {
+            Float size = (float) sizeT / 1024;
+            t = new DecimalFormat("##.##").format(size) + " MB ";
+        }
+        if(finished<1000000){
+            f = finished/1024 + "KB / ";
+        } else {
+            Float size = (float) sizeF / 1024;
+            f = new DecimalFormat("##.##").format(size) + " MB / ";
+        }
+        holder.size.setText(f + t + progress + "%");
     }
 }

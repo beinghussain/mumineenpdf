@@ -57,7 +57,7 @@ public class Home extends Fragment {
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
-        viewPagerAdapter = new FragmentPagerAdapterCustom(getActivity().getSupportFragmentManager());
+        viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager());
         viewPager.setAdapter(viewPagerAdapter);
         tabLayout = (TabLayout) rootView.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
