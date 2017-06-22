@@ -62,7 +62,6 @@ public class PDFListFragment extends Fragment {
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
     private PDFAdapter mPDFAdapter;
-    private SwipeRefreshLayout mSwipeListener;
     private String tag = "MumineenPDF";
     private ProgressView progressView;
     private PDFHelper mPDFHelper;
@@ -99,23 +98,7 @@ public class PDFListFragment extends Fragment {
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mSwipeListener = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainer);
-
         progressView = (ProgressView) rootView.findViewById(R.id.progress);
-
-
-        mSwipeListener.setColorSchemeColors(
-                Color.RED, Color.GREEN, Color.BLUE, Color.CYAN);
-
-        mSwipeListener.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                mSwipeListener.setRefreshing(false);
-                Toast.makeText(getActivity(),"Refreshing",Toast.LENGTH_SHORT).show();
-                refresh(album);
-                mPDFAdapter.notifyDataSetChanged();
-            }
-        });
 
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -128,7 +111,6 @@ public class PDFListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.e("DownloadManager", String.valueOf(DownloadManager.getInstance().getDownloadInfo(String.valueOf(3317))));
         setHasOptionsMenu(true);
     }
 

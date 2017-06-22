@@ -3,6 +3,8 @@ package com.mumineendownloads.mumineenpdf.Helpers;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.net.ConnectivityManager;
+import android.widget.Toast;
 
 import com.mumineendownloads.mumineenpdf.R;
 
@@ -24,6 +26,28 @@ public class Utils {
         badge.setCount(count);
         icon.mutate();
         icon.setDrawableByLayerId(R.id.ic_badge, badge);
+    }
+
+
+    public static boolean isConnected(Context context) {
+        try {
+            ConnectivityManager connec =
+                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            if (connec != null) {
+                if (connec.getActiveNetworkInfo().getState() == android.net.NetworkInfo.State.CONNECTED || connec.getActiveNetworkInfo().getState() == android.net.NetworkInfo.State.CONNECTING || connec.getActiveNetworkInfo().getState() == android.net.NetworkInfo.State.CONNECTING || connec.getActiveNetworkInfo().getState() == android.net.NetworkInfo.State.CONNECTED) {
+                    return true;
+
+                } else if (
+                        connec.getActiveNetworkInfo().getState() == android.net.NetworkInfo.State.DISCONNECTED ||
+                                connec.getActiveNetworkInfo().getState() == android.net.NetworkInfo.State.DISCONNECTED) {
+                    return false;
+                }
+            }
+        }catch (NullPointerException ignored){
+
+        }
+        return false;
     }
 
 

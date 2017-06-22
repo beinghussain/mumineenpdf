@@ -14,9 +14,11 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
+import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class BackgroundSync  {
     private MainActivity activity;
@@ -26,28 +28,40 @@ public class BackgroundSync  {
     }
 
     public void execute() {
-        RequestQueue queue = Volley.newRequestQueue(activity.getApplicationContext());
-        String url ="http://192.168.43.217/app/getPdf.php";
+        boolean connected = Utils.isConnected(activity.getApplicationContext());
+        if(connected) {
+            RequestQueue queue = Volley.newRequestQueue(activity.getApplicationContext());
+            String url = "http://192.168.43.217/app/getPdf.php";
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Gson gson = new Gson();
-                        ArrayList<PDF.PdfBean> pdfBeanArrayList;
-                        pdfBeanArrayList = gson.fromJson(response, new TypeToken<ArrayList<PDF.PdfBean>>(){}.getType());
-                        PDFHelper pdfHelper = new PDFHelper(activity.getApplicationContext());
-                        for(int i=0;i <pdfBeanArrayList.size(); i++) {
-                           pdfHelper.addPDF(pdfBeanArrayList.get(i));
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            Gson gson = new Gson();
+                            ArrayList<PDF.PdfBean> pdfBeanArrayList;
+                            pdfBeanArrayList = gson.fromJson(response, new TypeToken<ArrayList<PDF.PdfBean>>() {
+                            }.getType());
+                            PDFHelper pdfHelper = new PDFHelper(activity.getApplicationContext());
+                            for (int i = 0; i < pdfBeanArrayList.size(); i++) {
+                                if(pdfBeanArrayList.get(i).getAlbum().equals("0")){
+                                    pdfHelper.deleteContact(pdfBeanArrayList.get(i));
+                                }
+                                else if(pdfHelper.getPDF(pdfBeanArrayList.get(i).getPid())!=null) {
+                                    pdfHelper.updatePDF(pdfBeanArrayList.get(i));
+                                }
+                                else {
+                                    pdfHelper.addPDF(pdfBeanArrayList.get(i));
+                                }
+                            }
                         }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-               Log.e("Error", error.toString());
-            }
-        });
-        queue.add(stringRequest);
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("Error", error.toString());
+                }
+            });
+            queue.add(stringRequest);
+        }
     }
 }
 

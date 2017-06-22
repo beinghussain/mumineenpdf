@@ -44,6 +44,7 @@ import com.mumineendownloads.mumineenpdf.Constants;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFDialogFragment;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
+import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 import com.rey.material.widget.Button;
@@ -56,6 +57,9 @@ import java.io.RandomAccessFile;
 import java.lang.reflect.Type;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import es.dmoral.toasty.Toasty;
+
 import static android.content.ContentValues.TAG;
 
 public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
@@ -259,7 +263,11 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                             @Override
                             public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
                                 if (text.equals("Download")) {
-                                    pdfListFragment.startDownload(pdf, position, holder);
+                                    if(Utils.isConnected(context)) {
+                                        pdfListFragment.startDownload(pdf, position, holder);
+                                    } else {
+                                        Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
+                                    }
                                 } else if (text.equals("View Online")) {
                                     Toast.makeText(context, "Viewing online..", Toast.LENGTH_SHORT).show();
                                 } else if (text.equals("Share")) {

@@ -5,7 +5,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment">
 
-
     <com.rey.material.widget.ProgressView
         android:id="@+id/progress"
         android:layout_width="48dp"
@@ -16,11 +15,6 @@
         app:pv_progressMode="indeterminate"
         app:pv_progressStyle="@style/CircularProgressOrange" />
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:layout_width="match_parent"
-        android:id="@+id/swipeContainer"
-        android:layout_height="match_parent">
-
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler_view"
             android:visibility="gone"
@@ -28,10 +22,6 @@
             android:layout_height="match_parent">
 
         </android.support.v7.widget.RecyclerView>
-
-
-
-    </android.support.v4.widget.SwipeRefreshLayout>
-
+    
 
 </FrameLayout>
