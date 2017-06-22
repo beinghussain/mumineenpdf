@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.FragmentPagerAdapterCustom;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
@@ -35,8 +37,9 @@ public class Home extends Fragment {
     private PDFAdapter mPDFAdapter;
     private ViewPager viewPager;
     private FragmentPagerAdapterCustom viewPagerAdapter;
-    private TabLayout tabLayout;
+    public static TabLayout tabLayout;
     private SearchView searchView;
+
 
     public Home newInstance() {
         return new Home();
@@ -45,10 +48,12 @@ public class Home extends Fragment {
     public Home() {
     }
 
+    private Toolbar mActivityActionBarToolbar;
+
+
     public Home(MainActivity activity) {
         this.activity = activity;
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -56,13 +61,16 @@ public class Home extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
+        Fonty.setFonts(toolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
         viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager());
         viewPager.setAdapter(viewPagerAdapter);
         tabLayout = (TabLayout) rootView.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
+        Fonty.setFonts(tabLayout);
         return rootView;
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -90,5 +98,13 @@ public class Home extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+    }
+
+    public static void toggleTab(boolean hideShow){
+        if(hideShow){
+            tabLayout.setVisibility(View.GONE);
+        }else {
+            tabLayout.setVisibility(View.VISIBLE);
+        }
     }
 }

@@ -48,7 +48,7 @@ public class PDFHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_CONTACTS_TABLE = "CREATE TABLE " + TABLE_PDF + "("
                 + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TITLE + " TEXT UNIQUE,"
-                + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," + KEY_PID  + " INTEGER," + KEY_STATUS + " INTEGER DEFAULT 0" + ")";
+                + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," + KEY_PID  + " INTEGER," + KEY_STATUS + " INTEGER" + ")";
         db.execSQL(CREATE_CONTACTS_TABLE);
     }
 
@@ -60,7 +60,7 @@ public class PDFHelper extends SQLiteOpenHelper {
 
     public void addPDF(PDF.PdfBean pdf) {
         SQLiteDatabase db = this.getWritableDatabase();
-
+        try {
         ContentValues values = new ContentValues();
         values.put(KEY_TITLE, pdf.getTitle());
         values.put(KEY_ALBUM, pdf.getAlbum());
@@ -68,9 +68,9 @@ public class PDFHelper extends SQLiteOpenHelper {
         values.put(KEY_SIZE, pdf.getSize());
         values.put(KEY_PID, pdf.getPid());
         values.put(KEY_PID, pdf.getStatus());
-        try {
-           db.insert(TABLE_PDF, null, values);
-        }catch (Exception ignored){
+
+            db.insert(TABLE_PDF, null, values);
+        }catch (SQLiteConstraintException ignored){
 
         }
         db.close();
@@ -85,7 +85,7 @@ public class PDFHelper extends SQLiteOpenHelper {
         if (cursor != null)
             cursor.moveToFirst();
 
-        PDF.PdfBean pdf = new PDF.PdfBean(
+        return new PDF.PdfBean(
                 Integer.parseInt(cursor.getString(0)),
                 cursor.getString(1),
                 cursor.getString(2),
@@ -93,7 +93,6 @@ public class PDFHelper extends SQLiteOpenHelper {
                 cursor.getString(4),
                 Integer.parseInt(cursor.getString(5)),
                 Integer.parseInt(cursor.getString(5)));
-        return pdf;
     }
 
     public ArrayList<PDF.PdfBean> getAllPDFS(String album) {
@@ -146,16 +145,7 @@ public class PDFHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(KEY_TITLE, pdf.getTitle());
-        values.put(KEY_ALBUM, pdf.getAlbum());
-        values.put(KEY_SOURCE, pdf.getSource());
-        values.put(KEY_SIZE, pdf.getSize());
-        values.put(KEY_PID, pdf.getPid());
         values.put(KEY_STATUS, pdf.getStatus());
-
-
-
-        // updating row
         return db.update(TABLE_PDF, values, KEY_PID + " = ?",
                 new String[] { String.valueOf(pdf.getPid()) });
     }

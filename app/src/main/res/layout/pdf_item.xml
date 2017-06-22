@@ -49,6 +49,20 @@
         android:layout_centerVertical="true"
         android:text="Open" />
 
+    <ImageButton
+        android:id="@+id/cancelButton"
+        android:background="@android:color/transparent"
+        android:layout_width="24dp"
+        android:visibility="gone"
+        android:layout_height="24dp"
+        android:layout_alignParentEnd="true"
+        android:tint="@android:color/darker_gray"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
+
+
+
     <FrameLayout
         android:layout_alignParentLeft="true"
         android:layout_toStartOf="@+id/textView"

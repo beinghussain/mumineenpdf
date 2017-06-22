@@ -27,7 +27,7 @@ public class BackgroundSync  {
 
     public void execute() {
         RequestQueue queue = Volley.newRequestQueue(activity.getApplicationContext());
-        String url ="http://192.168.0.105/app/getPdf.php";
+        String url ="http://192.168.43.217/app/getPdf.php";
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
@@ -38,7 +38,7 @@ public class BackgroundSync  {
                         pdfBeanArrayList = gson.fromJson(response, new TypeToken<ArrayList<PDF.PdfBean>>(){}.getType());
                         PDFHelper pdfHelper = new PDFHelper(activity.getApplicationContext());
                         for(int i=0;i <pdfBeanArrayList.size(); i++) {
-                            pdfHelper.addPDF(pdfBeanArrayList.get(i));
+                           pdfHelper.addPDF(pdfBeanArrayList.get(i));
                         }
                     }
                 }, new Response.ErrorListener() {

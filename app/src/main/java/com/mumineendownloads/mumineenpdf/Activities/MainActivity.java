@@ -14,6 +14,7 @@ import android.view.View;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
 import com.mumineendownloads.mumineenpdf.Fragments.SavedFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
@@ -86,10 +87,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Fonty.setFonts(this);
 
         methodRequiresTwoPermission();
 
@@ -105,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
 
         BackgroundSync backgroundSync = new BackgroundSync(MainActivity.this);
-        backgroundSync.execute();
+       // backgroundSync.execute();
     }
 
     private ArrayList<Integer> getDownloadIds(){

@@ -28,7 +28,6 @@ dependencies {
 
     compile 'pub.devrel:easypermissions:0.4.2'
     compile 'com.github.MarcinOrlowski:fonty:2.0.0'
-    compile 'com.github.Aspsine:MultiThreadDownload:dc54cb1def'
     compile 'com.mikhaellopez:circularprogressbar:1.1.1'
     compile 'com.afollestad.material-dialogs:core:0.9.4.5'
     compile 'com.android.support:appcompat-v7:25.3.1'
@@ -41,5 +40,7 @@ dependencies {
     compile 'com.github.rey5137:material:1.2.4'
     compile 'com.github.barteksc:android-pdf-viewer:2.7.0-beta'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile project(':DownloadMan');
+
     testCompile 'junit:junit:4.12'
 }
