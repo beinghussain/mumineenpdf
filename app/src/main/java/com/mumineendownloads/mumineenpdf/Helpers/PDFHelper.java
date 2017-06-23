@@ -97,7 +97,18 @@ public class PDFHelper extends SQLiteOpenHelper {
 
     public ArrayList<PDF.PdfBean> getAllPDFS(String album) {
         ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
-        String selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' ORDER BY title";
+        String selectQuery;
+        if(album.equals("all")){
+            selectQuery = "SELECT  * FROM " + TABLE_PDF +" ORDER BY title";
+        }
+
+        else if(album.equals("Quran30")){
+            selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') ORDER BY title";
+        }
+
+        else {
+            selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' ORDER BY title";
+        }
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);

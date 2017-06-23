@@ -14,6 +14,7 @@ import android.view.View;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.marcinorlowski.fonty.Fonty;
+import com.mumineendownloads.mumineenpdf.Helpers.CustomScrollHandle;
 import com.mumineendownloads.mumineenpdf.R;
 
 import java.io.File;
@@ -35,14 +36,12 @@ public class PDFActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Fonty.setFonts(toolbar);
 
-
-
         pdfView = (PDFView) findViewById(R.id.pdfView);
         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+value+".pdf");
         pdfView.fromFile(file)
                 .enableSwipe(true)
                 .spacing(25)
-                 .scrollHandle(new DefaultScrollHandle(this))
+                 .scrollHandle(new CustomScrollHandle(this))
                 .load();
         pdfView.useBestQuality(true);
 

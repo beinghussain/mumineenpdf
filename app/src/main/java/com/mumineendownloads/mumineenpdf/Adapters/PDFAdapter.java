@@ -149,6 +149,71 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     }
 
 
+    public void startDownload(final PDF.PdfBean pdf, final int position, final PDFAdapter.MyViewHolder holder) {
+        File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
+        File mFile = new File(mDownloadDir + "/Mumineen/");
+        final DownloadRequest request = new DownloadRequest.Builder()
+                .setName(pdf.getTitle() + ".pdf")
+                .setUri("http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource())
+                .setFolder(mFile)
+                .build();
+
+
+        DownloadManager.getInstance().download(request, "http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource(), new CallBack() {
+            @Override
+            public void onStarted() {
+                pdf.setStatus(Constants.STATUS_DOWNLOADING);
+                notifyItemChanged(position);
+            }
+
+            @Override
+            public void onConnecting() {
+                pdf.setStatus(Constants.STATUS_LOADING);
+                notifyItemChanged(position);
+            }
+
+            @Override
+            public void onConnected(long total, boolean isRangeSupport) {
+                pdf.setStatus(Constants.STATUS_DOWNLOADING);
+                notifyItemChanged(position);
+            }
+
+            @Override
+            public void onProgress(long finished, long total, final int progress) {
+                pdfListFragment.updateProgressBar(progress, position, finished, total);
+            }
+
+            @Override
+            public void onCompleted() {
+                notifyItemChanged(position);
+                PDFHelper pdfHelper = new PDFHelper(context);
+                pdf.setStatus(Constants.STATUS_DOWNLOADED);
+                pdfHelper.updatePDF(pdf);
+            }
+
+
+            @Override
+            public void onDownloadPaused() {
+                pdf.setStatus(Constants.STATUS_PAUSED);
+                notifyItemChanged(position);
+            }
+
+            @Override
+            public void onDownloadCanceled() {
+                pdf.setStatus(Constants.STATUS_NULL);
+                notifyItemChanged(position);
+            }
+
+            @Override
+            public void onFailed(DownloadException e) {
+                Log.e("Failed", e.toString());
+                notifyItemChanged(position);
+            }
+        });
+    }
+
+
+
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -196,7 +261,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             holder.imageView.setVisibility(View.GONE);
             holder.progressBarDownload.setVisibility(View.GONE);
             holder.button.setVisibility(View.GONE);
-            holder.size.setText("Downloading");
+            holder.size.setText("Connecting..");
             holder.cancel.setVisibility(View.VISIBLE);
             holder.loading.setVisibility(View.VISIBLE);
         } else if (pdf.getStatus() == Constants.STATUS_DOWNLOADING) {
@@ -231,6 +296,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             holder.button.setVisibility(View.GONE);
             holder.loading.setVisibility(View.GONE);
             holder.cancel.setVisibility(View.GONE);
+
         }
 
         holder.button.setOnClickListener(new View.OnClickListener() {
@@ -264,7 +330,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                             public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
                                 if (text.equals("Download")) {
                                     if(Utils.isConnected(context)) {
-                                        pdfListFragment.startDownload(pdf, position, holder);
+                                        startDownload(pdf, position, holder);
                                     } else {
                                         Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
                                     }

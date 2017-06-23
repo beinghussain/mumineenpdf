@@ -159,69 +159,6 @@ public class PDFListFragment extends Fragment {
 
 
 
-    public void startDownload(final PDF.PdfBean pdf, final int position, final PDFAdapter.MyViewHolder holder) {
-        File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
-        File mFile = new File(mDownloadDir + "/Mumineen/");
-        final DownloadRequest request = new DownloadRequest.Builder()
-                .setName(pdf.getTitle() + ".pdf")
-                .setUri("http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource())
-                .setFolder(mFile)
-                .build();
-
-
-        DownloadManager.getInstance().download(request, "http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource(), new CallBack() {
-            @Override
-            public void onStarted() {
-                Log.e("PDF UPDATING", pdf.getStatus()+"");
-                pdf.setStatus(Constants.STATUS_DOWNLOADING);
-                mPDFAdapter.notifyItemChanged(position);
-            }
-
-            @Override
-            public void onConnecting() {
-                pdf.setStatus(Constants.STATUS_LOADING);
-                mPDFAdapter.notifyItemChanged(position);
-            }
-
-            @Override
-            public void onConnected(long total, boolean isRangeSupport) {
-                pdf.setStatus(Constants.STATUS_DOWNLOADING);
-                mPDFAdapter.notifyItemChanged(position);
-            }
-
-            @Override
-            public void onProgress(long finished, long total, final int progress) {
-                updateProgressBar(progress, position, finished, total);
-            }
-
-            @Override
-            public void onCompleted() {
-                mPDFAdapter.notifyItemChanged(position);
-                PDFHelper pdfHelper = new PDFHelper(getContext());
-                arrayList.get(position).setStatus(Constants.STATUS_DOWNLOADED);
-                pdfHelper.updatePDF(pdf);
-            }
-
-
-            @Override
-            public void onDownloadPaused() {
-                pdf.setStatus(Constants.STATUS_PAUSED);
-                mPDFAdapter.notifyItemChanged(position);
-            }
-
-            @Override
-            public void onDownloadCanceled() {
-                pdf.setStatus(Constants.STATUS_NULL);
-                mPDFAdapter.notifyItemChanged(position);
-            }
-
-            @Override
-            public void onFailed(DownloadException e) {
-                mPDFAdapter.notifyItemChanged(position);
-            }
-        });
-    }
-
 
     public void refresh(final String mainAlbum){
         progressView.setVisibility(View.VISIBLE);

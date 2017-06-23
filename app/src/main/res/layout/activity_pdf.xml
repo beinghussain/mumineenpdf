@@ -30,8 +30,6 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/appBarPDf"
         android:layout_marginBottom="0dp"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
         android:layout_marginTop="56dp"
         android:background="#ecf0f1">
 
