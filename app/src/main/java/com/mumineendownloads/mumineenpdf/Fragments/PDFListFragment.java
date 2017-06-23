@@ -50,6 +50,7 @@ import com.mumineendownloads.mumineenpdf.Helpers.PDM;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
+import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.rey.material.widget.ProgressView;
 
 import java.io.File;
@@ -215,7 +216,15 @@ public class PDFListFragment extends Fragment {
         });
     }
 
-
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id==R.id.action_sync){
+            BackgroundSync bg = new BackgroundSync(getActivity().getApplicationContext(), PDFListFragment.this);
+            bg.execute();
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     public void updateProgressBar(final int progress, int position, long finished, long total) {
         try {
@@ -255,5 +264,9 @@ public class PDFListFragment extends Fragment {
         }catch (NullPointerException ignored){
 
         }
+    }
+
+    public void notifyDatasetChanged() {
+        mPDFAdapter.notifyDataSetChanged();
     }
 }

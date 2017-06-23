@@ -82,32 +82,33 @@ public class PDFHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_PDF, new String[] { KEY_ID,
                         KEY_TITLE, KEY_ALBUM, KEY_SOURCE, KEY_SIZE, KEY_SIZE }, KEY_PID+ "=?",
                 new String[] { String.valueOf(pid) }, null, null, null, null);
-        if (cursor != null)
+        if (cursor != null) {
             cursor.moveToFirst();
 
-        return new PDF.PdfBean(
-                Integer.parseInt(cursor.getString(0)),
-                cursor.getString(1),
-                cursor.getString(2),
-                cursor.getString(3),
-                cursor.getString(4),
-                Integer.parseInt(cursor.getString(5)),
-                Integer.parseInt(cursor.getString(5)));
+            return new PDF.PdfBean(
+                    Integer.parseInt(cursor.getString(0)),
+                    cursor.getString(1),
+                    cursor.getString(2),
+                    cursor.getString(3),
+                    cursor.getString(4),
+                    Integer.parseInt(cursor.getString(5)),
+                    Integer.parseInt(cursor.getString(5)));
+        } return null;
     }
 
     public ArrayList<PDF.PdfBean> getAllPDFS(String album) {
         ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
         String selectQuery;
-        if(album.equals("all")){
-            selectQuery = "SELECT  * FROM " + TABLE_PDF +" ORDER BY title";
-        }
-
-        else if(album.equals("Quran30")){
-            selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') ORDER BY title";
-        }
-
-        else {
-            selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' ORDER BY title";
+        switch (album) {
+            case "all":
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " ORDER BY title";
+                break;
+            case "Quran30":
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') ORDER BY title";
+                break;
+            default:
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' ORDER BY title";
+                break;
         }
 
         SQLiteDatabase db = this.getWritableDatabase();

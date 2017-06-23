@@ -16,5 +16,10 @@
         app:actionViewClass="android.support.v7.widget.SearchView"
         android:title="Search"/>
 
+    <item
+        android:id="@+id/action_sync"
+        app:showAsAction="never"
+        android:title="Refresh"/>
+
 
 </menu>

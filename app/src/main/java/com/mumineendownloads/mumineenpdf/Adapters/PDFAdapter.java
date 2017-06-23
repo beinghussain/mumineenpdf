@@ -206,7 +206,8 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
             @Override
             public void onFailed(DownloadException e) {
-                Log.e("Failed", e.toString());
+                pdf.setStatus(Constants.STATUS_NULL);
+                Toasty.error(context,"Download Failed!",500).show();
                 notifyItemChanged(position);
             }
         });
@@ -296,7 +297,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             holder.button.setVisibility(View.GONE);
             holder.loading.setVisibility(View.GONE);
             holder.cancel.setVisibility(View.GONE);
-
         }
 
         holder.button.setOnClickListener(new View.OnClickListener() {
