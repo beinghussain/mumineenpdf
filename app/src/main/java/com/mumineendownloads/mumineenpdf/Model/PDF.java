@@ -25,6 +25,8 @@ public class PDF {
         boolean downloading;
         long progress;
         int status;
+        private int pageCount;
+        private boolean isSearchingMode;
 
         public PdfBean() {
 
@@ -114,6 +116,22 @@ public class PDF {
 
         public int getStatus(){
             return status;
+        }
+
+        public int getPageCount() {
+            return pageCount;
+        }
+
+        public void setPageCount(int pageCount) {
+            this.pageCount = pageCount;
+        }
+
+        public boolean isSearchingMode() {
+            return isSearchingMode;
+        }
+
+        public void setSearchingMode(boolean isSearchingMode){
+            this.isSearchingMode = isSearchingMode;
         }
     }
 }

@@ -24,7 +24,7 @@ import com.mumineendownloads.mumineenpdf.Model.PDF;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class BackgroundSync extends AsyncTask<Void, Void,Void> {
+public class BackgroundSync {
     private PDFListFragment pdfListFragment;
     private Context applicationContext;
 
@@ -37,13 +37,13 @@ public class BackgroundSync extends AsyncTask<Void, Void,Void> {
         this.pdfListFragment = pdfListFragment;
     }
 
-    public void executeF() {
+    private String executeF() {
         boolean connected = Utils.isConnected(applicationContext);
         if(connected) {
-            RequestQueue queue = Volley.newRequestQueue(applicationContext);
+            final RequestQueue queue = Volley.newRequestQueue(applicationContext);
             String url = "http://mumineendownloads.com/app/getPdfApp.php";
 
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+            final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
@@ -54,39 +54,28 @@ public class BackgroundSync extends AsyncTask<Void, Void,Void> {
                             PDFHelper pdfHelper = new PDFHelper(applicationContext);
                             for (int i = 0; i < pdfBeanArrayList.size(); i++) {
                                 PDF.PdfBean pdfBean = pdfBeanArrayList.get(i);
-                                Log.e("PDF",pdfHelper.getPDF(pdfBean.getPid()).getTitle());
-//                                if(pdfBeanArrayList.get(i).getAlbum().equals("0")){
-//                                    pdfHelper.deleteContact(pdfBeanArrayList.get(i));
-//                                }
-//                                else if(pdfHelper.getPDF(pdfBeanArrayList.get(i).getPid())!=null) {
-//                                    pdfHelper.updatePDF(pdfBeanArrayList.get(i));
-//                                }
-//                                else {
-//                                    pdfHelper.addPDF(pdfBeanArrayList.get(i));
-//                                }
+                                pdfHelper.updateOrInsert(pdfBean);
                             }
+                            pdfListFragment.notifyDatasetChanged();
                         }
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Log.e("Error", error.toString());
                 }
             });
-            queue.add(stringRequest);
+                    queue.add(stringRequest);
         }
+
+        return "Done";
     }
 
-    @Override
-    protected Void doInBackground(Void... params) {
-        executeF();
-        return null;
-    }
-
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        if(pdfListFragment!=null){
-            pdfListFragment.notifyDatasetChanged();
-        }
+    public void taskSync(){
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                executeF();
+            }
+        });
     }
 }
 

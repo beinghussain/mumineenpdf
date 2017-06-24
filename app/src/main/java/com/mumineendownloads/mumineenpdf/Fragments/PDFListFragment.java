@@ -1,71 +1,53 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Color;
+import android.content.SharedPreferences;
 import android.graphics.drawable.LayerDrawable;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.Toast;
 
-import com.aspsine.multithreaddownload.CallBack;
-import com.aspsine.multithreaddownload.DownloadException;
-import com.aspsine.multithreaddownload.DownloadInfo;
-import com.aspsine.multithreaddownload.DownloadManager;
-import com.aspsine.multithreaddownload.DownloadRequest;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
-import com.mumineendownloads.mumineenpdf.Constants;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
-import com.mumineendownloads.mumineenpdf.Helpers.PDM;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
+import com.mumineendownloads.mumineenpdf.Model.PDFDownload;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.rey.material.widget.ProgressView;
 
-import java.io.File;
+import java.lang.reflect.Type;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import static android.content.ContentValues.TAG;
+
 public class PDFListFragment extends Fragment {
-    private static final String SAVED_LAYOUT_MANAGER = "lm";
     private String album;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
     private PDFAdapter mPDFAdapter;
-    private String tag = "MumineenPDF";
     private ProgressView progressView;
     private PDFHelper mPDFHelper;
+    private ArrayList<Integer> downloadArray;
 
 
     public PDFListFragment(int position) {
@@ -115,15 +97,10 @@ public class PDFListFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
-    @   Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        MenuItem mSearchMenuItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) mSearchMenuItem.getActionView();
-    }
-
     private PDFAdapter.MyViewHolder getViewHolder(int position) {
         return (PDFAdapter.MyViewHolder) mRecyclerView.findViewHolderForLayoutPosition(position);
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -140,7 +117,8 @@ public class PDFListFragment extends Fragment {
                 refresh("all");
                 MainActivity.toggle(true);
                 Home.toggleTab(true);
-               return true;
+                mPDFAdapter.setSearchMode(true);
+                return true;
             }
 
             @Override
@@ -148,6 +126,7 @@ public class PDFListFragment extends Fragment {
                 refresh(album);
                 MainActivity.toggle(false);
                 Home.toggleTab(false);
+                mPDFAdapter.setSearchMode(false);
                 return true;
             }
         });
@@ -156,10 +135,6 @@ public class PDFListFragment extends Fragment {
         LayerDrawable icon = (LayerDrawable) item.getIcon();
         Utils.setBadgeCount(getActivity(), icon, 0);
     }
-
-
-
-
 
     public void refresh(final String mainAlbum){
         progressView.setVisibility(View.VISIBLE);
@@ -187,9 +162,6 @@ public class PDFListFragment extends Fragment {
             }
         });
     }
-
-
-
 
     private void search(SearchView searchView) {
 
@@ -221,7 +193,7 @@ public class PDFListFragment extends Fragment {
         int id = item.getItemId();
         if(id==R.id.action_sync){
             BackgroundSync bg = new BackgroundSync(getActivity().getApplicationContext(), PDFListFragment.this);
-            bg.execute();
+            bg.taskSync();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -267,6 +239,7 @@ public class PDFListFragment extends Fragment {
     }
 
     public void notifyDatasetChanged() {
+        mPDFAdapter = new PDFAdapter(arrayList,getContext(),PDFListFragment.this);
         mPDFAdapter.notifyDataSetChanged();
     }
 }

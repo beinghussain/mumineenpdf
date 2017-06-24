@@ -1,54 +1,32 @@
 package com.mumineendownloads.mumineenpdf.Model;
 
 public class PDFDownload {
-    PDF.PdfBean pdfBean;
-    long progress;
-    long finish;
-    long total;
-    int id;
+    private int pid;
+    private int status;
 
-    public PDFDownload(PDF.PdfBean pdfBean, long progress, long finish, long total, int id) {
-        this.progress = progress;
-        this.id = id;
+
+    public PDFDownload(){
+
     }
 
-    public PDF.PdfBean getPdfBean() {
-        return pdfBean;
+    public PDFDownload(int pid, int status) {
+        this.pid = pid;
+        this.status = status;
     }
 
-    public void setPdfBean(PDF.PdfBean pdfBean) {
-        this.pdfBean = pdfBean;
+    public int getStatus() {
+        return status;
     }
 
-    public long getProgress() {
-        return progress;
+    public void setStatus(int status) {
+        this.status = status;
     }
 
-    public void setProgress(long progress) {
-        this.progress = progress;
+    public int getPid() {
+        return pid;
     }
 
-    public long getFinish() {
-        return finish;
-    }
-
-    public void setFinish(long finish) {
-        this.finish = finish;
-    }
-
-    public long getTotal() {
-        return total;
-    }
-
-    public void setTotal(long total) {
-        this.total = total;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
+    public void setPid(int pid) {
+        this.pid = pid;
     }
 }

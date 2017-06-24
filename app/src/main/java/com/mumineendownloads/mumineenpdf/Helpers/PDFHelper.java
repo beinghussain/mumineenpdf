@@ -3,9 +3,11 @@ package com.mumineendownloads.mumineenpdf.Helpers;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
@@ -47,8 +49,8 @@ public class PDFHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_CONTACTS_TABLE = "CREATE TABLE " + TABLE_PDF + "("
-                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TITLE + " TEXT UNIQUE,"
-                + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," + KEY_PID  + " INTEGER," + KEY_STATUS + " INTEGER" + ")";
+                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TITLE + " TEXT,"
+                + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," + KEY_PID  + " INTEGER UNIQUE," + KEY_STATUS + " INTEGER" + ")";
         db.execSQL(CREATE_CONTACTS_TABLE);
     }
 
@@ -83,16 +85,20 @@ public class PDFHelper extends SQLiteOpenHelper {
                         KEY_TITLE, KEY_ALBUM, KEY_SOURCE, KEY_SIZE, KEY_SIZE }, KEY_PID+ "=?",
                 new String[] { String.valueOf(pid) }, null, null, null, null);
         if (cursor != null) {
-            cursor.moveToFirst();
+            try {
+                cursor.moveToFirst();
 
-            return new PDF.PdfBean(
-                    Integer.parseInt(cursor.getString(0)),
-                    cursor.getString(1),
-                    cursor.getString(2),
-                    cursor.getString(3),
-                    cursor.getString(4),
-                    Integer.parseInt(cursor.getString(5)),
-                    Integer.parseInt(cursor.getString(5)));
+                return new PDF.PdfBean(
+                        Integer.parseInt(cursor.getString(0)),
+                        cursor.getString(1),
+                        cursor.getString(2),
+                        cursor.getString(3),
+                        cursor.getString(4),
+                        Integer.parseInt(cursor.getString(5)),
+                        Integer.parseInt(cursor.getString(5)));
+            }catch (CursorIndexOutOfBoundsException ignored){
+
+            }
         } return null;
     }
 
@@ -162,10 +168,32 @@ public class PDFHelper extends SQLiteOpenHelper {
                 new String[] { String.valueOf(pdf.getPid()) });
     }
 
-    public void deleteContact(PDF.PdfBean pdf) {
+    public void deletePDF(PDF.PdfBean pdf) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_PDF, KEY_ID + " = ?",
                 new String[] { String.valueOf(pdf.getId()) });
         db.close();
+    }
+
+    public void updateOrInsert(final PDF.PdfBean pdf) {
+        final SQLiteDatabase db = this.getWritableDatabase();
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                ContentValues initialValues = new ContentValues();
+                initialValues.put(KEY_STATUS, pdf.getStatus());
+                initialValues.put(KEY_SIZE, pdf.getSize());
+                initialValues.put(KEY_SOURCE, pdf.getSource());
+                initialValues.put(KEY_ALBUM, pdf.getAlbum());
+                initialValues.put(KEY_TITLE, pdf.getTitle());
+                initialValues.put(KEY_PID, pdf.getPid());
+
+                int id = (int) db.insertWithOnConflict(TABLE_PDF, null, initialValues, SQLiteDatabase.CONFLICT_IGNORE);
+                if (id == -1) {
+                    db.update(TABLE_PDF, initialValues, "pid = ?", new String[] {String.valueOf(pdf.getPid())});
+                }
+            }
+        });
+
     }
 }
