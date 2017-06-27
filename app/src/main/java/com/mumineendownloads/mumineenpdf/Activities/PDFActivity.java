@@ -1,15 +1,20 @@
 package com.mumineendownloads.mumineenpdf.Activities;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
@@ -22,6 +27,7 @@ import java.io.File;
 public class PDFActivity extends AppCompatActivity {
 
     private PDFView pdfView;
+    private WebView webView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,20 +37,43 @@ public class PDFActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Intent intent = getIntent();
-        String value = intent.getStringExtra("title");
-        getSupportActionBar().setTitle(value);
+        int mode = intent.getIntExtra("mode",0);
+        int id = intent.getIntExtra("pid",0);
+        String title = intent.getStringExtra("title");
+        getSupportActionBar().setTitle(title);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        webView = (WebView) findViewById(R.id.pdfWebView);
         Fonty.setFonts(toolbar);
 
         pdfView = (PDFView) findViewById(R.id.pdfView);
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+value+".pdf");
-        pdfView.fromFile(file)
-                .enableSwipe(true)
-                .spacing(25)
-                 .scrollHandle(new CustomScrollHandle(this))
-                .load();
-        pdfView.useBestQuality(true);
+        if(mode==1){
+            String url = intent.getStringExtra("url");
+            url = url.replace("http","https");
+            onlinePDF(url);
+        } else {
+            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+id+".pdf");
+            pdfView.fromFile(file)
+                    .enableSwipe(true)
+                    .spacing(25)
+                    .scrollHandle(new CustomScrollHandle(this))
+                    .load();
+            pdfView.useBestQuality(true);
+        }
 
+
+    }
+
+    private void onlinePDF(String url) {
+        webView.setVisibility(View.VISIBLE);
+        final String doc = "http://docs.google.com/gview?embedded=true&url=" + url;
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.setWebViewClient(new WebViewClient(){
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                view.loadUrl("http://google.com");
+                return true;
+            }
+        });
     }
 
 

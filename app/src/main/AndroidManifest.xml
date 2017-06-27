@@ -32,7 +32,7 @@
         <activity
             android:name=".Activities.PDFActivity"
             android:label="@string/title_activity_pdf"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/AppTheme.ThemeDark" />
 
         <receiver android:name=".Widget.NewAppWidget">
             <intent-filter>

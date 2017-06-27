@@ -2,6 +2,7 @@ package com.mumineendownloads.mumineenpdf.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -11,8 +12,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.CallBack;
 import com.aspsine.multithreaddownload.DownloadException;
 import com.aspsine.multithreaddownload.DownloadManager;
@@ -24,9 +23,7 @@ import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Constants;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
-import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
-import com.mumineendownloads.mumineenpdf.Model.PDFDownload;
 import com.mumineendownloads.mumineenpdf.R;
 import com.rey.material.widget.Button;
 import com.rey.material.widget.ProgressView;
@@ -43,9 +40,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     private Context context;
     private PDFListFragment pdfListFragment;
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
-    private PDF.PdfBean pdf;
-    private PDFDownload pdfDownload = new PDFDownload();
-    private Utils utils;
+    private PDFHelper pdfHelper;
 
 
     private String getPagesString(int filePages) {
@@ -61,7 +56,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public CircularProgressBar progressBarDownload;
         ImageView imageView;
-        TextView title;
+        public TextView title;
         public TextView size;
         RelativeLayout mainView;
         ProgressView loading;
@@ -90,17 +85,18 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
 
     public PDFAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, PDFListFragment pdfListFragment) {
+        pdfHelper = new PDFHelper(applicationContext);
         this.pdfBeanArrayList = pdfList;
         this.context = applicationContext;
         this.pdfListFragment = pdfListFragment;
     }
 
 
-    private void startDownload(final PDF.PdfBean pdf, final int position, final PDFAdapter.MyViewHolder holder) {
+    public void startDownload(final PDF.PdfBean pdf, final int position) {
         File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
         File mFile = new File(mDownloadDir + "/Mumineen/");
         final DownloadRequest request = new DownloadRequest.Builder()
-                .setName(pdf.getTitle() + ".pdf")
+                .setName(pdf.getPid() + ".pdf")
                 .setUri("http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource())
                 .setFolder(mFile)
                 .build();
@@ -111,22 +107,20 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             public void onStarted() {
                 pdf.setStatus(Constants.STATUS_DOWNLOADING);
                 notifyItemChanged(position);
-                pdfDownload.setStatus(Constants.STATUS_DOWNLOADING);
-                pdfDownload.setPid(pdf.getPid());
-
+                pdfHelper.updatePDF(pdf);
             }
 
             @Override
             public void onConnecting() {
                 pdf.setStatus(Constants.STATUS_LOADING);
                 notifyItemChanged(position);
-                pdfDownload.setPid(Constants.STATUS_DOWNLOADING);
             }
 
             @Override
             public void onConnected(long total, boolean isRangeSupport) {
                 pdf.setStatus(Constants.STATUS_DOWNLOADING);
                 notifyItemChanged(position);
+                pdfHelper.updatePDF(pdf);
             }
 
             @Override
@@ -137,7 +131,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             @Override
             public void onCompleted() {
                 notifyItemChanged(position);
-                PDFHelper pdfHelper = new PDFHelper(context);
                 pdf.setStatus(Constants.STATUS_DOWNLOADED);
                 pdf.setPageCount(getFilePages(pdf));
                 pdfHelper.updatePDF(pdf);
@@ -148,12 +141,14 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             public void onDownloadPaused() {
                 pdf.setStatus(Constants.STATUS_PAUSED);
                 notifyItemChanged(position);
+                pdfHelper.updatePDF(pdf);
             }
 
             @Override
             public void onDownloadCanceled() {
                 pdf.setStatus(Constants.STATUS_NULL);
                 notifyItemChanged(position);
+                pdfHelper.updatePDF(pdf);
             }
 
             @Override
@@ -173,9 +168,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.pdf_item, parent, false);
 
-        utils = new Utils(context);
-
-
         Fonty.setFonts((ViewGroup) itemView);
 
 
@@ -183,7 +175,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     }
 
     private int getFilePages(PDF.PdfBean pdf){
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getTitle() + ".pdf");
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid() + ".pdf");
         int count;
         try {
             PdfReader pdfReader = new PdfReader(String.valueOf(file));
@@ -199,8 +191,8 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
 
     @Override
-    public void onBindViewHolder(final MyViewHolder holder, int position) {
-        pdf = pdfBeanArrayList.get(position);
+    public void onBindViewHolder(final MyViewHolder holder, final int position) {
+        final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
         holder.title.setText(pdf.getTitle());
         final String t;
         if (Integer.parseInt(pdf.getSize()) < 1024) {
@@ -211,25 +203,23 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         }
         String al = "";
 
-        holder.size.setText(t + al);
 
-        if(utils.CheckIfExists(pdf.getPid())) {
-            int pid = pdf.getPid();
-            PDFDownload pdfDownload = utils.getStatus(pid);
-            if (pdfDownload.getPid() == Constants.STATUS_LOADING) {
+        holder.size.setText(t + al);
+            int pdfDownloadStatus = pdf.getStatus();
+            if (pdfDownloadStatus == Constants.STATUS_LOADING) {
                 holder.imageView.setVisibility(View.GONE);
                 holder.progressBarDownload.setVisibility(View.GONE);
                 holder.button.setVisibility(View.GONE);
                 holder.size.setText("Connecting..");
                 holder.cancel.setVisibility(View.VISIBLE);
                 holder.loading.setVisibility(View.VISIBLE);
-            } else if (pdfDownload.getStatus() == Constants.STATUS_DOWNLOADING) {
+            } else if (pdfDownloadStatus == Constants.STATUS_DOWNLOADING) {
                 holder.imageView.setVisibility(View.GONE);
                 holder.progressBarDownload.setVisibility(View.VISIBLE);
                 holder.button.setVisibility(View.GONE);
                 holder.loading.setVisibility(View.GONE);
                 holder.cancel.setVisibility(View.VISIBLE);
-            } else if (pdfDownload.getStatus() == Constants.STATUS_DOWNLOADED) {
+            } else if (pdfDownloadStatus == Constants.STATUS_DOWNLOADED) {
                 if(pdf.getPageCount()==0) {
                     pdf.setPageCount(getFilePages(pdf));
                 }
@@ -237,11 +227,16 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                 holder.imageView.setImageResource(R.drawable.pdf_downloaded);
                 holder.progressBarDownload.setVisibility(View.GONE);
                 holder.size.setText(getPagesString(pdf.getPageCount()) + t) ;
-                holder.button.setVisibility(View.VISIBLE);
+                if(pdfListFragment.isMultiSelect){
+                    holder.button.setVisibility(View.GONE);
+                }else{
+                    holder.button.setVisibility(View.VISIBLE);
+                }
                 holder.loading.setVisibility(View.GONE);
                 holder.cancel.setVisibility(View.GONE);
-            }
         }
+
+
 
         else {
             holder.imageView.setVisibility(View.VISIBLE);
@@ -252,12 +247,28 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             holder.cancel.setVisibility(View.GONE);
         }
 
+        if(pdfListFragment.getMultiSelect_list().contains(pdf)){
+            holder.mainView.setBackgroundColor(Color.parseColor("#F3F4F3"));
+            holder.button.setVisibility(View.GONE);
+        }else {
+            holder.mainView.setBackgroundColor(Color.parseColor("#ffffff"));
+        }
+
         holder.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
-                intent.putExtra("title", pdf.getTitle());
-                pdfListFragment.startActivity(intent);
+                if(getFilePages(pdf)!=0) {
+                    Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+                    intent.putExtra("mode",0);
+                    intent.putExtra("pid", pdf.getPid());
+                    intent.putExtra("title", pdf.getTitle());
+                    pdfListFragment.startActivity(intent);
+                } else {
+                    Toasty.error(context,"Invalid file").show();
+                    pdf.setStatus(Constants.STATUS_NULL);
+                    notifyDataSetChanged();
+                    pdfHelper.updatePDF(pdf);
+                }
             }
         });
 
@@ -268,41 +279,30 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             }
         });
 
+        holder.mainView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                pdfListFragment.enableMultiSelect(position, pdf);
+                return true;
+            }
+        });
+
 
         holder.mainView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PDFDownload pdfDownload = utils.getStatus(pdf.getPid());
-                int array = R.array.preference_values;
-
-                if(utils.CheckIfExists(pdf.getPid())) {
-                    if (pdfDownload.getStatus() == Constants.STATUS_DOWNLOADED) {
-                        array = R.array.preference_values_downloaded;
-                    }
-                }
-                new MaterialDialog.Builder(holder.mainView.getContext())
-                        .items(array)
-                        .itemsCallback(new MaterialDialog.ListCallback() {
-                            @Override
-                            public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-                                if (text.equals("Download")) {
-                                    if(Utils.isConnected(context)) {
-                                        startDownload(pdf, holder.getAdapterPosition(), holder);
-                                    } else {
-                                        Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
-                                    }
-                                } else if (text.equals("View Online")) {
-                                    Toast.makeText(context, "Viewing online..", Toast.LENGTH_SHORT).show();
-                                } else if (text.equals("Share")) {
-                                    Toast.makeText(context, "Sharing..", Toast.LENGTH_SHORT).show();
-                                } else if (text.equals("Report")) {
-                                    Toast.makeText(context, "Reporting...", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        })
-                        .show();
+                pdfListFragment.openDialog(holder.mainView.getContext(),position,pdf);
             }
         });
+    }
+
+    public void viewOnline(PDF.PdfBean pdf, int adapterPosition, MyViewHolder holder) {
+        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+        intent.putExtra("mode",1);
+        intent.putExtra("pid", pdf.getPid());
+        intent.putExtra("url",pdf.getSource());
+        intent.putExtra("title",pdf.getTitle());
+        pdfListFragment.startActivity(intent);
     }
 
 

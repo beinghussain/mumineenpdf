@@ -31,8 +31,14 @@
         android:layout_below="@+id/appBarPDf"
         android:layout_marginBottom="0dp"
         android:layout_marginTop="56dp"
-        android:background="#ecf0f1">
+        android:background="#000000">
 
     </com.github.barteksc.pdfviewer.PDFView>
+
+    <WebView
+        android:id="@+id/pdfWebView"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </android.support.design.widget.CoordinatorLayout>

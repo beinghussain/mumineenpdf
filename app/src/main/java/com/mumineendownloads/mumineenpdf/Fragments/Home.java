@@ -1,14 +1,10 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
-
-import android.app.SearchManager;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -19,11 +15,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.FragmentPagerAdapterCustom;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
+import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 
@@ -37,7 +33,7 @@ public class Home extends Fragment {
     private PDFAdapter mPDFAdapter;
     private ViewPager viewPager;
     private FragmentPagerAdapterCustom viewPagerAdapter;
-    public static TabLayout tabLayout;
+    public static CstTabLayout tabLayout;
     private SearchView searchView;
 
 
@@ -48,7 +44,7 @@ public class Home extends Fragment {
     public Home() {
     }
 
-    private Toolbar mActivityActionBarToolbar;
+    public static Toolbar mActivityActionBarToolbar;
 
 
     public Home(MainActivity activity) {
@@ -65,8 +61,26 @@ public class Home extends Fragment {
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
         viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager());
         viewPager.setAdapter(viewPagerAdapter);
-        tabLayout = (TabLayout) rootView.findViewById(R.id.tabs);
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                PDFListFragment.destory();
+            }
+        });
+        tabLayout = (CstTabLayout) rootView.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
+//        TabLayout.Tab tab = tabLayout.getTabAt(2);
+//        assert tab != null;
+//        tab.setCustomView(R.layout.tab);
         Fonty.setFonts(tabLayout);
         return rootView;
     }

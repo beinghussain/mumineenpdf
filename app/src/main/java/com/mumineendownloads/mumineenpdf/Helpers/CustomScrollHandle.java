@@ -20,8 +20,8 @@ import com.mumineendownloads.mumineenpdf.R;
 
 public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
 
-    private final static int HANDLE_LONG = 30;
-    private final static int HANDLE_SHORT = 50;
+    private final static int HANDLE_LONG = 25;
+    private final static int HANDLE_SHORT = 70;
     private final static int DEFAULT_TEXT_SIZE = 16;
 
     private float relativeHandlerMiddle = 0f;

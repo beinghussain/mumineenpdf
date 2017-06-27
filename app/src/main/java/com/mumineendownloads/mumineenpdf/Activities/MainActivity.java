@@ -44,8 +44,7 @@ public class MainActivity extends AppCompatActivity {
     @AfterPermissionGranted(RC_STORAGE)
     private void methodRequiresTwoPermission() {
         String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-        if (EasyPermissions.hasPermissions(this, perms)) {
-        } else {
+        if (!EasyPermissions.hasPermissions(this, perms)) {
             EasyPermissions.requestPermissions(this, getString(R.string.title_request),
                     RC_STORAGE, perms);
         }
@@ -92,13 +91,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         Fonty.setFonts(this);
-
         methodRequiresTwoPermission();
-
-        clearDownloading();
-
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(bottomNavigationListener);
         BottomNavigationViewHelper.disableShiftMode(bottomNavigationView);
@@ -111,27 +105,4 @@ public class MainActivity extends AppCompatActivity {
         BackgroundSync backgroundSync = new BackgroundSync(MainActivity.this);
        // backgroundSync.execute();
     }
-
-    private ArrayList<Integer> getDownloadIds(){
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        Gson gson = new Gson();
-        String json = sharedPrefs.getString(TAG, null);
-        Type type = new TypeToken<ArrayList<Integer>>() {}.getType();
-        return gson.fromJson(json, type);
-    }
-
-    private void clearDownloading() {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        Gson gson = new Gson();
-        ArrayList<Integer> arrayList = getDownloadIds();
-        if(arrayList==null){
-            arrayList = new ArrayList<Integer>();
-        }
-        arrayList.clear();  
-        String json = gson.toJson(arrayList);
-        editor.putString(TAG, json);
-        editor.apply();
-    }
-
 }

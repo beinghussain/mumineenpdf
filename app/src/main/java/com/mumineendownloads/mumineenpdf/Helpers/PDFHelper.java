@@ -110,7 +110,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 selectQuery = "SELECT  * FROM " + TABLE_PDF + " ORDER BY title";
                 break;
             case "Quran30":
-                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') ORDER BY title";
+             selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') ORDER BY title";
                 break;
             default:
                 selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' ORDER BY title";
@@ -126,10 +126,8 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setId(Integer.parseInt(cursor.getString(0)));
                 contact.setTitle(cursor.getString(1));
                 contact.setAlbum(cursor.getString(2));
-                if(isDownloaded(cursor.getString(1))){
-                    if(cursor.getString(6) != null) {
-                        contact.setStatus(Integer.parseInt(cursor.getString(6)));
-                    }
+                if(isDownloaded(cursor.getInt(5))){
+                    contact.setStatus(Constants.STATUS_DOWNLOADED);
                 }else {
                     contact.setStatus(Constants.STATUS_NULL);
                 }
@@ -143,23 +141,13 @@ public class PDFHelper extends SQLiteOpenHelper {
         return arrayList;
     }
 
-    private boolean isDownloaded(String string) {
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+string+".pdf");
+    private boolean isDownloaded(int pid) {
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pid+".pdf");
         return file.exists();
     }
 
-    public int getPDFCount() {
-        String countQuery = "SELECT  * FROM " + TABLE_PDF;
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(countQuery, null);
-        if(cursor != null && !cursor.isClosed()){
-            cursor.close();
-        }
-        assert cursor != null;
-        return cursor.getCount();
-    }
-
     public int updatePDF(PDF.PdfBean pdf) {
+        Log.e(String.valueOf(pdf.getStatus()),pdf.getTitle());
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
