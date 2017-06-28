@@ -1,30 +1,44 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.aspsine.multithreaddownload.DownloadManager;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
@@ -36,8 +50,10 @@ import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.rey.material.widget.ProgressView;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 import es.dmoral.toasty.Toasty;
 
@@ -52,7 +68,6 @@ public class PDFListFragment extends Fragment {
     private static ActionMode mActionMode;
     private ArrayList<PDF.PdfBean> multiSelect_list;
     public boolean isMultiSelect;
-
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
     }
@@ -95,9 +110,9 @@ public class PDFListFragment extends Fragment {
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.getItemAnimator().setChangeDuration(0);
         SharedPreferences settings = getContext().getSharedPreferences("settings", 0);
-        boolean added = settings.getBoolean("added",true);
+        boolean added = settings.getBoolean("added",false);
 
-        if(!added){
+        if(added){
             progressView.setVisibility(View.VISIBLE);
             mRecyclerView.setVisibility(View.GONE);
         } else {
@@ -166,6 +181,24 @@ public class PDFListFragment extends Fragment {
         });
     }
 
+    public BroadcastReceiver intentReciver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+        }
+    };
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(intentReciver);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getActivity().registerReceiver(intentReciver,new IntentFilter(BackgroundSync.ACTION_BROADCAST_SYNC));
+    }
+
     private ActionMode.Callback mActionCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -177,15 +210,48 @@ public class PDFListFragment extends Fragment {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            if(Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP){
-                getActivity().getWindow().setStatusBarColor(Color.BLUE);
+            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorActionModeDark));
             }
+            Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorActionMode));
+            Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorActionMode));
             return true;
         }
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            return false;
+            int id = item.getItemId();
+            switch (id){
+                case R.id.navigation_download:
+                    final ArrayList<PDF.PdfBean> m = new ArrayList<>();
+                    for(int i =0; i<multiSelect_list.size(); i++){
+                        if(multiSelect_list.get(i).getStatus()!=Constants.STATUS_DOWNLOADED) {
+                            m.add(multiSelect_list.get(i));
+                        }
+                    }
+                    if(m.size()>0){
+                        for(int i =0; i<m.size(); i++) {
+                          mPDFAdapter.startDownload(m.get(i),-1);
+                        }
+                        Snackbar snackbar = Snackbar
+                                .make(mRecyclerView, "Downloading "+ m.size()+ " files", Snackbar.LENGTH_LONG)
+                                .setAction("CANCEL", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        DownloadManager.getInstance().cancelAll();
+                                    }
+                                });
+                        snackbar.show();
+                        destory();
+                    }else {
+                        Toasty.info(getContext(),"No files to download").show();
+                    }
+
+                    break;
+                case R.id.navigation_add_library:
+                    break;
+            }
+            return true;
         }
 
         @Override
@@ -195,13 +261,29 @@ public class PDFListFragment extends Fragment {
             isMultiSelect = false;
             multiSelect_list.clear();
             mPDFAdapter.notifyDataSetChanged();
+            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorPrimaryDark));
+            }
+            Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
+            Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
         }
     };
 
 
+    private boolean checkIfDownloaded(ArrayList<PDF.PdfBean> multiSelect_list1){
+        for (int i = 0; i< multiSelect_list1.size(); i++) {
+            if(this.multiSelect_list.get(i).getStatus()==Constants.STATUS_DOWNLOADED){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public void multi_select(int position, PDF.PdfBean pdfBean) {
-        PDFAdapter.MyViewHolder holder = getViewHolder(arrayList.indexOf(pdfBean));
+        MenuItem item = null;
         if (mActionMode != null) {
+            item = mActionMode.getMenu().findItem(R.id.navigation_download);
             if (multiSelect_list.contains(pdfBean)) {
                 multiSelect_list.remove(pdfBean);
                 pdfBean.setSelected(false);
@@ -354,5 +436,9 @@ public class PDFListFragment extends Fragment {
         if(mActionMode!=null) {
             mActionMode.finish();
         }
+    }
+
+    public void update() {
+        refresh(album);
     }
 }

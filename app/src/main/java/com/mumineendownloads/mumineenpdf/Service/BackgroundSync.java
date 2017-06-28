@@ -2,6 +2,7 @@ package com.mumineendownloads.mumineenpdf.Service;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -24,7 +25,10 @@ import com.mumineendownloads.mumineenpdf.Model.PDF;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import es.dmoral.toasty.Toasty;
+
 public class BackgroundSync {
+    public static final String ACTION_BROADCAST_SYNC = "background_sync";
     private PDFListFragment pdfListFragment;
     private Context applicationContext;
 
@@ -56,17 +60,26 @@ public class BackgroundSync {
                                 PDF.PdfBean pdfBean = pdfBeanArrayList.get(i);
                                 pdfHelper.updateOrInsert(pdfBean);
                             }
-                            pdfListFragment.notifyDatasetChanged();
+                            pdfListFragment.update();
                         }
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
+                    sendBroadCast(applicationContext,false);
                 }
             });
                     queue.add(stringRequest);
         }
 
         return "Done";
+    }
+
+    private void sendBroadCast(Context context, boolean result) {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_BROADCAST_SYNC);
+        intent.putExtra("result", result);
+        Log.e("Sending Broadcast","Should receive");
+        context.sendBroadcast(intent);
     }
 
     public void taskSync(){

@@ -31,7 +31,7 @@ public class Home extends Fragment {
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
     private PDFAdapter mPDFAdapter;
-    private ViewPager viewPager;
+    public static ViewPager viewPager;
     private FragmentPagerAdapterCustom viewPagerAdapter;
     public static CstTabLayout tabLayout;
     private SearchView searchView;
@@ -55,12 +55,13 @@ public class Home extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
-        Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
-        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
-        Fonty.setFonts(toolbar);
+        mActivityActionBarToolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
+        Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
         viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager());
         viewPager.setAdapter(viewPagerAdapter);
+        viewPager.setOffscreenPageLimit(6);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {

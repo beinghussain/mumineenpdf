@@ -92,7 +92,10 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     }
 
 
-    public void startDownload(final PDF.PdfBean pdf, final int position) {
+    public void startDownload(final PDF.PdfBean pdf, int position) {
+        if(position==-1){
+            position = pdfBeanArrayList.indexOf(pdf);
+        }
         File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
         File mFile = new File(mDownloadDir + "/Mumineen/");
         final DownloadRequest request = new DownloadRequest.Builder()
@@ -102,35 +105,36 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                 .build();
 
 
+        final int finalPosition = position;
         DownloadManager.getInstance().download(request, "http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource(), new CallBack() {
             @Override
             public void onStarted() {
                 pdf.setStatus(Constants.STATUS_DOWNLOADING);
-                notifyItemChanged(position);
+                notifyItemChanged(finalPosition);
                 pdfHelper.updatePDF(pdf);
             }
 
             @Override
             public void onConnecting() {
                 pdf.setStatus(Constants.STATUS_LOADING);
-                notifyItemChanged(position);
+                notifyItemChanged(finalPosition);
             }
 
             @Override
             public void onConnected(long total, boolean isRangeSupport) {
                 pdf.setStatus(Constants.STATUS_DOWNLOADING);
-                notifyItemChanged(position);
+                notifyItemChanged(finalPosition);
                 pdfHelper.updatePDF(pdf);
             }
 
             @Override
             public void onProgress(long finished, long total, final int progress) {
-                pdfListFragment.updateProgressBar(progress, position, finished, total);
+                pdfListFragment.updateProgressBar(progress, finalPosition, finished, total);
             }
 
             @Override
             public void onCompleted() {
-                notifyItemChanged(position);
+                notifyItemChanged(finalPosition);
                 pdf.setStatus(Constants.STATUS_DOWNLOADED);
                 pdf.setPageCount(getFilePages(pdf));
                 pdfHelper.updatePDF(pdf);
@@ -140,14 +144,14 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             @Override
             public void onDownloadPaused() {
                 pdf.setStatus(Constants.STATUS_PAUSED);
-                notifyItemChanged(position);
+                notifyItemChanged(finalPosition);
                 pdfHelper.updatePDF(pdf);
             }
 
             @Override
             public void onDownloadCanceled() {
                 pdf.setStatus(Constants.STATUS_NULL);
-                notifyItemChanged(position);
+                notifyItemChanged(finalPosition);
                 pdfHelper.updatePDF(pdf);
             }
 
@@ -155,7 +159,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             public void onFailed(DownloadException e) {
                 pdf.setStatus(Constants.STATUS_NULL);
                 Toasty.error(context,"Download Failed!",500).show();
-                notifyItemChanged(position);
+                notifyItemChanged(finalPosition);
             }
         });
     }
@@ -227,17 +231,17 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                 holder.imageView.setImageResource(R.drawable.pdf_downloaded);
                 holder.progressBarDownload.setVisibility(View.GONE);
                 holder.size.setText(getPagesString(pdf.getPageCount()) + t) ;
+                holder.button.setVisibility(View.VISIBLE);
                 if(pdfListFragment.isMultiSelect){
-                    holder.button.setVisibility(View.GONE);
+                    holder.button.setAlpha(0.2f);
+                    holder.button.setEnabled(false);
                 }else{
-                    holder.button.setVisibility(View.VISIBLE);
+                    holder.button.setAlpha(1.0f);
+                    holder.button.setEnabled(true);
                 }
                 holder.loading.setVisibility(View.GONE);
                 holder.cancel.setVisibility(View.GONE);
         }
-
-
-
         else {
             holder.imageView.setVisibility(View.VISIBLE);
             holder.progressBarDownload.setVisibility(View.GONE);
@@ -249,7 +253,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
         if(pdfListFragment.getMultiSelect_list().contains(pdf)){
             holder.mainView.setBackgroundColor(Color.parseColor("#F3F4F3"));
-            holder.button.setVisibility(View.GONE);
         }else {
             holder.mainView.setBackgroundColor(Color.parseColor("#ffffff"));
         }
