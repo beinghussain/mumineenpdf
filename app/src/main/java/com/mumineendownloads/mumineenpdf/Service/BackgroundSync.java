@@ -1,11 +1,18 @@
 package com.mumineendownloads.mumineenpdf.Service;
 
 
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -21,31 +28,40 @@ import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
+import com.mumineendownloads.mumineenpdf.R;
 
 import java.util.ArrayList;
 import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
-public class BackgroundSync {
+public class BackgroundSync extends Service {
     public static final String ACTION_BROADCAST_SYNC = "background_sync";
+    public static final String ACTION = "com.backgroundSync" ;
     private PDFListFragment pdfListFragment;
     private Context applicationContext;
+    public BackgroundSync() {
 
-    public BackgroundSync(Context applicationContext) {
-        this.applicationContext = applicationContext;
     }
 
-    public BackgroundSync(Context applicationContext, PDFListFragment pdfListFragment) {
-        this.applicationContext = applicationContext;
-        this.pdfListFragment = pdfListFragment;
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        taskSync();
+        return super.onStartCommand(intent,flags,startId);
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     private String executeF() {
-        boolean connected = Utils.isConnected(applicationContext);
+        boolean connected = Utils.isConnected(getApplicationContext());
         if(connected) {
-            final RequestQueue queue = Volley.newRequestQueue(applicationContext);
+            final RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
             String url = "http://mumineendownloads.com/app/getPdfApp.php";
+
 
             final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                     new Response.Listener<String>() {
@@ -55,31 +71,30 @@ public class BackgroundSync {
                             ArrayList<PDF.PdfBean> pdfBeanArrayList;
                             pdfBeanArrayList = gson.fromJson(response, new TypeToken<ArrayList<PDF.PdfBean>>() {
                             }.getType());
-                            PDFHelper pdfHelper = new PDFHelper(applicationContext);
+                            PDFHelper pdfHelper = new PDFHelper(getApplicationContext());
                             for (int i = 0; i < pdfBeanArrayList.size(); i++) {
                                 PDF.PdfBean pdfBean = pdfBeanArrayList.get(i);
                                 pdfHelper.updateOrInsert(pdfBean);
                             }
-                            pdfListFragment.update();
+                            updateRefresh();
                         }
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    sendBroadCast(applicationContext,false);
                 }
             });
-                    queue.add(stringRequest);
+
+            queue.add(stringRequest);
         }
 
         return "Done";
     }
 
-    private void sendBroadCast(Context context, boolean result) {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BROADCAST_SYNC);
-        intent.putExtra("result", result);
-        Log.e("Sending Broadcast","Should receive");
-        context.sendBroadcast(intent);
+    private void updateRefresh() {
+        Intent intent = new Intent(
+        ACTION);
+        intent.putExtra("setting", true);
+        sendBroadcast(intent);
     }
 
     public void taskSync(){

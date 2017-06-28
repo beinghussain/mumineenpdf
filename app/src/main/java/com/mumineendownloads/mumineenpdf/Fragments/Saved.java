@@ -23,6 +23,7 @@ import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.FragmentPagerAdapterCustom;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
+import com.mumineendownloads.mumineenpdf.Adapters.SavedViewPagerAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
@@ -30,13 +31,13 @@ import com.mumineendownloads.mumineenpdf.R;
 import java.util.ArrayList;
 
 
-public class Home extends Fragment {
+public class Saved extends Fragment {
     private MainActivity activity;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
     private PDFAdapter mPDFAdapter;
     public static ViewPager viewPager;
-    private static FragmentPagerAdapterCustom viewPagerAdapter;
+    private static SavedViewPagerAdapter viewPagerAdapter;
     public static CstTabLayout tabLayout;
     private SearchView searchView;
 
@@ -45,13 +46,13 @@ public class Home extends Fragment {
         return new Home();
     }
 
-    public Home() {
+    public Saved() {
     }
 
     public static Toolbar mActivityActionBarToolbar;
 
 
-    public Home(MainActivity activity) {
+    public Saved(MainActivity activity) {
         this.activity = activity;
     }
 
@@ -64,7 +65,7 @@ public class Home extends Fragment {
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
         Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
-        viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager());
+        viewPagerAdapter = new SavedViewPagerAdapter(getChildFragmentManager());
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setOffscreenPageLimit(6);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {

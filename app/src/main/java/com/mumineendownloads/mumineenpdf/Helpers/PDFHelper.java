@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
+import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 
 import java.io.File;
@@ -33,10 +34,13 @@ public class PDFHelper extends SQLiteOpenHelper {
     private static final String KEY_STATUS = "status";
     private static final String KEY_DOWNLOADS = "downloads";
     private static final String KEY_VIEWED = "viewed";
+    private static final String KEY_PAGE = "pages";
+    private static final String KEY_GO = "go";
+
 
 
     private Context context;
-
+    private ArrayList<PDF.PdfBean> downloaded;
 
 
     public PDFHelper(Context context){
@@ -49,7 +53,8 @@ public class PDFHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_CONTACTS_TABLE = "CREATE TABLE " + TABLE_PDF + "("
                 + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TITLE + " TEXT,"
-                + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," + KEY_PID  + " INTEGER UNIQUE," + KEY_STATUS + " INTEGER" + ")";
+                + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," +
+                KEY_PID  + " INTEGER UNIQUE," + KEY_STATUS + " INTEGER," + KEY_PAGE + " INTEGER,"+  KEY_GO + " INTEGER" + ")";
         db.execSQL(CREATE_CONTACTS_TABLE);
     }
 
@@ -69,7 +74,7 @@ public class PDFHelper extends SQLiteOpenHelper {
         values.put(KEY_SIZE, pdf.getSize());
         values.put(KEY_PID, pdf.getPid());
         values.put(KEY_PID, pdf.getStatus());
-
+        values.put(KEY_GO, pdf.getGo());
             db.insert(TABLE_PDF, null, values);
         }catch (SQLiteConstraintException ignored){
 
@@ -125,32 +130,45 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setId(Integer.parseInt(cursor.getString(0)));
                 contact.setTitle(cursor.getString(1));
                 contact.setAlbum(cursor.getString(2));
-                if(isDownloaded(cursor.getInt(5))){
-                    contact.setStatus(Status.STATUS_DOWNLOADED);
-                }else {
-                    contact.setStatus(Status.STATUS_NULL);
-                }
+                contact.setStatus(Integer.parseInt(cursor.getString(6)));
                 contact.setSource(cursor.getString(3));
                 contact.setSize(cursor.getString(4));
                 contact.setPid(Integer.parseInt(cursor.getString(5)));
-
+                String c;
+                if(cursor.getString(7)==null){
+                   c = "0";
+                } else {
+                    c = cursor.getString(7);
+                }
+                contact.setPageCount(Integer.parseInt(c));
+                if(isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
+                    contact.setStatus(Status.STATUS_DOWNLOADED);
+                    updatePDF(contact);
+                }else {
+                    contact.setStatus(Status.STATUS_NULL);
+                }
                 arrayList.add(contact);
             } while (cursor.moveToNext());
         }
         return arrayList;
     }
 
-    private boolean isDownloaded(int pid) {
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pid+".pdf");
+    private boolean isDownloaded(int pid,int size) {
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pid + ".pdf");
         return file.exists();
     }
 
     public int updatePDF(PDF.PdfBean pdf) {
-        Log.e(String.valueOf(pdf.getStatus()),pdf.getTitle());
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(KEY_STATUS, pdf.getStatus());
+        if(pdf.getPageCount()!=0) {
+            values.put(KEY_PAGE, pdf.getPageCount());
+        }
+        if(pdf.getGo()!=0) {
+            values.put(KEY_GO, pdf.getGo());
+        }
         return db.update(TABLE_PDF, values, KEY_PID + " = ?",
                 new String[] { String.valueOf(pdf.getPid()) });
     }
@@ -181,6 +199,80 @@ public class PDFHelper extends SQLiteOpenHelper {
                 }
             }
         });
-
     }
+
+    public ArrayList<String> getAlbumName(){
+        ArrayList<String> arrayList = new ArrayList<>();
+        String selectQuery = "SELECT distinct album FROM " + TABLE_PDF + " WHERE " + KEY_STATUS +"  = " + Status.STATUS_DOWNLOADED ;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                arrayList.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        return arrayList;
+    }
+
+    public ArrayList<PDF.PdfBean> getDownloaded(String album) {
+        String selectQuery;
+        switch (album) {
+            case "all":
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " ORDER BY title";
+                break;
+            case "Quran30":
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') AND status = 2 ORDER BY title";
+                break;
+            default:
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' AND status = 2 ORDER BY title";
+                break;
+        }
+        ArrayList arrayList = new ArrayList();
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+            if (cursor.moveToFirst()) {
+            do {
+                PDF.PdfBean contact = new PDF.PdfBean();
+                contact.setId(Integer.parseInt(cursor.getString(0)));
+                contact.setTitle(cursor.getString(1));
+                contact.setAlbum(cursor.getString(2));
+                contact.setSource(cursor.getString(3));
+                contact.setSize(cursor.getString(4));
+                contact.setPid(Integer.parseInt(cursor.getString(5)));
+                String c;
+                if(cursor.getString(7)==null){
+                    c = "0";
+                } else {
+                    c = cursor.getString(7);
+                }
+                contact.setPageCount(Integer.parseInt(c));
+                contact.setStatus(Integer.parseInt(cursor.getString(6)));
+                if(isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
+                    contact.setStatus(Status.STATUS_DOWNLOADED);
+                }else {
+                    contact.setStatus(Status.STATUS_NULL);
+                }
+                arrayList.add(contact);
+            } while (cursor.moveToNext());
+        }
+            return arrayList;
+    }
+
+    public int getDownloadAlbum() {
+        String selectQuery = "SELECT count(distinct album) FROM " + TABLE_PDF + " WHERE " + KEY_STATUS +"  = " + Status.STATUS_DOWNLOADED ;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                return cursor.getInt(0);
+            } while (cursor.moveToNext());
+        }
+        return 0;
+    }
+
+
+
 }

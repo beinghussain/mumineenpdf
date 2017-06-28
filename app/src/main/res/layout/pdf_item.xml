@@ -95,7 +95,7 @@
             android:id="@+id/spv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:cpb_background_progressbar_color="#ddd"
+            app:cpb_background_progressbar_color="#e2e5e7"
             app:cpb_background_progressbar_width="4dp"
             app:cpb_progressbar_color="@color/colorPrimary"
             app:cpb_progressbar_width="4dp" />

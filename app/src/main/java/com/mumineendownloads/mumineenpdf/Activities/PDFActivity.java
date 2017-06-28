@@ -24,6 +24,8 @@ import com.mumineendownloads.mumineenpdf.R;
 
 import java.io.File;
 
+import es.dmoral.toasty.Toasty;
+
 public class PDFActivity extends AppCompatActivity {
 
     private PDFView pdfView;
@@ -37,30 +39,52 @@ public class PDFActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Intent intent = getIntent();
-        int mode = intent.getIntExtra("mode",0);
-        int id = intent.getIntExtra("pid",0);
-        String title = intent.getStringExtra("title");
-        getSupportActionBar().setTitle(title);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        webView = (WebView) findViewById(R.id.pdfWebView);
-        Fonty.setFonts(toolbar);
+        String action = intent.getAction();
+        String type = intent.getType();
 
-        pdfView = (PDFView) findViewById(R.id.pdfView);
-        if(mode==1){
-            String url = intent.getStringExtra("url");
-            url = url.replace("http","https");
-            onlinePDF(url);
-        } else {
-            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+id+".pdf");
-            pdfView.fromFile(file)
-                    .enableSwipe(true)
-                    .spacing(25)
-                    .scrollHandle(new CustomScrollHandle(this))
-                    .load();
-            pdfView.useBestQuality(true);
+        if (Intent.ACTION_DEFAULT.equals(action) && type != null) {
+            if ("application/pdf".equals(type)) {
+                handlePdf(intent);
+            }
         }
 
+        Intent intent1 = getIntent();
+        int mode = intent1.getIntExtra("mode",0);
+        int id = intent1.getIntExtra("pid",0);
 
+        if(id!=0) {
+            String title = intent1.getStringExtra("title");
+            getSupportActionBar().setTitle(title);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            webView = (WebView) findViewById(R.id.pdfWebView);
+            Fonty.setFonts(toolbar);
+
+            pdfView = (PDFView) findViewById(R.id.pdfView);
+            if (mode == 1) {
+                String url = intent.getStringExtra("url");
+                url = url.replace("http", "https");
+                onlinePDF(url);
+            } else {
+                File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + id + ".pdf");
+                pdfView.fromFile(file)
+                        .enableSwipe(true)
+                        .spacing(25)
+                        .scrollHandle(new CustomScrollHandle(this))
+                        .load();
+                pdfView.useBestQuality(true);
+            }
+
+        }
+    }
+
+    private void handlePdf(Intent intent) {
+        pdfView = (PDFView) findViewById(R.id.pdfView);
+        pdfView.fromUri(intent.getData())
+                .enableSwipe(true)
+                .spacing(25)
+                .scrollHandle(new CustomScrollHandle(this))
+                .load();
+        pdfView.useBestQuality(true);
     }
 
     private void onlinePDF(String url) {

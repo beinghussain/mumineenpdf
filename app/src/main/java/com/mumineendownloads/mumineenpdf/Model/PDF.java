@@ -28,6 +28,7 @@ public class PDF {
         private int pageCount;
         private boolean isSearchingMode;
         private boolean selected;
+        private int go;
 
         public PdfBean() {
 
@@ -141,6 +142,14 @@ public class PDF {
 
         public void setSelected(boolean selected) {
             this.selected = selected;
+        }
+
+        public void setGo(int go){
+            this.go = go;
+        }
+
+        public int getGo() {
+            return go;
         }
     }
 }

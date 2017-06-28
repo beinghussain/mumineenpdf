@@ -1,9 +1,11 @@
 package com.mumineendownloads.mumineenpdf.Activities;
 
 import android.Manifest;
-import android.content.SharedPreferences;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
@@ -12,25 +14,29 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
-import com.mumineendownloads.mumineenpdf.Fragments.SavedFragment;
+import com.mumineendownloads.mumineenpdf.Fragments.Saved;
 import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
-import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
-
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import static android.content.ContentValues.TAG;
-
 public class MainActivity extends AppCompatActivity {
+
+
+    public MainActivity(){
+
+    }
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+          refresh();
+        }
+    };
 
     private static final int RC_STORAGE = 1;
     public static BottomNavigationView bottomNavigationView;
@@ -40,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
-
 
     @AfterPermissionGranted(RC_STORAGE)
     private void methodRequiresTwoPermission() {
@@ -56,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             Fragment selectedFragment = null;
             Home home = new Home(MainActivity.this);
-            SavedFragment savedFragment = new SavedFragment();
+            Saved savedFragment = new Saved();
             switch (item.getItemId()) {
                 case R.id.navigation_home:
                     selectedFragment = home.newInstance();
@@ -103,7 +108,22 @@ public class MainActivity extends AppCompatActivity {
         transaction.replace(R.id.fragment, home.newInstance());
         transaction.commit();
 
-        BackgroundSync backgroundSync = new BackgroundSync(MainActivity.this);
        // backgroundSync.execute();
+    }
+
+    public void refresh(){
+        Home.viewPager.getAdapter().notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver,new IntentFilter(BackgroundSync.ACTION));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
     }
 }

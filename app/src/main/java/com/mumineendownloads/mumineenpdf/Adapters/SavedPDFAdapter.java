@@ -21,6 +21,7 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.marcinorlowski.fonty.Fonty;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Fragments.PDFSavedListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
@@ -36,10 +37,10 @@ import java.util.ArrayList;
 
 import es.dmoral.toasty.Toasty;
 
-public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
+public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyViewHolder>  {
 
     private Context context;
-    private PDFListFragment pdfListFragment;
+    private PDFSavedListFragment pdfListFragment;
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
     private PDFHelper pdfHelper;
 
@@ -85,7 +86,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     }
 
 
-    public PDFAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, PDFListFragment pdfListFragment) {
+    public SavedPDFAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, PDFSavedListFragment pdfListFragment) {
         pdfHelper = new PDFHelper(applicationContext);
         this.pdfBeanArrayList = pdfList;
         this.context = applicationContext;
@@ -211,34 +212,34 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
 
         holder.size.setText(t + al);
-            int pdfDownloadStatus = pdf.getStatus();
-            if (pdfDownloadStatus == Status.STATUS_LOADING) {
-                holder.imageView.setVisibility(View.GONE);
-                holder.progressBarDownload.setVisibility(View.GONE);
-                holder.button.setVisibility(View.GONE);
-                holder.size.setText("Connecting..");
-                holder.cancel.setVisibility(View.VISIBLE);
-                holder.loading.setVisibility(View.VISIBLE);
-            } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADING) {
-                holder.imageView.setVisibility(View.GONE);
-                holder.progressBarDownload.setVisibility(View.VISIBLE);
-                holder.button.setVisibility(View.GONE);
-                holder.loading.setVisibility(View.GONE);
-                holder.cancel.setVisibility(View.VISIBLE);
-            } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADED) {
-                holder.imageView.setVisibility(View.VISIBLE);
-                holder.progressBarDownload.setVisibility(View.GONE);
-                holder.size.setText(getPagesString(pdf.getPageCount()) + t) ;
-                holder.button.setVisibility(View.VISIBLE);
-                if(pdfListFragment.isMultiSelect){
-                    holder.button.setAlpha(0.2f);
-                    holder.button.setEnabled(false);
-                }else{
-                    holder.button.setAlpha(1.0f);
-                    holder.button.setEnabled(true);
-                }
-                holder.loading.setVisibility(View.GONE);
-                holder.cancel.setVisibility(View.GONE);
+        int pdfDownloadStatus = pdf.getStatus();
+        if (pdfDownloadStatus == Status.STATUS_LOADING) {
+            holder.imageView.setVisibility(View.GONE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.size.setText("Connecting..");
+            holder.cancel.setVisibility(View.VISIBLE);
+            holder.loading.setVisibility(View.VISIBLE);
+        } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADING) {
+            holder.imageView.setVisibility(View.GONE);
+            holder.progressBarDownload.setVisibility(View.VISIBLE);
+            holder.button.setVisibility(View.GONE);
+            holder.loading.setVisibility(View.GONE);
+            holder.cancel.setVisibility(View.VISIBLE);
+        } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADED) {
+            holder.imageView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.size.setText(getPagesString(pdf.getPageCount()) + t) ;
+            holder.button.setVisibility(View.VISIBLE);
+            if(pdfListFragment.isMultiSelect){
+                holder.button.setAlpha(0.2f);
+                holder.button.setEnabled(false);
+            }else{
+                holder.button.setAlpha(1.0f);
+                holder.button.setEnabled(true);
+            }
+            holder.loading.setVisibility(View.GONE);
+            holder.cancel.setVisibility(View.GONE);
         }
         else {
             holder.imageView.setVisibility(View.VISIBLE);

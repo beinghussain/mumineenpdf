@@ -1,0 +1,148 @@
+{
+  "project_info": {
+    "project_number": "608113651835",
+    "firebase_url": "https://mumineen-downloads.firebaseio.com",
+    "project_id": "mumineen-downloads",
+    "storage_bucket": "mumineen-downloads.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608113651835:android:122a119a6fb2b1f1",
+        "android_client_info": {
+          "package_name": "com.hdevelopers.mumineendownloads"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608113651835-t2k4ere3fj2q2ojb38jq0jid5b07ka98.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw9wdpetaOgjb4euXs8RzBWLACe12bg0g"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608113651835:android:3b8f929caefc2ff8",
+        "android_client_info": {
+          "package_name": "com.hdevelopers.tahercyclist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608113651835-t2k4ere3fj2q2ojb38jq0jid5b07ka98.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw9wdpetaOgjb4euXs8RzBWLACe12bg0g"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608113651835:android:d7789aca4bfa638b",
+        "android_client_info": {
+          "package_name": "com.hddevelopers.tahercyclist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608113651835-t2k4ere3fj2q2ojb38jq0jid5b07ka98.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw9wdpetaOgjb4euXs8RzBWLACe12bg0g"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608113651835:android:8ac6c7b4344f9838",
+        "android_client_info": {
+          "package_name": "com.mumineendownloads.mumineenpdf"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608113651835-qo502h2bhkdt94doqg8bgrvs8iqj78ok.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mumineendownloads.mumineenpdf",
+            "certificate_hash": "aefb04de2f3341be5ce864a336531e59358051af"
+          }
+        },
+        {
+          "client_id": "608113651835-t2k4ere3fj2q2ojb38jq0jid5b07ka98.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw9wdpetaOgjb4euXs8RzBWLACe12bg0g"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "608113651835-t2k4ere3fj2q2ojb38jq0jid5b07ka98.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -20,6 +20,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,6 +34,7 @@ import com.aspsine.multithreaddownload.DownloadManager;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
+import com.mumineendownloads.mumineenpdf.Adapters.SavedPDFAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomAnimator;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
@@ -45,11 +47,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import es.dmoral.toasty.Toasty;
 
-public class PDFListFragment extends Fragment {
+public class PDFSavedListFragment extends Fragment {
     private String album;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
-    private PDFAdapter mPDFAdapter;
+    private SavedPDFAdapter mPDFAdapter;
     private ProgressView progressView;
     private PDFHelper mPDFHelper;
     private ArrayList<Integer> downloadArray;
@@ -60,7 +62,7 @@ public class PDFListFragment extends Fragment {
         return multiSelect_list;
     }
 
-    public PDFListFragment(int position) {
+    public PDFSavedListFragment(int position) {
         multiSelect_list = new ArrayList<>();
         switch (position){
             case 0:
@@ -169,8 +171,8 @@ public class PDFListFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if(id==R.id.action_sync){
-          Intent intent = new Intent(getActivity(),BackgroundSync.class);
-          getActivity().startService(intent);
+            Intent intent = new Intent(getActivity(),BackgroundSync.class);
+            getActivity().startService(intent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -182,14 +184,16 @@ public class PDFListFragment extends Fragment {
             @Override
             public void run() {
                 try {
-                    arrayList = mPDFHelper.getAllPDFS(mainAlbum);
+                    arrayList = mPDFHelper.getDownloaded(mainAlbum);
+                    Log.e("Downloaded", String.valueOf(arrayList.size()));
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             progressView.setVisibility(View.GONE);
                             mRecyclerView.setVisibility(View.VISIBLE);
-                            mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
+                            mPDFAdapter = new SavedPDFAdapter(arrayList, getActivity().getApplicationContext(), PDFSavedListFragment.this);
                             mRecyclerView.setAdapter(mPDFAdapter);
+
                         }
 
                     });
@@ -233,8 +237,8 @@ public class PDFListFragment extends Fragment {
                     if(m.size()>0){
                         if(Utils.isConnected(getContext())) {
                             for(int i =0; i<m.size(); i++) {
-                          mPDFAdapter.startDownload(m.get(i),-1);
-                        }
+                                mPDFAdapter.startDownload(m.get(i),-1);
+                            }
                             Snackbar snackbar = Snackbar
                                     .make(mRecyclerView, "Downloading " + m.size() + " files", Snackbar.LENGTH_LONG)
                                     .setAction("CANCEL", new View.OnClickListener() {
@@ -279,7 +283,7 @@ public class PDFListFragment extends Fragment {
 
     private void selectAll(MenuItem item) {
         if(item.getTitle().equals("Deselect All")){
-          destory();
+            destory();
         }else {
             for (PDF.PdfBean pdfBean : arrayList) {
                 multiSelect_list.add(pdfBean);
@@ -306,10 +310,10 @@ public class PDFListFragment extends Fragment {
                 mActionMode.setTitle( multiSelect_list.size() + " Selected");
             else
             {
-              mActionMode.finish();
+                mActionMode.finish();
             }
 
-           mPDFAdapter.notifyItemChanged(position);
+            mPDFAdapter.notifyItemChanged(position);
         }
     }
 
@@ -409,7 +413,7 @@ public class PDFListFragment extends Fragment {
                                 }
                             } else if (text.equals("View Online")) {
                                 if (Utils.isConnected(context)) {
-                                    mPDFAdapter.viewOnline(pdf, holder.getAdapterPosition(), holder);
+
                                 } else {
                                     Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
                                 }

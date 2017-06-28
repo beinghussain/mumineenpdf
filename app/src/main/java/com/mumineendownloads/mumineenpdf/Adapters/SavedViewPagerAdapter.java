@@ -7,18 +7,18 @@ import android.widget.Toast;
 
 import com.mumineendownloads.mumineenpdf.Fragments.PDFDialogFragment;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
+import com.mumineendownloads.mumineenpdf.Fragments.PDFSavedListFragment;
 
 
+public class SavedViewPagerAdapter extends FragmentPagerAdapter {
 
-public class FragmentPagerAdapterCustom extends FragmentPagerAdapter {
-
-    public FragmentPagerAdapterCustom(FragmentManager fm) {
+    public SavedViewPagerAdapter(FragmentManager fm) {
         super(fm);
     }
 
     @Override
-    public PDFListFragment getItem(int position) {
-        return new PDFListFragment(position);
+    public PDFSavedListFragment getItem(int position) {
+        return new PDFSavedListFragment(position);
     }
 
     @Override
