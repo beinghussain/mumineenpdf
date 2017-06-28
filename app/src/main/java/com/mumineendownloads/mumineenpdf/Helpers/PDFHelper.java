@@ -11,7 +11,6 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
-import com.mumineendownloads.mumineenpdf.Constants;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 
 import java.io.File;
@@ -127,9 +126,9 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setTitle(cursor.getString(1));
                 contact.setAlbum(cursor.getString(2));
                 if(isDownloaded(cursor.getInt(5))){
-                    contact.setStatus(Constants.STATUS_DOWNLOADED);
+                    contact.setStatus(Status.STATUS_DOWNLOADED);
                 }else {
-                    contact.setStatus(Constants.STATUS_NULL);
+                    contact.setStatus(Status.STATUS_NULL);
                 }
                 contact.setSource(cursor.getString(3));
                 contact.setSize(cursor.getString(4));

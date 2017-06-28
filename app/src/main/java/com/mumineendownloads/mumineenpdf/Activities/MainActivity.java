@@ -18,6 +18,7 @@ import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
 import com.mumineendownloads.mumineenpdf.Fragments.SavedFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
+import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 

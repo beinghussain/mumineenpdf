@@ -3,7 +3,6 @@ package com.mumineendownloads.mumineenpdf.Fragments;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -11,38 +10,30 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
-import com.mumineendownloads.mumineenpdf.Constants;
+import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomAnimator;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
@@ -53,7 +44,6 @@ import com.rey.material.widget.ProgressView;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.List;
 
 import es.dmoral.toasty.Toasty;
 
@@ -225,7 +215,7 @@ public class PDFListFragment extends Fragment {
                 case R.id.navigation_download:
                     final ArrayList<PDF.PdfBean> m = new ArrayList<>();
                     for(int i =0; i<multiSelect_list.size(); i++){
-                        if(multiSelect_list.get(i).getStatus()!=Constants.STATUS_DOWNLOADED) {
+                        if(multiSelect_list.get(i).getStatus()!= Status.STATUS_DOWNLOADED) {
                             m.add(multiSelect_list.get(i));
                         }
                     }
@@ -272,7 +262,7 @@ public class PDFListFragment extends Fragment {
 
     private boolean checkIfDownloaded(ArrayList<PDF.PdfBean> multiSelect_list1){
         for (int i = 0; i< multiSelect_list1.size(); i++) {
-            if(this.multiSelect_list.get(i).getStatus()==Constants.STATUS_DOWNLOADED){
+            if(this.multiSelect_list.get(i).getStatus()== Status.STATUS_DOWNLOADED){
                 return true;
             }
         }
@@ -399,7 +389,7 @@ public class PDFListFragment extends Fragment {
         if(!isMultiSelect) {
             final PDFAdapter.MyViewHolder holder = getViewHolder(position);
             int array = R.array.preference_values;
-            if (pdf.getStatus() == Constants.STATUS_DOWNLOADED) {
+            if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
                 array = R.array.preference_values_downloaded;
             }
             new MaterialDialog.Builder(context)

@@ -40,7 +40,6 @@ dependencies {
     compile 'com.github.rey5137:material:1.2.4'
     compile 'com.github.barteksc:android-pdf-viewer:2.7.0-beta'
     compile 'com.github.GrenderG:Toasty:1.2.5'
-    compile 'com.irozon.sneaker:sneaker:1.0.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile project(':DownloadMan');
 
