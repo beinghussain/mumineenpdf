@@ -21,8 +21,8 @@ public class App extends Application {
 
     private void initDownloader() {
         DownloadConfiguration configuration = new DownloadConfiguration();
-        configuration.setMaxThreadNum(10);
-        configuration.setThreadNum(4);
+        configuration.setMaxThreadNum(1);
+        configuration.setThreadNum(1);
         DownloadManager.getInstance().init(getApplicationContext(), configuration);
     }
 }

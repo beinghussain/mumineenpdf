@@ -65,10 +65,10 @@ public class Go extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_saved, container, false);
         mActivityActionBarToolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
-        mActivityActionBarToolbar.setTitle("Saved PDF");
+        mActivityActionBarToolbar.setTitle("On the go list");
         Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
-        viewPagerAdapter = new SavedViewPagerAdapter(getChildFragmentManager());
+        viewPagerAdapter = new SavedViewPagerAdapter(getChildFragmentManager(),null);
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setOffscreenPageLimit(6);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {

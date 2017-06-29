@@ -72,10 +72,10 @@ public class MainActivity extends AppCompatActivity {
                     selectedFragment = savedFragment.newInstance();
                     break;
                 case R.id.navigation_saved:
-                    selectedFragment = goFragment.newInstance();
+                    selectedFragment = savedFragment.newInstance();
                     break;
                 case R.id.navigation_upload:
-                    selectedFragment = savedFragment.newInstance();
+                    selectedFragment = goFragment.newInstance();
                     break;
             }
 

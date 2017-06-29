@@ -63,24 +63,12 @@ public class PDFSavedListFragment extends Fragment {
         return multiSelect_list;
     }
 
-    public PDFSavedListFragment(int position) {
+    public PDFSavedListFragment(ArrayList arrayList1, int position) {
         multiSelect_list = new ArrayList<>();
-        switch (position){
-            case 0:
-                album = "Marasiya";
-                break;
-            case 1:
-                album = "Madeh";
-                break;
-            case 2:
-                album = "Rasa";
-                break;
-            case 3:
-                album = "Other";
-                break;
-            case 4:
-                album = "Quran30";
-                break;
+        for(int i=0; i<arrayList1.size(); i++){
+            if(position==i) {
+                album = arrayList1.get(i).toString();
+            }
         }
     }
 
@@ -242,9 +230,6 @@ public class PDFSavedListFragment extends Fragment {
 
                     break;
                 case R.id.navigation_add_library:
-                    break;
-                case R.id.select_all:
-                    selectAll(item);
                     break;
             }
             return true;

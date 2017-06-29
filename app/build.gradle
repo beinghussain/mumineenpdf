@@ -45,7 +45,9 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.google.firebase:firebase-messaging:10.0.1'
     compile 'com.android.volley:volley:1.0.0'
-    compile 'com.afollestad:sectioned-recyclerview:0.5.0'
+    compile 'com.facebook.android:audience-network-sdk:4.24.0'
+
+
 
 
     testCompile 'junit:junit:4.12'

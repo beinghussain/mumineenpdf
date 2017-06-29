@@ -7,13 +7,37 @@ import android.net.ConnectivityManager;
 
 import com.mumineendownloads.mumineenpdf.R;
 
+import java.text.DecimalFormat;
+
 
 public class Utils {
     private Context context;
+    private static final DecimalFormat DF = new DecimalFormat("0.00");
 
     public Utils(Context context) {
         this.context = context;
     }
+
+
+    public static String getDownloadPerSize(long finished, long total, int progress) {
+        String t,f;
+        int sizeF = (int) (finished / 1024);
+        int sizeT = (int) (total / 1024);
+        if (total < 1000000) {
+            t = total / 1024 + " KB  ";
+        } else {
+            Float size = (float) sizeT / 1024;
+            t = new DecimalFormat("##.##").format(size) + " MB  ";
+        }
+        if (finished < 1000000) {
+            f = finished / 1024 + "KB / ";
+        } else {
+            Float size = (float) sizeF / 1024;
+            f = new DecimalFormat("##.##").format(size) + " MB / ";
+        }
+        return  f + t + progress + "%";
+    }
+
 
     public static void setBadgeCount(Context context, LayerDrawable icon, int count) {
 

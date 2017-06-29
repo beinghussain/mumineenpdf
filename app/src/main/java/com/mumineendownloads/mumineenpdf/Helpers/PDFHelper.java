@@ -203,7 +203,7 @@ public class PDFHelper extends SQLiteOpenHelper {
 
     public ArrayList<String> getAlbumName(){
         ArrayList<String> arrayList = new ArrayList<>();
-        String selectQuery = "SELECT distinct album FROM " + TABLE_PDF + " WHERE " + KEY_STATUS +"  = " + Status.STATUS_DOWNLOADED ;
+        String selectQuery = "SELECT distinct album FROM " + TABLE_PDF + " WHERE " + KEY_STATUS +"  = " + Status.STATUS_DOWNLOADED;
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 

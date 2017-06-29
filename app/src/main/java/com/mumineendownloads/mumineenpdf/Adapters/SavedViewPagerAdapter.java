@@ -9,21 +9,26 @@ import com.mumineendownloads.mumineenpdf.Fragments.PDFDialogFragment;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFSavedListFragment;
 
+import java.util.ArrayList;
+
 
 public class SavedViewPagerAdapter extends FragmentPagerAdapter {
 
-    public SavedViewPagerAdapter(FragmentManager fm) {
+    private final ArrayList<String> arrayList;
+
+    public SavedViewPagerAdapter(FragmentManager fm, ArrayList<String> noOfTabs) {
         super(fm);
+        this.arrayList = noOfTabs;
     }
 
     @Override
     public PDFSavedListFragment getItem(int position) {
-        return new PDFSavedListFragment(position);
+        return new PDFSavedListFragment(arrayList, position);
     }
 
     @Override
     public int getCount() {
-        return 5;
+        return arrayList.size();
     }
 
     public int getItemPosition(Object object){
@@ -33,25 +38,10 @@ public class SavedViewPagerAdapter extends FragmentPagerAdapter {
     @Override
     public CharSequence getPageTitle(int position) {
         String title = null;
-        if (position == 0)
-        {
-            title = "Marasiya";
-        }
-        else if (position == 1)
-        {
-            title = "Madeh";
-        }
-        else if (position == 2)
-        {
-            title = "Rasa";
-        }
-        else if (position == 3)
-        {
-            title = "Other";
-        }
-        else if (position == 4)
-        {
-            title = "Quran";
+        for(int i = 0; i<arrayList.size(); i++){
+            if(position==i){
+                title = arrayList.get(i);
+            }
         }
         return title;
     }

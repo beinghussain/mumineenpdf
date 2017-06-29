@@ -25,6 +25,7 @@ import com.mumineendownloads.mumineenpdf.Adapters.FragmentPagerAdapterCustom;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.SavedViewPagerAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
+import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 
@@ -68,7 +69,11 @@ public class Saved extends Fragment {
         mActivityActionBarToolbar.setTitle("Saved PDF");
         Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
-        viewPagerAdapter = new SavedViewPagerAdapter(getChildFragmentManager());
+        int noOfTabs = 3;
+        ArrayList<String> arrayList = new ArrayList<>();
+        PDFHelper pdfHelper = new PDFHelper(getContext());
+        arrayList = pdfHelper.getAlbumName();
+        viewPagerAdapter = new SavedViewPagerAdapter(getChildFragmentManager(), arrayList);
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setOffscreenPageLimit(6);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {

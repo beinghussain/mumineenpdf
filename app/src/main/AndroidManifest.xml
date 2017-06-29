@@ -57,6 +57,8 @@
             </intent-filter>
             </activity>
 
+        <service android:name=".Service.DownloadService"/>
+
         <receiver android:name=".Widget.NewAppWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

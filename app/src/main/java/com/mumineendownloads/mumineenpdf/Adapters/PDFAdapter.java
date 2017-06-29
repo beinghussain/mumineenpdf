@@ -92,81 +92,79 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         this.pdfListFragment = pdfListFragment;
     }
 
-
     public void startDownload(final PDF.PdfBean pdf, int position) {
-        if(position==-1){
-            position = pdfBeanArrayList.indexOf(pdf);
-        }
-        File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
-        File mFile = new File(mDownloadDir + "/Mumineen/");
-        final DownloadRequest request = new DownloadRequest.Builder()
-                .setName(pdf.getPid() + ".pdf")
-                .setUri("http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource())
-                .setFolder(mFile)
-                .build();
-
-
-        final int finalPosition = position;
-        final int finalPosition1 = position;
-        DownloadManager.getInstance().download(request, "http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource(), new CallBack() {
-            @Override
-            public void onStarted() {
-                pdf.setStatus(Status.STATUS_DOWNLOADING);
-                notifyItemChanged(finalPosition);
-                pdfHelper.updatePDF(pdf);
-            }
-
-            @Override
-            public void onConnecting() {
-                pdf.setStatus(Status.STATUS_LOADING);
-                notifyItemChanged(finalPosition);
-            }
-
-            @Override
-            public void onConnected(long total, boolean isRangeSupport) {
-                pdf.setStatus(Status.STATUS_DOWNLOADING);
-                notifyItemChanged(finalPosition);
-                pdfHelper.updatePDF(pdf);
-            }
-
-            @Override
-            public void onProgress(long finished, long total, final int progress) {
-                pdfListFragment.updateProgressBar(progress, finalPosition, finished, total);
-            }
-
-            @Override
-            public void onCompleted() {
-                notifyItemChanged(finalPosition);
-                pdf.setStatus(Status.STATUS_DOWNLOADED);
-                pdf.setPageCount(getFilePages(pdf));
-                pdfHelper.updatePDF(pdf);
-            }
-
-
-            @Override
-            public void onDownloadPaused() {
-                pdf.setStatus(Status.STATUS_PAUSED);
-                notifyItemChanged(finalPosition);
-                pdfHelper.updatePDF(pdf);
-            }
-
-            @Override
-            public void onDownloadCanceled() {
-                pdf.setStatus(Status.STATUS_NULL);
-                notifyItemChanged(finalPosition);
-                pdfHelper.updatePDF(pdf);
-            }
-
-            @Override
-            public void onFailed(DownloadException e) {
-                pdf.setStatus(Status.STATUS_NULL);
-                Toasty.error(context,"Download Failed!",500).show();
-                notifyItemChanged(finalPosition);
-            }
-        });
+        pdfListFragment.download(position, String.valueOf(pdf.getPid()),pdf);
+//        if(position==-1){
+//            position = pdfBeanArrayList.indexOf(pdf);
+//        }
+//        File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
+//        File mFile = new File(mDownloadDir + "/Mumineen/");
+//        final DownloadRequest request = new DownloadRequest.Builder()
+//                .setName(pdf.getPid() + ".pdf")
+//                .setUri("http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource())
+//                .setFolder(mFile)
+//                .build();
+//
+//
+//        final int finalPosition = position;
+//        final int finalPosition1 = position;
+//        DownloadManager.getInstance().download(request, "http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource(), new CallBack() {
+//            @Override
+//            public void onStarted() {
+//                pdf.setStatus(Status.STATUS_DOWNLOADING);
+//                notifyItemChanged(finalPosition);
+//                pdfHelper.updatePDF(pdf);
+//            }
+//
+//            @Override
+//            public void onConnecting() {
+//                pdf.setStatus(Status.STATUS_LOADING);
+//                notifyItemChanged(finalPosition);
+//            }
+//
+//            @Override
+//            public void onConnected(long total, boolean isRangeSupport) {
+//                pdf.setStatus(Status.STATUS_DOWNLOADING);
+//                notifyItemChanged(finalPosition);
+//                pdfHelper.updatePDF(pdf);
+//            }
+//
+//            @Override
+//            public void onProgress(long finished, long total, final int progress) {
+//                pdfListFragment.updateProgressBar(progress, finalPosition, finished, total);
+//            }
+//
+//            @Override
+//            public void onCompleted() {
+//                notifyItemChanged(finalPosition);
+//                pdf.setStatus(Status.STATUS_DOWNLOADED);
+//                pdf.setPageCount(getFilePages(pdf));
+//                pdfHelper.updatePDF(pdf);
+//            }
+//
+//
+//            @Override
+//            public void onDownloadPaused() {
+//                pdf.setStatus(Status.STATUS_PAUSED);
+//                notifyItemChanged(finalPosition);
+//                pdfHelper.updatePDF(pdf);
+//            }
+//
+//            @Override
+//            public void onDownloadCanceled() {
+//                pdf.setStatus(Status.STATUS_NULL);
+//                notifyItemChanged(finalPosition);
+//                pdfHelper.updatePDF(pdf);
+//            }
+//
+//            @Override
+//            public void onFailed(DownloadException e) {
+//                pdf.setStatus(Status.STATUS_NULL);
+//                Toasty.error(context,"Download Failed!",500).show();
+//                notifyItemChanged(finalPosition);
+//            }
+//        });
     }
-
-
 
 
     @Override
@@ -208,10 +206,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         }
         String al = "";
 
-
-
-        holder.size.setText(t + al);
-            int pdfDownloadStatus = pdf.getStatus();
+        int pdfDownloadStatus = pdf.getStatus();
             if (pdfDownloadStatus == Status.STATUS_LOADING) {
                 holder.imageView.setVisibility(View.GONE);
                 holder.progressBarDownload.setVisibility(View.GONE);
@@ -241,7 +236,8 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                 holder.cancel.setVisibility(View.GONE);
         }
         else {
-            holder.imageView.setVisibility(View.VISIBLE);
+                holder.size.setText(t + al);
+                holder.imageView.setVisibility(View.VISIBLE);
             holder.progressBarDownload.setVisibility(View.GONE);
             holder.button.setVisibility(View.GONE);
             holder.loading.setVisibility(View.GONE);

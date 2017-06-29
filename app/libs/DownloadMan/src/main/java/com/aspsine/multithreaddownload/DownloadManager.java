@@ -99,7 +99,7 @@ public class DownloadManager implements Downloader.OnDownloaderDestroyedListener
         }
     }
 
-    void pause(String tag) {
+    public void pause(String tag) {
         String key = createKey(tag);
         if (mDownloaderMap.containsKey(key)) {
             Downloader downloader = mDownloaderMap.get(key);

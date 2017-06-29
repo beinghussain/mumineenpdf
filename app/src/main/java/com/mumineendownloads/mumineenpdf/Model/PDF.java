@@ -1,9 +1,18 @@
 package com.mumineendownloads.mumineenpdf.Model;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 public class PDF {
+    public static final int STATUS_NOT_DOWNLOAD = 0;
+    public static final int STATUS_CONNECTING = 1;
+    public static final int STATUS_CONNECT_ERROR = 2;
+    public static final int STATUS_DOWNLOADING = 3;
+    public static final int STATUS_PAUSED = 4;
+    public static final int STATUS_DOWNLOAD_ERROR = 5;
+    public static final int STATUS_COMPLETE = 6;
+    public static final int STATUS_INSTALLED = 7;
 
     private ArrayList<PdfBean> pdf;
 
@@ -15,7 +24,7 @@ public class PDF {
         this.pdf = pdf;
     }
 
-    public static class PdfBean {
+    public static class PdfBean implements Serializable {
         private int id;
         private String title;
         private String album;
@@ -23,15 +32,24 @@ public class PDF {
         private String size;
         private int pid;
         boolean downloading;
-        long progress;
+        int progress;
         int status;
         private int pageCount;
         private boolean isSearchingMode;
         private boolean selected;
         private int go;
+        private String downloadPerSize;
 
         public PdfBean() {
 
+        }
+
+        public String getDownloadPerSize() {
+            return downloadPerSize;
+        }
+
+        public void setDownloadPerSize(String downloadPerSize) {
+            this.downloadPerSize = downloadPerSize;
         }
 
         public PdfBean(int id, String title, String album, String source, String size, int pid, int status) {
@@ -100,11 +118,11 @@ public class PDF {
             return downloading;
         }
 
-        public void setProgress(long progress) {
+        public void setProgress(int progress) {
             this.progress = progress;
         }
 
-        public long getProgress() {
+        public int getProgress() {
             return progress;
         }
 

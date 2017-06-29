@@ -244,9 +244,6 @@ public class GoListFragment extends Fragment {
                     break;
                 case R.id.navigation_add_library:
                     break;
-                case R.id.select_all:
-                    selectAll(item);
-                    break;
             }
             return true;
         }
