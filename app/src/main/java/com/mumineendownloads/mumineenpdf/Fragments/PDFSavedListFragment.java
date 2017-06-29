@@ -17,6 +17,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -86,20 +87,19 @@ public class PDFSavedListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_pdflist, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_savedlist, container, false);
         Fonty.setFonts((ViewGroup) rootView);
 
         mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
 
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
         progressView = (ProgressView) rootView.findViewById(R.id.progress);
 
         mRecyclerView.addItemDecoration(new CustomAnimator(getContext()));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.getItemAnimator().setChangeDuration(0);
-        setRecyclerViewLayoutManager(mRecyclerView);
 
         SharedPreferences settings = getContext().getSharedPreferences("settings", 0);
         boolean added = settings.getBoolean("added",false);
@@ -114,20 +114,6 @@ public class PDFSavedListFragment extends Fragment {
         return rootView;
     }
 
-    private void setRecyclerViewLayoutManager(RecyclerView mRecyclerView) {
-        int scrollPosition = 0;
-
-        // If a layout manager has already been set, get current scroll position.
-        if (mRecyclerView.getLayoutManager() != null) {
-            scrollPosition =
-                    ((LinearLayoutManager) mRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
-        }
-
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-
-        mRecyclerView.setLayoutManager(linearLayoutManager);
-        mRecyclerView.scrollToPosition(scrollPosition);
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -185,7 +171,6 @@ public class PDFSavedListFragment extends Fragment {
             public void run() {
                 try {
                     arrayList = mPDFHelper.getDownloaded(mainAlbum);
-                    Log.e("Downloaded", String.valueOf(arrayList.size()));
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -237,7 +222,6 @@ public class PDFSavedListFragment extends Fragment {
                     if(m.size()>0){
                         if(Utils.isConnected(getContext())) {
                             for(int i =0; i<m.size(); i++) {
-                                mPDFAdapter.startDownload(m.get(i),-1);
                             }
                             Snackbar snackbar = Snackbar
                                     .make(mRecyclerView, "Downloading " + m.size() + " files", Snackbar.LENGTH_LONG)
@@ -342,46 +326,6 @@ public class PDFSavedListFragment extends Fragment {
         });
     }
 
-    public void updateProgressBar(final int progress, int position, long finished, long total) {
-        try {
-            final PDFAdapter.MyViewHolder holder = getViewHolder(position);
-            final Handler handler = new Handler();
-            String f, t;
-            int sizeF = (int) (finished / 1024);
-            int sizeT = (int) (total / 1024);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                holder.progressBarDownload.setProgress(progress);
-                            } catch (NullPointerException ignored){
-
-                            }
-                        }
-                    });
-                }
-            }).start();
-            if (total < 1000000) {
-                t = total / 1024 + " KB  ";
-            } else {
-                Float size = (float) sizeT / 1024;
-                t = new DecimalFormat("##.##").format(size) + " MB  ";
-            }
-            if (finished < 1000000) {
-                f = finished / 1024 + "KB / ";
-            } else {
-                Float size = (float) sizeF / 1024;
-                f = new DecimalFormat("##.##").format(size) + " MB / ";
-            }
-            holder.size.setText(f + t + progress + "%");
-        }catch (NullPointerException ignored){
-
-        }
-    }
-
     public void enableMultiSelect(int position, PDF.PdfBean pdf) {
         if(!isMultiSelect){
             multiSelect_list = new ArrayList<PDF.PdfBean>();
@@ -407,7 +351,6 @@ public class PDFSavedListFragment extends Fragment {
                         public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
                             if (text.equals("Download")) {
                                 if (Utils.isConnected(context)) {
-                                    mPDFAdapter.startDownload(pdf, holder.getAdapterPosition());
                                 } else {
                                     Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
                                 }

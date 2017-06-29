@@ -17,6 +17,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -33,7 +34,9 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
+import com.mumineendownloads.mumineenpdf.Adapters.GoAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
+import com.mumineendownloads.mumineenpdf.Adapters.SavedPDFAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomAnimator;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
@@ -46,11 +49,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import es.dmoral.toasty.Toasty;
 
-public class PDFListFragment extends Fragment {
+public class GoListFragment extends Fragment {
     private String album;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
-    private PDFAdapter mPDFAdapter;
+    private GoAdapter mPDFAdapter;
     private ProgressView progressView;
     private PDFHelper mPDFHelper;
     private ArrayList<Integer> downloadArray;
@@ -61,7 +64,7 @@ public class PDFListFragment extends Fragment {
         return multiSelect_list;
     }
 
-    public PDFListFragment(int position) {
+    public GoListFragment(int position) {
         multiSelect_list = new ArrayList<>();
         switch (position){
             case 0:
@@ -85,20 +88,19 @@ public class PDFListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_pdflist, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_savedlist, container, false);
         Fonty.setFonts((ViewGroup) rootView);
 
         mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
 
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
         progressView = (ProgressView) rootView.findViewById(R.id.progress);
 
         mRecyclerView.addItemDecoration(new CustomAnimator(getContext()));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.getItemAnimator().setChangeDuration(0);
-        setRecyclerViewLayoutManager(mRecyclerView);
 
         SharedPreferences settings = getContext().getSharedPreferences("settings", 0);
         boolean added = settings.getBoolean("added",false);
@@ -113,20 +115,6 @@ public class PDFListFragment extends Fragment {
         return rootView;
     }
 
-    private void setRecyclerViewLayoutManager(RecyclerView mRecyclerView) {
-        int scrollPosition = 0;
-
-        // If a layout manager has already been set, get current scroll position.
-        if (mRecyclerView.getLayoutManager() != null) {
-            scrollPosition =
-                    ((LinearLayoutManager) mRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
-        }
-
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-
-        mRecyclerView.setLayoutManager(linearLayoutManager);
-        mRecyclerView.scrollToPosition(scrollPosition);
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -170,8 +158,8 @@ public class PDFListFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if(id==R.id.action_sync){
-          Intent intent = new Intent(getActivity(),BackgroundSync.class);
-          getActivity().startService(intent);
+            Intent intent = new Intent(getActivity(),BackgroundSync.class);
+            getActivity().startService(intent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -183,14 +171,15 @@ public class PDFListFragment extends Fragment {
             @Override
             public void run() {
                 try {
-                    arrayList = mPDFHelper.getAllPDFS(mainAlbum);
+                    arrayList = mPDFHelper.getDownloaded(mainAlbum);
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             progressView.setVisibility(View.GONE);
                             mRecyclerView.setVisibility(View.VISIBLE);
-                            mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
+                            mPDFAdapter = new GoAdapter(arrayList, getActivity().getApplicationContext(), GoListFragment.this);
                             mRecyclerView.setAdapter(mPDFAdapter);
+
                         }
 
                     });
@@ -234,8 +223,7 @@ public class PDFListFragment extends Fragment {
                     if(m.size()>0){
                         if(Utils.isConnected(getContext())) {
                             for(int i =0; i<m.size(); i++) {
-                          mPDFAdapter.startDownload(m.get(i),-1);
-                        }
+                            }
                             Snackbar snackbar = Snackbar
                                     .make(mRecyclerView, "Downloading " + m.size() + " files", Snackbar.LENGTH_LONG)
                                     .setAction("CANCEL", new View.OnClickListener() {
@@ -280,7 +268,7 @@ public class PDFListFragment extends Fragment {
 
     private void selectAll(MenuItem item) {
         if(item.getTitle().equals("Deselect All")){
-          destory();
+            destory();
         }else {
             for (PDF.PdfBean pdfBean : arrayList) {
                 multiSelect_list.add(pdfBean);
@@ -307,10 +295,10 @@ public class PDFListFragment extends Fragment {
                 mActionMode.setTitle( multiSelect_list.size() + " Selected");
             else
             {
-              mActionMode.finish();
+                mActionMode.finish();
             }
 
-           mPDFAdapter.notifyItemChanged(position);
+            mPDFAdapter.notifyItemChanged(position);
         }
     }
 
@@ -339,46 +327,6 @@ public class PDFListFragment extends Fragment {
         });
     }
 
-    public void updateProgressBar(final int progress, int position, long finished, long total) {
-        try {
-            final PDFAdapter.MyViewHolder holder = getViewHolder(position);
-            final Handler handler = new Handler();
-            String f, t;
-            int sizeF = (int) (finished / 1024);
-            int sizeT = (int) (total / 1024);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                holder.progressBarDownload.setProgress(progress);
-                            } catch (NullPointerException ignored){
-
-                            }
-                        }
-                    });
-                }
-            }).start();
-            if (total < 1000000) {
-                t = total / 1024 + " KB  ";
-            } else {
-                Float size = (float) sizeT / 1024;
-                t = new DecimalFormat("##.##").format(size) + " MB  ";
-            }
-            if (finished < 1000000) {
-                f = finished / 1024 + "KB / ";
-            } else {
-                Float size = (float) sizeF / 1024;
-                f = new DecimalFormat("##.##").format(size) + " MB / ";
-            }
-            holder.size.setText(f + t + progress + "%");
-        }catch (NullPointerException ignored){
-
-        }
-    }
-
     public void enableMultiSelect(int position, PDF.PdfBean pdf) {
         if(!isMultiSelect){
             multiSelect_list = new ArrayList<PDF.PdfBean>();
@@ -404,13 +352,12 @@ public class PDFListFragment extends Fragment {
                         public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
                             if (text.equals("Download")) {
                                 if (Utils.isConnected(context)) {
-                                    mPDFAdapter.startDownload(pdf, holder.getAdapterPosition());
                                 } else {
                                     Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
                                 }
                             } else if (text.equals("View Online")) {
                                 if (Utils.isConnected(context)) {
-                                    mPDFAdapter.viewOnline(pdf, holder.getAdapterPosition(), holder);
+
                                 } else {
                                     Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
                                 }

@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
+import com.mumineendownloads.mumineenpdf.Fragments.GoListFragment;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFSavedListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
@@ -22,10 +23,10 @@ import com.mumineendownloads.mumineenpdf.R;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyViewHolder>  {
+public class GoAdapter extends RecyclerView.Adapter<GoAdapter.MyViewHolder>  {
 
     private Context context;
-    private PDFSavedListFragment pdfListFragment;
+    private GoListFragment pdfListFragment;
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
     private PDFHelper pdfHelper;
 
@@ -47,7 +48,7 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
         notifyDataSetChanged();
     }
 
-    public SavedPDFAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, PDFSavedListFragment pdfListFragment) {
+    public GoAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, GoListFragment pdfListFragment) {
         pdfHelper = new PDFHelper(applicationContext);
         this.pdfBeanArrayList = pdfList;
         this.context = applicationContext;

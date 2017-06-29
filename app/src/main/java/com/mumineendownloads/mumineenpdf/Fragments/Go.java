@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import es.dmoral.toasty.Toasty;
 
 
-public class Saved extends Fragment {
+public class Go extends Fragment {
     private MainActivity activity;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
@@ -44,17 +44,17 @@ public class Saved extends Fragment {
     private SearchView searchView;
 
 
-    public Saved newInstance() {
-        return new Saved();
+    public Go newInstance() {
+        return new Go();
     }
 
-    public Saved() {
+    public Go() {
     }
 
     public static Toolbar mActivityActionBarToolbar;
 
 
-    public Saved(MainActivity activity) {
+    public Go(MainActivity activity) {
         this.activity = activity;
     }
 

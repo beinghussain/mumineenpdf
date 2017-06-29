@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.marcinorlowski.fonty.Fonty;
+import com.mumineendownloads.mumineenpdf.Fragments.Go;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
 import com.mumineendownloads.mumineenpdf.Fragments.Saved;
 import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
             Home home = new Home(MainActivity.this);
             Saved savedFragment = new Saved();
+            Go goFragment = new Go();
             switch (item.getItemId()) {
                 case R.id.navigation_home:
                     selectedFragment = home.newInstance();
@@ -70,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                     selectedFragment = savedFragment.newInstance();
                     break;
                 case R.id.navigation_saved:
-                    selectedFragment = savedFragment.newInstance();
+                    selectedFragment = goFragment.newInstance();
                     break;
                 case R.id.navigation_upload:
                     selectedFragment = savedFragment.newInstance();
