@@ -36,18 +36,13 @@ public class PDFHelper extends SQLiteOpenHelper {
     private static final String KEY_VIEWED = "viewed";
     private static final String KEY_PAGE = "pages";
     private static final String KEY_GO = "go";
-
-
-
     private Context context;
     private ArrayList<PDF.PdfBean> downloaded;
-
 
     public PDFHelper(Context context){
         super(context, "database.db", null, 1);
         this.context = context;
     }
-
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -126,10 +121,15 @@ public class PDFHelper extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()) {
             do {
+                String title = cursor.getString(1);
+                String album1 = cursor.getString(2);
+                if(album.equals("QuranSurat")){
+                    title = title.substring(4);
+                }
                 PDF.PdfBean contact = new PDF.PdfBean();
                 contact.setId(Integer.parseInt(cursor.getString(0)));
-                contact.setTitle(cursor.getString(1));
-                contact.setAlbum(cursor.getString(2));
+                contact.setTitle(title);
+                contact.setAlbum(album1);
                 contact.setStatus(Integer.parseInt(cursor.getString(6)));
                 contact.setSource(cursor.getString(3));
                 contact.setSize(cursor.getString(4));
@@ -141,11 +141,11 @@ public class PDFHelper extends SQLiteOpenHelper {
                     c = cursor.getString(7);
                 }
                 contact.setPageCount(Integer.parseInt(c));
-                if(isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
+                if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
+                    contact.setStatus(Status.STATUS_NULL);
+                }else {
                     contact.setStatus(Status.STATUS_DOWNLOADED);
                     updatePDF(contact);
-                }else {
-                    contact.setStatus(Status.STATUS_NULL);
                 }
                 arrayList.add(contact);
             } while (cursor.moveToNext());
@@ -222,10 +222,10 @@ public class PDFHelper extends SQLiteOpenHelper {
                 selectQuery = "SELECT  * FROM " + TABLE_PDF + " ORDER BY title";
                 break;
             case "Quran30":
-                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') AND status = 2 ORDER BY title";
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') AND status = 6 ORDER BY title";
                 break;
             default:
-                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' AND status = 2 ORDER BY title";
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' AND status = 6 ORDER BY title";
                 break;
         }
         ArrayList arrayList = new ArrayList();
@@ -249,10 +249,11 @@ public class PDFHelper extends SQLiteOpenHelper {
                 }
                 contact.setPageCount(Integer.parseInt(c));
                 contact.setStatus(Integer.parseInt(cursor.getString(6)));
-                if(isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
-                    contact.setStatus(Status.STATUS_DOWNLOADED);
-                }else {
+                if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
                     contact.setStatus(Status.STATUS_NULL);
+                }else {
+                    contact.setStatus(Status.STATUS_DOWNLOADED);
+                    updatePDF(contact);
                 }
                 arrayList.add(contact);
             } while (cursor.moveToNext());

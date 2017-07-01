@@ -1,10 +1,7 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -17,7 +14,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
@@ -41,19 +37,16 @@ public class Home extends Fragment {
     private SearchView searchView;
 
 
-    public Home newInstance() {
-        return new Home();
+    public Home newInstance(MainActivity activity) {
+        return new Home(activity);
     }
-
-    public Home() {
-    }
-
-    public static Toolbar mActivityActionBarToolbar;
-
 
     public Home(MainActivity activity) {
         this.activity = activity;
     }
+
+    public static Toolbar mActivityActionBarToolbar;
+
 
 
     @Override
@@ -64,7 +57,7 @@ public class Home extends Fragment {
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
         Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
-        viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager());
+        viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager(), activity);
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setOffscreenPageLimit(6);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {

@@ -1,12 +1,8 @@
 package com.mumineendownloads.mumineenpdf.Adapters;
 
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.widget.Toast;
 
-import com.mumineendownloads.mumineenpdf.Fragments.PDFDialogFragment;
-import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFSavedListFragment;
 
 import java.util.ArrayList;

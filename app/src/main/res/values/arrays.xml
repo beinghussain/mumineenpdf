@@ -9,5 +9,6 @@
     <string-array name="preference_values_downloaded">
         <item>Share</item>
         <item>Report</item>
+        <item>Delete file</item>
     </string-array>
 </resources>

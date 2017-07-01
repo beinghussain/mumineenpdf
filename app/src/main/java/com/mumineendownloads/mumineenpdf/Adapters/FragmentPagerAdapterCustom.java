@@ -1,24 +1,24 @@
 package com.mumineendownloads.mumineenpdf.Adapters;
 
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.widget.Toast;
 
-import com.mumineendownloads.mumineenpdf.Fragments.PDFDialogFragment;
+import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 
 
 
 public class FragmentPagerAdapterCustom extends FragmentPagerAdapter {
+    MainActivity activity;
 
-    public FragmentPagerAdapterCustom(FragmentManager fm) {
+    public FragmentPagerAdapterCustom(FragmentManager fm, MainActivity activity) {
         super(fm);
+        this.activity = activity;
     }
 
     @Override
     public PDFListFragment getItem(int position) {
-        return new PDFListFragment(position);
+        return new PDFListFragment(position,activity);
     }
 
     @Override

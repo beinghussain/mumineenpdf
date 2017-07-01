@@ -13,6 +13,8 @@ public class PDF {
     public static final int STATUS_DOWNLOAD_ERROR = 5;
     public static final int STATUS_COMPLETE = 6;
     public static final int STATUS_INSTALLED = 7;
+    public static final int STATUS_QUEUED = 8;
+
 
     private ArrayList<PdfBean> pdf;
 
@@ -23,6 +25,7 @@ public class PDF {
     public void setPdf(ArrayList<PdfBean> pdf) {
         this.pdf = pdf;
     }
+
 
     public static class PdfBean implements Serializable {
         private int id;
@@ -39,6 +42,29 @@ public class PDF {
         private boolean selected;
         private int go;
         private String downloadPerSize;
+
+        public String getStatusText() {
+            switch (status) {
+                case STATUS_NOT_DOWNLOAD:
+                    return "Not Download";
+                case STATUS_CONNECTING:
+                    return "Connecting";
+                case STATUS_CONNECT_ERROR:
+                    return "Connect Error";
+                case STATUS_DOWNLOADING:
+                    return "Downloading";
+                case STATUS_PAUSED:
+                    return "Pause";
+                case STATUS_DOWNLOAD_ERROR:
+                    return "Download Error";
+                case STATUS_COMPLETE:
+                    return "Complete";
+                case STATUS_INSTALLED:
+                    return "Installed";
+                default:
+                    return "Not Download";
+            }
+        }
 
         public PdfBean() {
 

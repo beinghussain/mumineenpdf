@@ -1,107 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parentView"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="60dp"
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:id="@+id/mainView"
-    android:orientation="vertical"
-    android:paddingBottom="12dp"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:paddingTop="12dp">
+    android:orientation="horizontal"
+    android:weightSum="16">
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:text="Test Title"
-        android:textColor="#212121"
-        android:textSize="13dp"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/frameLayout"
-        android:layout_toEndOf="@+id/frameLayout" />
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentStart="false"
+        android:layout_centerInParent="false"
+        android:layout_weight="2.5">
 
-    <TextView
-        android:id="@+id/size"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#616161"
-        android:text="2017 KB"
-        android:textSize="12sp"
-        android:layout_marginTop="0dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignLeft="@+id/title"
-        android:layout_alignStart="@+id/title" />
+        <FrameLayout
+            android:id="@+id/frameLayout"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_centerInParent="true">
 
-    <com.rey.material.widget.Button
-        android:id="@+id/openButton"
-        style="@style/RightLink"
-        android:layout_width="60dp"
-        android:layout_height="25dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:text="Open" />
+            <com.rey.material.widget.ProgressView
+                android:id="@+id/loading"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:pv_autostart="true"
+                app:pv_circular="true"
+                app:pv_progressMode="indeterminate"
+                app:pv_progressStyle="@style/CircularProgressOrange" />
 
-    <ImageButton
-        android:id="@+id/cancelButton"
-        android:background="@android:color/transparent"
-        android:layout_width="24dp"
-        android:visibility="gone"
-        android:layout_height="24dp"
-        android:layout_alignParentEnd="true"
-        android:tint="@android:color/darker_gray"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        app:srcCompat="@drawable/ic_close_black_24dp" />
+            <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                android:id="@+id/spv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cpb_background_progressbar_color="#e2e5e7"
+                app:cpb_background_progressbar_width="4dp"
+                app:cpb_progressbar_color="@color/colorPrimary"
+                app:cpb_progressbar_width="4dp" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/hello"
+                app:srcCompat="@drawable/pdf" />
+
+        </FrameLayout>
 
 
+    </RelativeLayout>
 
-    <FrameLayout
-        android:layout_alignParentLeft="true"
-        android:layout_toStartOf="@+id/textView"
-        android:layout_toLeftOf="@+id/textView"
-        android:layout_alignParentStart="true"
-        android:layout_centerInParent="true"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginRight="12dp"
-        android:id="@+id/frameLayout">
+    <RelativeLayout
+        android:id="@id/mainView"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="10.5"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/imageView"
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:srcCompat="@drawable/pdf"
-            android:contentDescription="@string/hello" />
-
-        <com.rey.material.widget.ProgressView
-            android:id="@+id/loading"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:pv_autostart="true"
-            app:pv_circular="true"
-            app:pv_progressMode="indeterminate"
-            app:pv_progressStyle="@style/CircularProgressOrange" />
-
-        <com.mikhaellopez.circularprogressbar.CircularProgressBar
-            android:id="@+id/spv"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:cpb_background_progressbar_color="#e2e5e7"
-            app:cpb_background_progressbar_width="4dp"
-            app:cpb_progressbar_color="@color/colorPrimary"
-            app:cpb_progressbar_width="4dp" />
+            android:layout_alignParentBottom="false"
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentStart="false"
+            android:layout_centerInParent="true"
+            android:orientation="vertical">
 
-    </FrameLayout>
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginBottom="4dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Test Title"
+                android:textColor="#212121"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/size"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="3dp"
+                android:layout_weight="1"
+                android:text="2017 KB"
+                android:textColor="#616161"
+                android:textSize="12sp" />
 
 
+        </LinearLayout>
 
-</RelativeLayout>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/cancel"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:clickable="true"
+        android:padding="0dp"
+        android:visibility="visible">
+
+        <ImageButton
+            android:id="@+id/cancelButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/transparent"
+            android:tint="@android:color/darker_gray"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_close_black_24dp" />
+
+        <com.rey.material.widget.Button
+            android:id="@+id/openButton"
+            style="@style/RightLink"
+            android:layout_width="60dp"
+            android:layout_height="25dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="15dp"
+            android:text="Open" />
+
+    </RelativeLayout>
+
+
+</LinearLayout>

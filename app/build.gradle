@@ -27,7 +27,9 @@ dependencies {
     })
 
     compile project(':DownloadMan');
-
+    compile 'com.android.volley:volley:1.0.0'
+    compile 'com.android.volley:volley:1.0.0'
+    compile 'com.github.pro100svitlo:creditCardNfcReader:1.0.2'
     compile 'pub.devrel:easypermissions:0.4.2'
     compile 'com.github.MarcinOrlowski:fonty:2.0.0'
     compile 'com.mikhaellopez:circularprogressbar:1.1.1'
@@ -35,7 +37,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.google.code.gson:gson:2.7'
-    compile 'com.android.volley:volley:1.0.0'
     compile 'com.android.support:support-vector-drawable:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.itextpdf:itextg:5.5.9'
@@ -44,14 +45,15 @@ dependencies {
     compile 'com.github.GrenderG:Toasty:1.2.5'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.google.firebase:firebase-messaging:10.0.1'
-    compile 'com.android.volley:volley:1.0.0'
+    compile 'com.google.firebase:firebase-appindexing:10.0.1'
     compile 'com.facebook.android:audience-network-sdk:4.24.0'
-
-
-
-
+    compile 'com.github.javiersantos:AppUpdater:2.6.1'
     testCompile 'junit:junit:4.12'
+    compile 'com.tonyodev.fetch:fetch:1.1.2'
+
 }
+
+
 
 
 apply plugin: 'com.google.gms.google-services'

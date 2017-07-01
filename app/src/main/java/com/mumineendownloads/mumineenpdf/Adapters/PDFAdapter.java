@@ -6,11 +6,13 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.aspsine.multithreaddownload.CallBack;
@@ -38,11 +40,13 @@ import es.dmoral.toasty.Toasty;
 
 public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
+    ArrayList<PDF.PdfBean> downloadRequest = new ArrayList<>();
+
     private Context context;
     private PDFListFragment pdfListFragment;
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
     private PDFHelper pdfHelper;
-
+    private int size = 0;
 
     private String getPagesString(int filePages) {
         if(filePages==0){
@@ -59,7 +63,8 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         ImageView imageView;
         public TextView title;
         public TextView size;
-        RelativeLayout mainView;
+        RelativeLayout mainView,cancelView;
+        LinearLayout parentView;
         public ProgressView loading;
         Button button;
         ImageButton cancel;
@@ -74,16 +79,16 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             progressBarDownload = (CircularProgressBar) view.findViewById(R.id.spv);
             loading = (ProgressView) view.findViewById(R.id.loading);
             cancel = (ImageButton) view.findViewById(R.id.cancelButton);
+            cancelView = (RelativeLayout) view.findViewById(R.id.cancel);
+            parentView = (LinearLayout) view.findViewById(R.id.parentView);
         }
     }
 
-    public void filter(ArrayList<PDF.PdfBean>newList)
-    {
+    public void filter(ArrayList<PDF.PdfBean>newList) {
         pdfBeanArrayList=new ArrayList<>();
         pdfBeanArrayList.addAll(newList);
         notifyDataSetChanged();
     }
-
 
     public PDFAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, PDFListFragment pdfListFragment) {
         pdfHelper = new PDFHelper(applicationContext);
@@ -91,81 +96,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         this.context = applicationContext;
         this.pdfListFragment = pdfListFragment;
     }
-
-    public void startDownload(final PDF.PdfBean pdf, int position) {
-        pdfListFragment.download(position, String.valueOf(pdf.getPid()),pdf);
-//        if(position==-1){
-//            position = pdfBeanArrayList.indexOf(pdf);
-//        }
-//        File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
-//        File mFile = new File(mDownloadDir + "/Mumineen/");
-//        final DownloadRequest request = new DownloadRequest.Builder()
-//                .setName(pdf.getPid() + ".pdf")
-//                .setUri("http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource())
-//                .setFolder(mFile)
-//                .build();
-//
-//
-//        final int finalPosition = position;
-//        final int finalPosition1 = position;
-//        DownloadManager.getInstance().download(request, "http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource(), new CallBack() {
-//            @Override
-//            public void onStarted() {
-//                pdf.setStatus(Status.STATUS_DOWNLOADING);
-//                notifyItemChanged(finalPosition);
-//                pdfHelper.updatePDF(pdf);
-//            }
-//
-//            @Override
-//            public void onConnecting() {
-//                pdf.setStatus(Status.STATUS_LOADING);
-//                notifyItemChanged(finalPosition);
-//            }
-//
-//            @Override
-//            public void onConnected(long total, boolean isRangeSupport) {
-//                pdf.setStatus(Status.STATUS_DOWNLOADING);
-//                notifyItemChanged(finalPosition);
-//                pdfHelper.updatePDF(pdf);
-//            }
-//
-//            @Override
-//            public void onProgress(long finished, long total, final int progress) {
-//                pdfListFragment.updateProgressBar(progress, finalPosition, finished, total);
-//            }
-//
-//            @Override
-//            public void onCompleted() {
-//                notifyItemChanged(finalPosition);
-//                pdf.setStatus(Status.STATUS_DOWNLOADED);
-//                pdf.setPageCount(getFilePages(pdf));
-//                pdfHelper.updatePDF(pdf);
-//            }
-//
-//
-//            @Override
-//            public void onDownloadPaused() {
-//                pdf.setStatus(Status.STATUS_PAUSED);
-//                notifyItemChanged(finalPosition);
-//                pdfHelper.updatePDF(pdf);
-//            }
-//
-//            @Override
-//            public void onDownloadCanceled() {
-//                pdf.setStatus(Status.STATUS_NULL);
-//                notifyItemChanged(finalPosition);
-//                pdfHelper.updatePDF(pdf);
-//            }
-//
-//            @Override
-//            public void onFailed(DownloadException e) {
-//                pdf.setStatus(Status.STATUS_NULL);
-//                Toasty.error(context,"Download Failed!",500).show();
-//                notifyItemChanged(finalPosition);
-//            }
-//        });
-    }
-
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -192,7 +122,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         }
     }
 
-
     @Override
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
         final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
@@ -205,52 +134,96 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             t = new DecimalFormat("##.##").format(size) + " MB";
         }
         String al = "";
-
-        int pdfDownloadStatus = pdf.getStatus();
-            if (pdfDownloadStatus == Status.STATUS_LOADING) {
-                holder.imageView.setVisibility(View.GONE);
-                holder.progressBarDownload.setVisibility(View.GONE);
-                holder.button.setVisibility(View.GONE);
-                holder.size.setText("Connecting..");
-                holder.cancel.setVisibility(View.VISIBLE);
-                holder.loading.setVisibility(View.VISIBLE);
-            } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADING) {
-                holder.imageView.setVisibility(View.GONE);
-                holder.progressBarDownload.setVisibility(View.VISIBLE);
-                holder.button.setVisibility(View.GONE);
-                holder.loading.setVisibility(View.GONE);
-                holder.cancel.setVisibility(View.VISIBLE);
-            } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADED) {
-                holder.imageView.setVisibility(View.VISIBLE);
-                holder.progressBarDownload.setVisibility(View.GONE);
-                holder.size.setText(getPagesString(pdf.getPageCount()) + t) ;
-                holder.button.setVisibility(View.VISIBLE);
-                if(pdfListFragment.isMultiSelect){
-                    holder.button.setAlpha(0.2f);
-                    holder.button.setEnabled(false);
-                }else{
-                    holder.button.setAlpha(1.0f);
-                    holder.button.setEnabled(true);
-                }
-                holder.loading.setVisibility(View.GONE);
-                holder.cancel.setVisibility(View.GONE);
+        final int pdfDownloadStatus = pdf.getStatus();
+        if (pdfDownloadStatus == Status.STATUS_LOADING) {
+            holder.imageView.setVisibility(View.GONE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.size.setText("Connecting..");
+            holder.cancel.setVisibility(View.VISIBLE);
+            holder.cancelView.setVisibility(View.VISIBLE);
+            holder.loading.setVisibility(View.VISIBLE);
+        } else if(pdfDownloadStatus == PDF.STATUS_QUEUED) {
+            holder.imageView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.size.setText("Queued..");
+            holder.cancel.setVisibility(View.GONE);
+            holder.cancelView.setVisibility(View.GONE);
+        }else if (pdfDownloadStatus == Status.STATUS_DOWNLOADING) {
+            holder.imageView.setVisibility(View.GONE);
+            holder.progressBarDownload.setVisibility(View.VISIBLE);
+            holder.button.setVisibility(View.GONE);
+            holder.loading.setVisibility(View.GONE);
+            holder.cancel.setVisibility(View.VISIBLE);
+            holder.cancelView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setProgress(pdf.getProgress());
+            holder.size.setText(pdf.getDownloadPerSize());
+        } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADED) {
+            holder.imageView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.size.setText(getPagesString(pdf.getPageCount()) + t) ;
+            holder.button.setVisibility(View.VISIBLE);
+            if(pdfListFragment.isMultiSelect){
+                holder.button.setAlpha(0.5f);
+                holder.button.setEnabled(false);
+                holder.cancelView.setEnabled(false);
+            }else{
+                holder.button.setAlpha(1.0f);
+                holder.button.setEnabled(true);
+                holder.cancelView.setEnabled(false);
+            }
+            holder.loading.setVisibility(View.GONE);
+            holder.cancel.setVisibility(View.GONE);
+            holder.cancelView.setVisibility(View.VISIBLE);
+        }else if(pdfDownloadStatus==Status.STATUS_CONNECTED){
+            holder.size.setText("Downloading..");
+            holder.loading.setVisibility(View.INVISIBLE);
+            holder.imageView.setVisibility(View.INVISIBLE);
+            holder.cancel.setVisibility(View.VISIBLE);
+            holder.cancelView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.VISIBLE);
         }
         else {
-                holder.size.setText(t + al);
-                holder.imageView.setVisibility(View.VISIBLE);
+            holder.cancelView.setVisibility(View.GONE);
+            holder.size.setText(t + al);
+            holder.imageView.setVisibility(View.VISIBLE);
             holder.progressBarDownload.setVisibility(View.GONE);
             holder.button.setVisibility(View.GONE);
             holder.loading.setVisibility(View.GONE);
             holder.cancel.setVisibility(View.GONE);
         }
 
+
         if(pdfListFragment.getMultiSelect_list().contains(pdf)){
             holder.imageView.setImageResource(R.drawable.pdf_downloaded_selected);
-            holder.mainView.setBackgroundColor(Color.parseColor("#F3F4F3"));
+            holder.parentView.setBackgroundColor(Color.parseColor("#F3F4F3"));
         }else {
             holder.imageView.setImageResource(R.drawable.pdf_downloaded);
-            holder.mainView.setBackgroundColor(Color.parseColor("#ffffff"));
+            holder.parentView.setBackgroundColor(Color.parseColor("#ffffff"));
         }
+
+        holder.cancelView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(pdfDownloadStatus==Status.STATUS_DOWNLOADED) {
+                    if (getFilePages(pdf) != 0) {
+                        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+                        intent.putExtra("mode", 0);
+                        intent.putExtra("pid", pdf.getPid());
+                        intent.putExtra("title", pdf.getTitle());
+                        pdfListFragment.startActivity(intent);
+                    } else {
+                        Toasty.error(context, "Invalid file").show();
+                        pdf.setStatus(Status.STATUS_NULL);
+                        notifyDataSetChanged();
+                        pdfHelper.updatePDF(pdf);
+                    }
+                } else {
+                    DownloadManager.getInstance().cancel(String.valueOf(pdf.getPid()));
+                }
+            }
+        });
 
         holder.button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -273,11 +246,11 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         holder.cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DownloadManager.getInstance().cancel("http://mumineendownloads.com/downloadFile.php?file="+pdf.getSource());
+                DownloadManager.getInstance().cancel(String.valueOf(pdf.getPid()));
             }
         });
 
-        holder.mainView.setOnLongClickListener(new View.OnLongClickListener() {
+        holder.parentView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 pdfListFragment.enableMultiSelect(position, pdf);
@@ -285,11 +258,10 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             }
         });
 
-
-        holder.mainView.setOnClickListener(new View.OnClickListener() {
+        holder.parentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                pdfListFragment.openDialog(holder.mainView.getContext(),position,pdf);
+                pdfListFragment.openDialog(holder.parentView.getContext(),position,pdf);
             }
         });
     }
@@ -302,7 +274,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         intent.putExtra("title",pdf.getTitle());
         pdfListFragment.startActivity(intent);
     }
-
 
     @Override
     public int getItemCount() {

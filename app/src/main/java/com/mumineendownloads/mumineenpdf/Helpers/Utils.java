@@ -18,7 +18,6 @@ public class Utils {
         this.context = context;
     }
 
-
     public static String getDownloadPerSize(long finished, long total, int progress) {
         String t,f;
         int sizeF = (int) (finished / 1024);
@@ -38,7 +37,6 @@ public class Utils {
         return  f + t + progress + "%";
     }
 
-
     public static void setBadgeCount(Context context, LayerDrawable icon, int count) {
 
         BadgeDrawable badge;
@@ -53,7 +51,6 @@ public class Utils {
         icon.mutate();
         icon.setDrawableByLayerId(R.id.ic_badge, badge);
     }
-
 
     public static boolean isConnected(Context context) {
         try {

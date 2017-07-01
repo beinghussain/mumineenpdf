@@ -20,7 +20,9 @@ import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomScrollHandle;
+import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
+import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 
 import java.io.File;
 
@@ -30,17 +32,34 @@ public class PDFActivity extends AppCompatActivity {
 
     private PDFView pdfView;
     private WebView webView;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pdf);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Fonty.setFonts(toolbar);
 
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
+
+        final PDF.PdfBean pdfBean = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
+        if(pdfBean!=null){
+            getSupportActionBar().setTitle(pdfBean.getTitle());
+            pdfView = (PDFView) findViewById(R.id.pdfView);
+            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdfBean.getPid() + ".pdf");
+            pdfView.fromFile(file)
+                    .enableSwipe(true)
+                    .spacing(25)
+                    .scrollHandle(new CustomScrollHandle(this))
+                    .load();
+            pdfView.useBestQuality(true);
+        }
+
 
         if (Intent.ACTION_DEFAULT.equals(action) && type != null) {
             if ("application/pdf".equals(type)) {
@@ -55,10 +74,6 @@ public class PDFActivity extends AppCompatActivity {
         if(id!=0) {
             String title = intent1.getStringExtra("title");
             getSupportActionBar().setTitle(title);
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            webView = (WebView) findViewById(R.id.pdfWebView);
-            Fonty.setFonts(toolbar);
-
             pdfView = (PDFView) findViewById(R.id.pdfView);
             if (mode == 1) {
                 String url = intent.getStringExtra("url");

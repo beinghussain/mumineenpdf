@@ -1,6 +1,6 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
-
+import com.facebook.ads.*;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +9,9 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -32,6 +34,15 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.formats.NativeAdOptions;
+import com.google.android.gms.ads.formats.NativeAppInstallAd;
+import com.google.android.gms.ads.formats.NativeContentAd;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
@@ -44,14 +55,19 @@ import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.rey.material.widget.ProgressView;
+import com.tonyodev.fetch.Fetch;
+import com.tonyodev.fetch.listener.FetchListener;
+import com.tonyodev.fetch.request.Request;
+
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import es.dmoral.toasty.Toasty;
-import com.facebook.ads.*;
+
 
 
 public class PDFListFragment extends Fragment {
-    private NativeAd nativeAd;
+    private final MainActivity activity;
     private String album;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
@@ -63,41 +79,42 @@ public class PDFListFragment extends Fragment {
     private ArrayList<PDF.PdfBean> multiSelect_list;
     public boolean isMultiSelect;
     private DownloadReceiver mReceiver;
+    private ArrayList<Integer> positionList = new ArrayList<>();
+    private ArrayList<PDF.PdfBean> goList;
+
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
     }
+    public ArrayList<PDF.PdfBean> downloadingList = new ArrayList<>();
+    private NativeAd nativeAd;
+
 
     private void showNativeAd() {
-        nativeAd = new NativeAd(getActivity(), "241795092978159_241795442978124");
-        nativeAd.setAdListener(new AdListener() {
-
-            @Override
-            public void onError(Ad ad, AdError error) {
-                Toast.makeText(getContext(), error.getErrorMessage(), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdLoaded(Ad ad) {
-                Toast.makeText(getContext(), nativeAd.getAdTitle(), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onAdClicked(Ad ad) {
-                // Ad clicked callback
-            }
-
-            @Override
-            public void onLoggingImpression(Ad ad) {
-                // Ad impression logged callback
-            }
-        });
-
-        nativeAd.loadAd();
-    }
-
-    public void download(int position, String tag, PDF.PdfBean info) {
-        Log.e("Position", String.valueOf(position));
-        DownloadService.intentDownload(getActivity(), position, tag, info);
+//        AdSettings.addTestDevice("387fd295a941656b4222e5215d26babd");
+//        AdSettings.setTestAdType(AdSettings.TestAdType.VIDEO_HD_9_16_39S_APP_INSTALL);
+//        nativeAd = new NativeAd(getContext(), "324867547967949_324868507967853");
+//        nativeAd.setAdListener(new com.facebook.ads.AdListener() {
+//            @Override
+//            public void onError(Ad ad, AdError adError) {
+//                Log.e("Ad Error", adError.getErrorCode() + adError.getErrorMessage());
+//            }
+//
+//            @Override
+//            public void onAdLoaded(Ad ad) {
+//                Log.e("Ad Loaded", nativeAd.getAdRawBody());
+//            }
+//
+//            @Override
+//            public void onAdClicked(Ad ad) {
+//
+//            }
+//
+//            @Override
+//            public void onLoggingImpression(Ad ad) {
+//
+//            }
+//        });
+//        nativeAd.loadAd();
     }
 
     private void pause(String tag) {
@@ -108,8 +125,8 @@ public class PDFListFragment extends Fragment {
         DownloadService.intentPauseAll(getActivity());
     }
 
-
-    public PDFListFragment(int position) {
+    public PDFListFragment(int position, MainActivity activity) {
+        this.activity = activity;
         multiSelect_list = new ArrayList<>();
         switch (position){
             case 0:
@@ -135,6 +152,7 @@ public class PDFListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_pdflist, container, false);
         Fonty.setFonts((ViewGroup) rootView);
+
 
         mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
 
@@ -179,6 +197,7 @@ public class PDFListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.goList = getGoList();
         setHasOptionsMenu(true);
     }
 
@@ -218,8 +237,10 @@ public class PDFListFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if(id==R.id.action_sync){
-          Intent intent = new Intent(getActivity(),BackgroundSync.class);
-          getActivity().startService(intent);
+            Intent intent = new Intent(getActivity(),BackgroundSync.class);
+            getActivity().startService(intent);
+            mRecyclerView.setVisibility(View.GONE);
+            progressView.setVisibility(View.VISIBLE);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -239,7 +260,6 @@ public class PDFListFragment extends Fragment {
                             mRecyclerView.setVisibility(View.VISIBLE);
                             mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
                             mRecyclerView.setAdapter(mPDFAdapter);
-                            showNativeAd();
                         }
 
                     });
@@ -280,33 +300,52 @@ public class PDFListFragment extends Fragment {
                             m.add(multiSelect_list.get(i));
                         }
                     }
-                    if(m.size()>0){
+                    if(m.size()>10){
+                    Toasty.normal(getContext(),"Cannot download more than 10 file at once").show();
+                    }
+                    else if(m.size()>0){
                         if(Utils.isConnected(getContext())) {
+                            downloadingList.clear();
+                            positionList.clear();
                             for(int i =0; i<m.size(); i++) {
-                                mPDFAdapter.startDownload(m.get(i), arrayList.indexOf(m.get(i)));
+                                downloadingList.add((m.get(i)));
+                                positionList.add(arrayList.indexOf(m.get(i)));
+                                PDF.PdfBean pdfBean = downloadingList.get(i);
+                                pdfBean.setStatus(PDF.STATUS_QUEUED);
+                                mPDFAdapter.notifyItemChanged(arrayList.indexOf(pdfBean));
                             }
-                            Snackbar snackbar = Snackbar
-                                    .make(mRecyclerView, "Downloading " + m.size() + " files", Snackbar.LENGTH_LONG)
+                            startDownloading();
+                            final Snackbar snackbar = Snackbar
+                                    .make(mRecyclerView, "Downloading " + m.size() + " files", Snackbar.LENGTH_SHORT)
                                     .setAction("CANCEL", new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
+                                            for(PDF.PdfBean p : downloadingList){
+                                                p.setStatus(Status.STATUS_NULL);
+                                                mPDFAdapter.notifyItemChanged(arrayList.indexOf(p));
+                                            }
+                                            downloadingList.clear();
                                             DownloadManager.getInstance().cancelAll();
                                         }
-                                    });
+                                    }).setAction("OK", null);
                             snackbar.show();
                         }
                         else {
-                            Toasty.error(getContext(),"No internet connection").show();
+                            Snackbar snackbar = Snackbar
+                                    .make(mRecyclerView, "No Internet Connection", Snackbar.LENGTH_SHORT)
+                                    .setAction("OK", null);
+                            snackbar.show();
                         }
                         destory();
-                    }  else if(m.size()>20){
-                        Toasty.info(getContext(),"Cannot download more than 20 file at once").show();
-                    }else {
-                        Toasty.info(getContext(),"No files to download").show();
+                    } else {
+                        Toasty.normal(getContext(),"No files to download").show();
                     }
 
                     break;
                 case R.id.navigation_add_library:
+                    for(PDF.PdfBean pdfBean : multiSelect_list){
+                        goList.add(pdfBean);
+                    }
                     break;
             }
             return true;
@@ -327,6 +366,10 @@ public class PDFListFragment extends Fragment {
         }
     };
 
+    private void startDownloading() {
+        DownloadService.intentDownload(positionList, downloadingList, getContext());
+    }
+
     public void multi_select(int position, PDF.PdfBean pdfBean) {
         MenuItem item = null;
         if (mActionMode != null) {
@@ -343,10 +386,10 @@ public class PDFListFragment extends Fragment {
                 mActionMode.setTitle( multiSelect_list.size() + " Selected");
             else
             {
-              mActionMode.finish();
+                mActionMode.finish();
             }
 
-           mPDFAdapter.notifyItemChanged(position);
+            mPDFAdapter.notifyItemChanged(position);
         }
     }
 
@@ -370,49 +413,10 @@ public class PDFListFragment extends Fragment {
                     }
                 }
                 mPDFAdapter.filter(newlist);
+                arrayList = newlist;
                 return true;
             }
         });
-    }
-
-    public void updateProgressBar(final int progress, int position, long finished, long total) {
-        try {
-            final PDFAdapter.MyViewHolder holder = getViewHolder(position);
-            final Handler handler = new Handler();
-            String f, t;
-            int sizeF = (int) (finished / 1024);
-            int sizeT = (int) (total / 1024);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                holder.progressBarDownload.setProgress(progress);
-                            } catch (NullPointerException ignored){
-
-                            }
-                        }
-                    });
-                }
-            }).start();
-            if (total < 1000000) {
-                t = total / 1024 + " KB  ";
-            } else {
-                Float size = (float) sizeT / 1024;
-                t = new DecimalFormat("##.##").format(size) + " MB  ";
-            }
-            if (finished < 1000000) {
-                f = finished / 1024 + "KB / ";
-            } else {
-                Float size = (float) sizeF / 1024;
-                f = new DecimalFormat("##.##").format(size) + " MB / ";
-            }
-            holder.size.setText(f + t + progress + "%");
-        }catch (NullPointerException ignored){
-
-        }
     }
 
     public void enableMultiSelect(int position, PDF.PdfBean pdf) {
@@ -440,10 +444,22 @@ public class PDFListFragment extends Fragment {
                         public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
                             if (text.equals("Download")) {
                                 if (Utils.isConnected(context)) {
-                                    mPDFAdapter.startDownload(pdf, holder.getAdapterPosition());
+                                    downloadingList.clear();
+                                    positionList.clear();
+                                    downloadingList.add(pdf);
+                                    positionList.add(position);
+                                    startDownloading();
                                 } else {
-                                    Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
+                                    Snackbar snackbar = Snackbar
+                                            .make(mRecyclerView, "No Internet Connection", Snackbar.LENGTH_SHORT)
+                                            .setAction("OK", null);
+                                    snackbar.show();
                                 }
+
+                            } else if(text.equals("Delete file")) {
+                                delete(pdf);
+                                pdf.setStatus(Status.STATUS_NULL);
+                                mPDFAdapter.notifyItemChanged(position);
                             } else if (text.equals("View Online")) {
                                 if (Utils.isConnected(context)) {
                                     mPDFAdapter.viewOnline(pdf, holder.getAdapterPosition(), holder);
@@ -463,6 +479,13 @@ public class PDFListFragment extends Fragment {
         }
     }
 
+    private void delete(PDF.PdfBean pdf) {
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid()+".pdf");
+        if(file.exists()){
+            file.delete();
+        }
+    }
+
     public static void destory() {
         if(mActionMode!=null) {
             mActionMode.finish();
@@ -476,80 +499,72 @@ public class PDFListFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         unRegister();
     }
 
+    private boolean isCurrentListViewItemVisible(int position) {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        int first = layoutManager.findFirstVisibleItemPosition();
+        int last = layoutManager.findLastVisibleItemPosition();
+        return first <= position && position <= last;
+    }
+
     class DownloadReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if(arrayList==null){
+                return;
+            }
             final String action = intent.getAction();
             if (action == null || !action.equals(DownloadService.ACTION_DOWNLOAD_BROAD_CAST)) {
                 return;
             }
             final int position = intent.getIntExtra(DownloadService.EXTRA_POSITION, -1);
-            final PDF.PdfBean tmpInfo = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
-            if (tmpInfo == null || position == -1) {
+            final PDF.PdfBean tmpPdf = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
+            if (tmpPdf == null || position == -1) {
                 return;
             }
-            final PDF.PdfBean appInfo = arrayList.get(position);
-            final int status = tmpInfo.getStatus();
-            switch (status) {
-                case PDF.STATUS_CONNECTING:
-                    appInfo.setStatus(Status.STATUS_LOADING);
-                    mPDFHelper.updatePDF(tmpInfo);
-                    mPDFAdapter.notifyItemChanged(position);
-                    break;
-                case PDF.STATUS_DOWNLOADING:
-                    appInfo.setStatus(Status.STATUS_DOWNLOADING);
-                    mPDFHelper.updatePDF(tmpInfo);
-                    updateProgressBar(tmpInfo.getDownloadPerSize(), position, tmpInfo.getProgress());
-                    mPDFAdapter.notifyItemChanged(position);
-                    break;
-                case PDF.STATUS_COMPLETE:
-                    appInfo.setStatus(Status.STATUS_DOWNLOADED);
-                    mPDFHelper.updatePDF(tmpInfo);
-                    mPDFAdapter.notifyItemChanged(position);
-                    break;
-                case PDF.STATUS_PAUSED:
-                    appInfo.setStatus(Status.STATUS_PAUSED);
-                    mPDFHelper.updatePDF(tmpInfo);
-                    mPDFAdapter.notifyItemChanged(position);
-                    break;
-                case PDF.STATUS_NOT_DOWNLOAD:
-                    appInfo.setStatus(Status.STATUS_NULL);
-                    mPDFHelper.updatePDF(tmpInfo);
-                    mPDFAdapter.notifyItemChanged(position);
-                    break;
-                case PDF.STATUS_DOWNLOAD_ERROR:
-                    appInfo.setStatus(Status.STATUS_NULL);
-                    mPDFHelper.updatePDF(tmpInfo);
-                    mPDFAdapter.notifyItemChanged(position);
-                    break;
-            }
-        }
-    }
-
-    private void updateProgressBar(final String downloadPerSize, int position, final int progress) {
-        final PDFAdapter.MyViewHolder holder = getViewHolder(position);
-        final Handler handler = new Handler();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            holder.progressBarDownload.setProgress(progress);
-                            holder.size.setText(downloadPerSize);
-                        } catch (NullPointerException ignored){
-
-                        }
+            if(isCurrentListViewItemVisible(position)) {
+                final PDF.PdfBean pdf = arrayList.get(position);
+                final int status = tmpPdf.getStatus();
+                if(status!=Status.STATUS_DOWNLOADING){
+                    mPDFHelper.updatePDF(tmpPdf);
+                }
+                if (pdf.getPid() == tmpPdf.getPid()) {
+                    if (status == Status.STATUS_LOADING) {
+                        pdf.setStatus(Status.STATUS_LOADING);
+                        mPDFAdapter.notifyItemChanged(position);
+                    } else if (status == Status.STATUS_DOWNLOADING) {
+                        pdf.setStatus(Status.STATUS_DOWNLOADING);
+                        pdf.setDownloadPerSize(tmpPdf.getDownloadPerSize());
+                        pdf.setProgress(tmpPdf.getProgress());
+                        mPDFAdapter.notifyDataSetChanged();
+                    } else if (status == Status.STATUS_NULL) {
+                        pdf.setStatus(Status.STATUS_NULL);
+                        mPDFAdapter.notifyItemChanged(position);
+                    } else if (status==Status.STATUS_DOWNLOADED){
+                        pdf.setStatus(Status.STATUS_DOWNLOADED);
+                        mPDFAdapter.notifyItemChanged(position);
+                    } else if (status==Status.STATUS_CONNECTED){
+                        pdf.setStatus(Status.STATUS_CONNECTED);
+                        mPDFAdapter.notifyItemChanged(position);
                     }
-                });
+                }
             }
-        }).start();
+       }
     }
 
     private void register() {
@@ -559,10 +574,34 @@ public class PDFListFragment extends Fragment {
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mReceiver, intentFilter);
     }
 
+        @Override
+    public void onDestroy() {
+        super.onDestroy();
+        destory();
+        saveGoList();
+    }
+
     private void unRegister() {
         if (mReceiver != null) {
             LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mReceiver);
         }
     }
 
+    private void saveGoList() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String s = gson.toJson(goList);
+        editor.putString("goList",s).apply();
+    }
+
+    public ArrayList<PDF.PdfBean> getGoList() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String s = sharedPreferences.getString("downloadList", "");
+        if (s.equals("")) {
+            return new ArrayList<PDF.PdfBean>();
+        }
+        Gson gson = new Gson();
+        return gson.fromJson(s, new TypeToken<ArrayList<PDF.PdfBean>>(){}.getType());
+    }
 }

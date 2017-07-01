@@ -14,6 +14,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.firebase.appindexing.Action;
+import com.google.firebase.appindexing.FirebaseUserActions;
+import com.google.firebase.appindexing.builders.Actions;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Fragments.Go;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
@@ -21,11 +24,15 @@ import com.mumineendownloads.mumineenpdf.Fragments.Saved;
 import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
+import com.mumineendownloads.mumineenpdf.Service.DownloadService;
+import com.tonyodev.fetch.Fetch;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity {
+
+    public Fetch fetch;
 
 
     public MainActivity(){
@@ -57,16 +64,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Intent intent = new Intent(MainActivity.this, DownloadService.class);
+        stopService(intent);
+    }
+
     private BottomNavigationView.OnNavigationItemSelectedListener bottomNavigationListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            fetch = Fetch.newInstance(MainActivity.this);
             Fragment selectedFragment = null;
             Home home = new Home(MainActivity.this);
             Saved savedFragment = new Saved();
             Go goFragment = new Go();
             switch (item.getItemId()) {
                 case R.id.navigation_home:
-                    selectedFragment = home.newInstance();
+                    selectedFragment = home.newInstance(MainActivity.this);
                     break;
                 case R.id.navigation_request:
                     selectedFragment = savedFragment.newInstance();
@@ -82,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.fragment, selectedFragment);
             transaction.commit();
+
             return true;
         }
     };
@@ -106,10 +123,9 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationViewHelper.disableShiftMode(bottomNavigationView);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        Home home = new Home();
-        transaction.replace(R.id.fragment, home.newInstance());
+        Home home = new Home(MainActivity.this);
+        transaction.replace(R.id.fragment, home.newInstance(MainActivity.this));
         transaction.commit();
-
        // backgroundSync.execute();
     }
 
@@ -127,5 +143,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         unregisterReceiver(broadcastReceiver);
+    }
+
+    public Action getIndexApiAction() {
+        return Actions.newView("Main", "https://mumineendownloads.com");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        FirebaseUserActions.getInstance().start(getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        FirebaseUserActions.getInstance().end(getIndexApiAction());
+        super.onStop();
     }
 }

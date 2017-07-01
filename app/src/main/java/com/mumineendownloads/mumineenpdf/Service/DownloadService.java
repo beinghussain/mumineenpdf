@@ -7,14 +7,18 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 import com.aspsine.multithreaddownload.CallBack;
@@ -22,7 +26,10 @@ import com.aspsine.multithreaddownload.DownloadException;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.aspsine.multithreaddownload.DownloadRequest;
 import com.aspsine.multithreaddownload.util.L;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
@@ -31,7 +38,11 @@ import java.io.File;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import es.dmoral.toasty.Toasty;
 
 public class DownloadService extends Service {
 
@@ -54,25 +65,29 @@ public class DownloadService extends Service {
     public static final String EXTRA_TAG = "extra_tag";
 
     public static final String EXTRA_APP_INFO = "extra_app_info";
-
+    public static final String EXTRA_APP_INFO_START = "start_download";
+    public static final String EXTRA_APP_INFO_OLD = "extra_app_info_old";
+    private static final String EXTRA_APP_POSITION_LIST = "extra_pdf_position_list";
+    private static final String EXTRA_APP_INFO_LIST = "extra_pdf_list";
     private File mDownloadDir;
-
     private DownloadManager mDownloadManager;
-
+    List<Integer> positionList = new ArrayList<>();
+    List<String> downloadedList = new ArrayList<>();
+    boolean downloading;
+    private NotificationCompat.Builder mBuilder;
     private NotificationManagerCompat mNotificationManager;
-    NotificationCompat.Builder mBuilder;
-    NotificationManager mNotifyMgr = null;
 
-    List<String> downloadingList = new ArrayList<>();
 
-    private Context context;
+    private LocalBroadcastManager mLocalBroadcastManager;
+    private ArrayList<PDF.PdfBean> downloadList = new ArrayList<>();
+    private ArrayList<String> failedList = new ArrayList<>();
+    private String failedMessage= "Download failed";
 
-    public static void intentDownload(Context context, int position, String tag, PDF.PdfBean pdf) {
+    public static void intentDownload(ArrayList<Integer> positionList, ArrayList<PDF.PdfBean> downloadingList, Context context) {
         Intent intent = new Intent(context, DownloadService.class);
         intent.setAction(ACTION_DOWNLOAD);
-        intent.putExtra(EXTRA_POSITION, position);
-        intent.putExtra(EXTRA_TAG, tag);
-        intent.putExtra(EXTRA_APP_INFO, pdf);
+        intent.putExtra(EXTRA_APP_POSITION_LIST, positionList);
+        intent.putExtra(EXTRA_APP_INFO_LIST, downloadingList);
         context.startService(intent);
     }
 
@@ -100,15 +115,17 @@ public class DownloadService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        downloadingList.clear();
+        mDownloadManager = DownloadManager.getInstance();
+        mNotificationManager = NotificationManagerCompat.from(getApplicationContext());
+        mBuilder = new NotificationCompat.Builder(getApplicationContext());
         if (intent != null) {
             String action = intent.getAction();
-            int position = intent.getIntExtra(EXTRA_POSITION, 0);
-            PDF.PdfBean pdf = (PDF.PdfBean) intent.getSerializableExtra(EXTRA_APP_INFO);
+            ArrayList<PDF.PdfBean> downloadList =  (ArrayList<PDF.PdfBean>) intent.getSerializableExtra(EXTRA_APP_INFO_LIST);
+            ArrayList<Integer> position =  (ArrayList<Integer>) intent.getIntegerArrayListExtra(EXTRA_APP_POSITION_LIST);
             String tag = intent.getStringExtra(EXTRA_TAG);
             switch (action) {
                 case ACTION_DOWNLOAD:
-                    download(position, pdf, tag);
+                    startDownloading(downloadList,position);
                     break;
                 case ACTION_PAUSE:
                     pause(tag);
@@ -124,16 +141,285 @@ public class DownloadService extends Service {
                     break;
             }
         }
-        return super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;
     }
 
-    private void download(final int position, final PDF.PdfBean appInfo, String tag) {
+    private boolean Exist(int pid){
+       for(PDF.PdfBean p : downloadList){
+           if(p.getPid()==pid){
+               return true;
+           }
+       }
+
+       return false;
+    }
+
+    private String calculateEllapsedTime(long startTime, long allBytes, long downloadedBytes){
+        Long elapsedTime = System.currentTimeMillis() - startTime;
+        Long allTimeForDownloading = (elapsedTime * allBytes / downloadedBytes);
+        Long remainingTime = allTimeForDownloading - elapsedTime;
+        int seconds = (int) (TimeUnit.MILLISECONDS.toSeconds(remainingTime) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(remainingTime)));
+        if(seconds<60){
+            return String.format("%2d seconds remaining",
+                    TimeUnit.MILLISECONDS.toSeconds(remainingTime) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(remainingTime)));
+        } else {
+            return String.format("%02d minute remaining",
+                    TimeUnit.MILLISECONDS.toMinutes(remainingTime) -
+                            TimeUnit.MINUTES.toMinutes(TimeUnit.MILLISECONDS.toHours(remainingTime)));
+        }
+    }
+
+    private void startDownloading(ArrayList<PDF.PdfBean> downloadList1, ArrayList<Integer> positionList1) {
+
+        for (int i =0; i<downloadList1.size();i++){
+            if (!Exist(downloadList1.get(i).getPid())) {
+                downloadList.add(downloadList1.get(i));
+                positionList.add(positionList1.get(i));
+            }
+        }
+
+        if(!downloading){
+            download(downloadList.get(0),positionList.get(0));
+        }
+    }
+
+    private void download(final PDF.PdfBean appInfo, final int position) {
+        final PDF.PdfBean old = appInfo;
+
+        File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
+        File mFile = new File(mDownloadDir + "/Mumineen/");
         final DownloadRequest request = new DownloadRequest.Builder()
                 .setName(appInfo.getPid() + ".pdf")
-                .setUri("http://mumineendownloads.com/downloadFile.php?file="+appInfo.getSource())
-                .setFolder(mDownloadDir)
+                .setUri("http://mumineendownloads.com/downloadFile.php?file=" + appInfo.getSource())
+                .setFolder(mFile)
                 .build();
-        mDownloadManager.download(request, tag, new DownloadCallBack(position, appInfo, mNotificationManager, getApplicationContext()));
+
+        DownloadManager.getInstance().download(request, String.valueOf(appInfo.getPid()), new CallBack() {
+            private long mLastTime;
+            Long startTime;
+            @Override
+            public void onStarted() {
+                mBuilder.setSmallIcon(android.R.drawable.stat_sys_download)
+                        .setContentTitle(appInfo.getTitle())
+                        .setShowWhen(false)
+                        .setContentText("Please wait..")
+                        .setProgress(100, 0, true)
+                        .setTicker("Start download " + appInfo.getTitle());
+                appInfo.setStatus(Status.STATUS_DOWNLOADING);
+                updateNotification();
+                sendBroadCast(appInfo,position);
+            }
+
+            @Override
+            public void onConnecting() {
+                mBuilder.setContentText("Connecting..")
+                        .setProgress(100, 0, true);
+                updateNotification();
+                appInfo.setStatus(Status.STATUS_LOADING);
+                sendBroadCast(appInfo,position);
+            }
+
+            @Override
+            public void onConnected(long total, boolean isRangeSupport) {
+                startTime = System.currentTimeMillis();
+                mBuilder.setContentText("Downloading..")
+                        .setProgress(100, 0, true);
+                updateNotification();
+                appInfo.setStatus(Status.STATUS_CONNECTED);
+                sendBroadCast(appInfo,position);
+            }
+
+            @Override
+            public void onProgress(long finished, long total, final int progress) {
+                appInfo.setStatus(Status.STATUS_DOWNLOADING);
+                appInfo.setProgress(progress);
+                appInfo.setDownloadPerSize(Utils.getDownloadPerSize(finished,total,progress));
+
+                if (mLastTime == 0) {
+                    mLastTime = System.currentTimeMillis();
+                }
+
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - mLastTime > 500) {
+                    mBuilder.setContentText(calculateEllapsedTime(startTime,total,finished));
+                    mBuilder.setProgress(100, progress, false);
+                    sendBroadCast(appInfo,position);
+                    updateNotification();
+                    mLastTime = currentTime;
+                }
+            }
+
+            int i = 0;
+            @Override
+            public void onCompleted() {
+                i++;
+                if(i==1){
+                    downloadNext(1);
+                }
+                appInfo.setStatus(Status.STATUS_DOWNLOADED);
+                sendBroadCast(appInfo,position);
+                clearNotification();
+                notificationSuccess(appInfo);
+            }
+
+            @Override
+            public void onDownloadPaused() {
+                appInfo.setStatus(Status.STATUS_PAUSED);
+                sendBroadCast(appInfo,position);
+            }
+
+            @Override
+            public void onDownloadCanceled() {
+                appInfo.setStatus(Status.STATUS_NULL);
+                sendBroadCast(appInfo,position);
+
+                clearNotification();
+                downloadNext(0);
+
+            }
+
+            @Override
+            public void onFailed(DownloadException e) {
+                if(e.getErrorCode()==108){
+                    failedMessage = "Download failed. Server error.";
+                }
+                Toasty.normal(getApplicationContext(),String.valueOf(e.getErrorCode())).show();
+                appInfo.setStatus(Status.STATUS_NULL);
+                sendBroadCast(appInfo,position);
+                downloadNext(-1);
+                clearNotification();
+                notificationFailed(appInfo);
+            }
+        });
+    }
+
+    public void updateNotification(){
+        mNotificationManager.notify(0, mBuilder.build());
+    }
+
+    public void clearNotification(){
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mNotificationManager.cancel(0);
+            }
+        }, 10);
+    }
+
+    public void notificationFailed(PDF.PdfBean pdfBean) {
+        String contentInfo = "";
+        String newLine = "";
+        for(String item : failedList){
+            if(item.indexOf(item)!=failedList.size()-1 || item.indexOf(item)!=0){
+                newLine = "\n";
+            }
+            contentInfo += item + newLine;
+        }
+        Intent resultIntent = new Intent(this, PDFActivity.class);
+        resultIntent.putExtra(EXTRA_APP_INFO,pdfBean);
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        String pdfLabel = " PDF file failed";
+        if(failedList.size()>1){
+            pdfLabel = " PDF files failed";
+        }
+
+        NotificationCompat.Builder  mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.mipmap.ic_launcher_round)
+                        .setContentTitle(failedList.size() + pdfLabel)
+                        .setAutoCancel(true)
+                        .setShowWhen(false)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(contentInfo).setSummaryText(failedMessage))
+                        .setColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary))
+                        .setContentInfo(failedMessage);
+        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(1, mBuilder.build());
+    }
+
+    public void notificationSuccess(PDF.PdfBean pdfBean){
+        String contentInfo = "";
+        String newLine = "";
+        for(String item : downloadedList){
+            if(item.indexOf(item)!=downloadedList.size()-1 || item.indexOf(item)!=0){
+                newLine = "\n";
+            }
+            contentInfo += item + newLine;
+        }
+        Intent resultIntent = new Intent(this, PDFActivity.class);
+        resultIntent.putExtra(EXTRA_APP_INFO,pdfBean);
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        String pdfLabel = " PDF file downloaded";
+        if(downloadedList.size()>1){
+            pdfLabel = " PDF files downloaded";
+        }
+        NotificationCompat.Builder  mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.mipmap.ic_launcher_round)
+                        .setContentTitle(downloadedList.size() + pdfLabel)
+                        .setShowWhen(false)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(contentInfo))
+                        .setAutoCancel(true)
+                        .setColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary))
+                        .setContentText("Download Successful");
+        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(2, mBuilder.build());
+    }
+
+    private void downloadNext(int prevFailed) {
+      if(!downloading) {
+          if (!downloadList.isEmpty()) {
+              if (downloadList.contains(downloadList.get(0))) {
+                  if(prevFailed==1) {
+                      if(!downloadedList.isEmpty()) {
+                          if (!downloadedList.contains(downloadedList.get(0))) {
+                              downloadedList.add(downloadList.get(0).getTitle());
+                          }
+                      }
+                  }else if(prevFailed==-1) {
+                      try {
+                          if (!failedList.contains(downloadedList.get(0))) {
+                              failedList.add(downloadList.get(0).getTitle());
+                          }
+                      }catch (IndexOutOfBoundsException ignored){
+
+                      }
+                  }
+                  downloadList.remove(downloadList.get(0));
+                  positionList.remove(positionList.get(0));
+              }
+          } else {
+              downloadedList.clear();
+          }
+
+          if (!downloadList.isEmpty()) {
+              download(downloadList.get(0), positionList.get(0));
+          }
+      }
+    }
+
+    private void sendBroadCast(PDF.PdfBean pdf, int position) {
+        Intent intent = new Intent();
+        intent.setAction(DownloadService.ACTION_DOWNLOAD_BROAD_CAST);
+        intent.putExtra(EXTRA_APP_INFO, pdf);
+        intent.putExtra(EXTRA_POSITION, position);
+        mLocalBroadcastManager.sendBroadcast(intent);
     }
 
     private void pause(String tag) {
@@ -152,204 +438,33 @@ public class DownloadService extends Service {
         mDownloadManager.cancelAll();
     }
 
-    private class DownloadCallBack implements CallBack {
-
-        private int mPosition;
-
-        private PDF.PdfBean mPdf;
-
-        private LocalBroadcastManager mLocalBroadcastManager;
-
-        private NotificationCompat.Builder mBuilder;
-
-        private NotificationManagerCompat mNotificationManager;
-
-        private long mLastTime;
-
-        DownloadCallBack(int position, PDF.PdfBean pdf, NotificationManagerCompat notificationManager, Context context) {
-            mPosition = position;
-            mPdf = pdf;
-            mNotificationManager = notificationManager;
-            mLocalBroadcastManager = LocalBroadcastManager.getInstance(context);
-            mBuilder = new NotificationCompat.Builder(context);
-        }
-
-        @Override
-        public void onStarted() {
-            Intent intent = new Intent(getApplicationContext(), BroadcastReceiver.class);
-            PendingIntent pIntent = PendingIntent.getActivity(getApplicationContext(), (int) System.currentTimeMillis(), intent, 0);
-            mBuilder.setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(mPdf.getTitle())
-                    .setOngoing(true)
-                    .setContentText("Init Download")
-                    .setProgress(100, 0, true)
-                    .setTicker("Start download " + mPdf.getTitle());
-            mBuilder.addAction(0, "Cancel", pIntent);
-            mBuilder.addAction(0, "Pause", pIntent);
-            updateNotification();
-        }
-
-        @Override
-        public void onConnecting() {
-            L.i(TAG, "onConnecting()");
-            mBuilder.setContentText("Connecting")
-                    .setProgress(100, 0, true);
-            updateNotification();
-
-            mPdf.setStatus(PDF.STATUS_CONNECTING);
-            sendBroadCast(mPdf);
-        }
-
-        @Override
-        public void onConnected(long total, boolean isRangeSupport) {
-            L.i(TAG, "onConnected()");
-            mBuilder.setContentText("Connected")
-                    .setProgress(100, 0, true);
-            updateNotification();
-        }
-
-        @Override
-        public void onProgress(long finished, long total, int progress) {
-
-            if (mLastTime == 0) {
-                mLastTime = System.currentTimeMillis();
-            }
-
-            mPdf.setStatus(PDF.STATUS_DOWNLOADING);
-            mPdf.setProgress(progress);
-            mPdf.setDownloadPerSize(Utils.getDownloadPerSize(finished, total, progress));
-
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - mLastTime > 500) {
-                String f, t;
-                int sizeF = (int) (finished / 1024);
-                int sizeT = (int) (total / 1024);
-                if (total < 1000000) {
-                    t = total / 1024 + " KB  ";
-                } else {
-                    Float size = (float) sizeT / 1024;
-                    t = new DecimalFormat("##.##").format(size) + " MB  ";
-                }
-                if (finished < 1000000) {
-                    f = finished / 1024 + "KB / ";
-                } else {
-                    Float size = (float) sizeF / 1024;
-                    f = new DecimalFormat("##.##").format(size) + " MB / ";
-                }
-                L.i(TAG, "onProgress()");
-                mBuilder.setContentText(progress + "%");
-                mBuilder.setProgress(100, progress, false);
-                updateNotification();
-
-                sendBroadCast(mPdf);
-
-                mLastTime = currentTime;
-            }
-        }
-
-        @Override
-        public void onCompleted() {
-            L.i(TAG, "onDownloadCanceled()");
-            mBuilder.setContentText("Download completed");
-            mBuilder.setTicker(mPdf.getTitle() + " download completed");
-            updateNotification();
-            downloadingList.add(mPdf.getTitle());
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mNotificationManager.cancel(0);
-                }
-            }, 1000);
-            addNotificationCompleted(mPdf);
-            mPdf.setStatus(PDF.STATUS_COMPLETE);
-            mPdf.setProgress(100);
-            sendBroadCast(mPdf);
-        }
-
-        @Override
-        public void onDownloadPaused() {
-            L.i(TAG, "onDownloadPaused()");
-            mBuilder.setContentText("Download Paused");
-            mBuilder.setTicker(mPdf.getTitle() + " download Paused");
-            mBuilder.setProgress(100, mPdf.getProgress(), false);
-            updateNotification();
-
-            mPdf.setStatus(PDF.STATUS_PAUSED);
-            sendBroadCast(mPdf);
-        }
-
-        @Override
-        public void onDownloadCanceled() {
-            L.i(TAG, "onDownloadCanceled()");
-            mBuilder.setContentText("Download Canceled");
-            mBuilder.setTicker(mPdf.getTitle() + " download Canceled");
-            updateNotification();
-
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mNotificationManager.cancel(0);
-                }
-            }, 1000);
-
-            mPdf.setStatus(PDF.STATUS_NOT_DOWNLOAD);
-            mPdf.setProgress(0);
-            mPdf.setDownloadPerSize("");
-            sendBroadCast(mPdf);
-        }
-
-        @Override
-        public void onFailed(DownloadException e) {
-            L.i(TAG, "onFailed()");
-            e.printStackTrace();
-            mBuilder.setContentText("Download Failed");
-            mBuilder.setTicker(mPdf.getTitle() + " download failed");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mBuilder.setCategory(Notification.CATEGORY_ERROR);
-            }
-            updateNotification();
-            mPdf.setStatus(PDF.STATUS_DOWNLOAD_ERROR);
-            sendBroadCast(mPdf);
-        }
-
-        private void updateNotification() {
-            mNotificationManager.notify(0, mBuilder.build());
-        }
-
-        private void sendBroadCast(PDF.PdfBean pdf) {
-            Intent intent = new Intent();
-            intent.setAction(DownloadService.ACTION_DOWNLOAD_BROAD_CAST);
-            intent.putExtra(EXTRA_POSITION, mPosition);
-            intent.putExtra(EXTRA_APP_INFO, pdf);
-            mLocalBroadcastManager.sendBroadcast(intent);
-        }
-    }
-
-    private void addNotificationCompleted(PDF.PdfBean pdfBean) {
+    private void addNotificationCompleted(PDF.PdfBean pdfBean, String status) {
         Intent resultIntent = new Intent(this, PDFActivity.class);
+        resultIntent.putExtra(EXTRA_APP_INFO,pdfBean);
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
                         this,
                         0,
                         resultIntent,
-                        PendingIntent.FLAG_ONE_SHOT
+                        PendingIntent.FLAG_UPDATE_CURRENT
                 );
-        mBuilder =
+        NotificationCompat.Builder  mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.ic_launcher_round)
-                        .setContentTitle(pdfBean.getTitle())
-                        .setContentText("Download Completed");
+                        .setContentTitle(downloadedList.size()+1 + " files downloaded")
+                        .setAutoCancel(true)
+                        .setColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary))
+                        .setContentText(status);
         mBuilder.setContentIntent(resultPendingIntent);
-        mNotifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        mNotifyMgr.notify(pdfBean.getPid(), mBuilder.build());
+        NotificationManager mNotifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(2222, mBuilder.build());
 
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mDownloadManager = DownloadManager.getInstance();
-        mNotificationManager = NotificationManagerCompat.from(getApplicationContext());
+        mLocalBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         mDownloadDir = new File(Environment.getExternalStorageDirectory(), "Mumineen");
     }
 
