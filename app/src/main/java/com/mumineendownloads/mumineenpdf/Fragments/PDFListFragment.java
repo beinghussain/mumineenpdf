@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -36,15 +35,6 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdLoader;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.formats.NativeAdOptions;
-import com.google.android.gms.ads.formats.NativeAppInstallAd;
-import com.google.android.gms.ads.formats.NativeContentAd;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
@@ -57,12 +47,7 @@ import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.rey.material.widget.ProgressView;
-import com.tonyodev.fetch.Fetch;
-import com.tonyodev.fetch.listener.FetchListener;
-import com.tonyodev.fetch.request.Request;
-
 import java.io.File;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import es.dmoral.toasty.Toasty;
 
@@ -353,9 +338,7 @@ public class PDFListFragment extends Fragment {
                     Utils.addListOfArray(goList,getContext());
                     break;
                 case R.id.delele_all:
-                    for(PDF.PdfBean pdfBean : multiSelect_list){
-                        delete(pdfBean, getActivity(),arrayList.indexOf(pdfBean));
-                    }
+                    deleteAll(multiSelect_list,getContext());
             }
             return true;
         }
@@ -374,6 +357,69 @@ public class PDFListFragment extends Fragment {
             Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
         }
     };
+
+    private void deleteAll(final ArrayList<PDF.PdfBean> multiSelect_list, Context context) {
+        final ArrayList<PDF.PdfBean> pdfBeanArrayList;
+        pdfBeanArrayList = multiSelect_list;
+        new MaterialDialog.Builder(context)
+                .title("Delete "+ multiSelect_list.size() +" files")
+                .negativeText("Cancel")
+                .positiveText("Delete")
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                    }
+                })
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        final int count = 0;
+                        final Handler handler = new Handler();
+                        for(PDF.PdfBean p : pdfBeanArrayList){
+                            p.setStatus(Status.STATUS_NULL);
+                            mPDFAdapter.notifyItemChanged(pdfBeanArrayList.indexOf(p));
+                        }
+                        final Runnable r = new Runnable() {
+                            @Override
+                            public void run() {
+                                {
+                                    startPostDelayDelete(pdfBeanArrayList);
+                                }
+                            }
+                        };
+                        handler.postDelayed(r, 5000);
+                        final Snackbar snackbar = Snackbar
+                                .make(MainActivity.bottomNavigationView, multiSelect_list.size() + " files deleted", Snackbar.LENGTH_LONG)
+                                .setAction("UNDO", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                       handler.removeCallbacks(r);
+                                        for(PDF.PdfBean p : multiSelect_list){
+                                            p.setStatus(Status.STATUS_DOWNLOADED);
+                                            mPDFAdapter.notifyItemChanged(multiSelect_list.indexOf(p));
+                                        }
+                                    }
+                                });
+                        snackbar.show();
+                    }
+                })
+                .content("Do you really want to delete this files?").build().show();
+       // destory();
+
+    }
+
+    public void startPostDelayDelete(ArrayList<PDF.PdfBean> multiSelect_list1){
+        Log.e("List", String.valueOf(multiSelect_list1.size()));
+        for(PDF.PdfBean pdfBean : multiSelect_list1) {
+            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdfBean.getPid() + ".pdf");
+            if (file.exists()) {
+                file.delete();
+                pdfBean.setStatus(Status.STATUS_NULL);
+                mPDFAdapter.notifyItemChanged(arrayList.indexOf(pdfBean));
+            }
+        }
+    }
 
     private void startDownloading() {
         DownloadService.intentDownload(positionList, downloadingList, getContext());
@@ -488,34 +534,45 @@ public class PDFListFragment extends Fragment {
     }
 
     private void delete(final PDF.PdfBean pdf, Context context, final int position) {
-          new MaterialDialog.Builder(context)
-                  .title("Delete file")
-                  .negativeText("Cancel")
-                  .positiveText("Delete")
-                  .onNegative(new MaterialDialog.SingleButtonCallback() {
-                      @Override
-                      public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+        new MaterialDialog.Builder(context)
+                .title("Delete file")
+                .negativeText("Cancel")
+                .positiveText("Delete")
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
 
-                      }
-                  })
-                  .onPositive(new MaterialDialog.SingleButtonCallback() {
-                      @Override
-                      public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                          File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid()+".pdf");
-                            if(file.exists()){
-                                file.delete();
-                                pdf.setStatus(Status.STATUS_NULL);
-                                mPDFAdapter.notifyItemChanged(position);
-                            }
-                      }
-                  })
-                  .content("Do you really want to delete this file?").build().show();
+                    }
+                })
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdf.getPid() + ".pdf");
+                        if (file.exists()) {
+                            file.delete();
+                            pdf.setStatus(Status.STATUS_NULL);
+                            mPDFAdapter.notifyItemChanged(position);
+                        }
+                    }
+                })
+                .content("Do you really want to delete this file?").build().show();
     }
 
     public static void destory() {
         if(mActionMode!=null) {
             mActionMode.finish();
         }
+    }
+    public void destoryNoList() {
+        mActionMode.finish();
+        mActionMode = null;
+        isMultiSelect = false;
+        mPDFAdapter.notifyDataSetChanged();
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
+            getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorPrimaryDark));
+        }
+        Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
+        Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
     }
 
     @Override
