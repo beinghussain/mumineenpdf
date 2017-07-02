@@ -1,13 +1,19 @@
 package com.mumineendownloads.mumineenpdf.Helpers;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.net.ConnectivityManager;
+import android.preference.PreferenceManager;
+import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mumineendownloads.mumineenpdf.R;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 
 public class Utils {
@@ -16,6 +22,43 @@ public class Utils {
 
     public Utils(Context context) {
         this.context = context;
+    }
+
+
+    public static void addListOfArray(ArrayList<Integer> newList, Context context){
+        ArrayList<Integer> oldArrayList = loadArray(context);
+        for(int i = 0; i<newList.size(); i++){
+            if(!oldArrayList.contains(newList.get(i))){
+                oldArrayList.add(newList.get(i));
+            }
+        }
+        saveArray(context,oldArrayList);
+    }
+
+    public static void addSingleItem(int pid, Context context){
+        ArrayList<Integer> oldArrayList=  loadArray(context);
+        oldArrayList.add(pid);
+        saveArray(context,oldArrayList);
+    }
+
+    private static void saveArray(Context context, ArrayList<Integer> goList) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor mEdit1 = sp.edit();
+        Gson gson = new Gson();
+        String listJson = gson.toJson(goList);
+        Log.e("ListJson",listJson);
+        mEdit1.putString("list1",listJson);
+        mEdit1.apply();
+    }
+
+    public static ArrayList<Integer> loadArray(Context mContext) {
+        SharedPreferences mSharedPreference1 =   PreferenceManager.getDefaultSharedPreferences(mContext);
+        String listJson = mSharedPreference1.getString("list1", "[]");
+        Gson gson = new Gson();
+
+        return gson.fromJson(listJson, new TypeToken<ArrayList<Integer>>() {
+        }.getType());
+
     }
 
     public static String getDownloadPerSize(long finished, long total, int progress) {

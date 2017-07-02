@@ -16,6 +16,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,6 +35,8 @@ import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.SavedViewPagerAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomAnimator;
+import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
+import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 import com.rey.material.widget.ProgressView;
@@ -53,6 +56,7 @@ public class Go extends Fragment {
     public static CstTabLayout tabLayout;
     private SearchView searchView;
     private ArrayList<PDF.PdfBean> goList;
+    private PDFHelper pdfHelper;
 
     public Go newInstance() {
         return new Go();
@@ -74,24 +78,26 @@ public class Go extends Fragment {
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.goList);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.addItemDecoration(new CustomAnimator(getContext()));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mRecyclerView.addItemDecoration(new CustomAnimator(getContext()));
         mRecyclerView.getItemAnimator().setChangeDuration(0);
-
-        mRecyclerView.setVisibility(View.GONE);
+        pdfHelper = new PDFHelper(getContext());
+        ArrayList<Integer> a = Utils.loadArray(getContext());
+        arrayList = new ArrayList<>();
         AsyncTask.execute(new Runnable() {
-
-
             @Override
             public void run() {
                 try {
-                    arrayList = getGoList();
+                    ArrayList<Integer> a = Utils.loadArray(getContext());
+                    arrayList = new ArrayList<>();
+                    for(int i = 0; i<a.size(); i++){
+                       arrayList.add(pdfHelper.getPDF(a.get(i)));
+                    }
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             mPDFAdapter = new GoAdapter(arrayList, getActivity().getApplicationContext());
                             mRecyclerView.setAdapter(mPDFAdapter);
-
                         }
 
                     });
@@ -136,24 +142,5 @@ public class Go extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        saveGoList();
-    }
-
-    private void saveGoList() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
-        String s = gson.toJson(goList);
-        editor.putString("positionList",s).apply();
-    }
-
-    public ArrayList<PDF.PdfBean> getGoList() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String s = sharedPreferences.getString("downloadList", "");
-        if (s.equals("")) {
-            return new ArrayList<PDF.PdfBean>();
-        }
-        Gson gson = new Gson();
-        return gson.fromJson(s, new TypeToken<ArrayList<PDF.PdfBean>>(){}.getType());
     }
 }

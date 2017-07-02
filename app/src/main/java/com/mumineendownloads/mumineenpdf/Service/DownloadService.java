@@ -28,6 +28,7 @@ import com.aspsine.multithreaddownload.DownloadRequest;
 import com.aspsine.multithreaddownload.util.L;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
@@ -131,7 +132,9 @@ public class DownloadService extends Service {
                     pause(tag);
                     break;
                 case ACTION_CANCEL:
-                    cancel(tag);
+                    Log.e("Received","Action Cancel");
+                    PDF.PdfBean pdfBean = (PDF.PdfBean) intent.getSerializableExtra(EXTRA_APP_INFO);
+                    cancel(String.valueOf(pdfBean .getPid()));
                     break;
                 case ACTION_PAUSE_ALL:
                     pauseAll();
@@ -160,19 +163,21 @@ public class DownloadService extends Service {
         Long remainingTime = allTimeForDownloading - elapsedTime;
         int seconds = (int) (TimeUnit.MILLISECONDS.toSeconds(remainingTime) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(remainingTime)));
-        if(seconds<60){
+        int minute = (int) (TimeUnit.MILLISECONDS.toMinutes(remainingTime) -
+                        TimeUnit.MINUTES.toMinutes(TimeUnit.MILLISECONDS.toHours(remainingTime)));
+        if(minute<=0){
             return String.format("%2d seconds remaining",
                     TimeUnit.MILLISECONDS.toSeconds(remainingTime) -
                             TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(remainingTime)));
         } else {
-            return String.format("%02d minute remaining",
+            return String.format("%d minutes remaining",
                     TimeUnit.MILLISECONDS.toMinutes(remainingTime) -
-                            TimeUnit.MINUTES.toMinutes(TimeUnit.MILLISECONDS.toHours(remainingTime)));
+                            TimeUnit.MINUTES.toMinutes(TimeUnit.MILLISECONDS.toHours(remainingTime))+1);
         }
     }
 
     private void startDownloading(ArrayList<PDF.PdfBean> downloadList1, ArrayList<Integer> positionList1) {
-
+        downloadedList.clear();
         for (int i =0; i<downloadList1.size();i++){
             if (!Exist(downloadList1.get(i).getPid())) {
                 downloadList.add(downloadList1.get(i));
@@ -201,11 +206,23 @@ public class DownloadService extends Service {
             Long startTime;
             @Override
             public void onStarted() {
+                Intent resultIntent = new Intent(getApplicationContext(), DownloadService.class);
+                resultIntent.setAction(ACTION_CANCEL);
+                resultIntent.putExtra(EXTRA_APP_INFO, appInfo);
+                PendingIntent resultPendingIntent =
+                        PendingIntent.getActivity(
+                                getApplicationContext(),
+                                0,
+                                resultIntent,
+                                PendingIntent.FLAG_UPDATE_CURRENT
+                        );
                 mBuilder.setSmallIcon(android.R.drawable.stat_sys_download)
                         .setContentTitle(appInfo.getTitle())
                         .setShowWhen(false)
                         .setContentText("Please wait..")
                         .setProgress(100, 0, true)
+                        .setOngoing(false)
+                        .addAction(0,"Cancel",resultPendingIntent)
                         .setTicker("Start download " + appInfo.getTitle());
                 appInfo.setStatus(Status.STATUS_DOWNLOADING);
                 updateNotification();
@@ -258,6 +275,7 @@ public class DownloadService extends Service {
                 if(i==1){
                     downloadNext(1);
                 }
+
                 appInfo.setStatus(Status.STATUS_DOWNLOADED);
                 sendBroadCast(appInfo,position);
                 clearNotification();
@@ -310,14 +328,15 @@ public class DownloadService extends Service {
 
     public void notificationFailed(PDF.PdfBean pdfBean) {
         String contentInfo = "";
-        String newLine = "";
-        for(String item : failedList){
-            if(item.indexOf(item)!=failedList.size()-1 || item.indexOf(item)!=0){
-                newLine = "\n";
+
+        for(int i = 0; i<failedList.size(); i++){
+            if(i!=failedList.size()-1){
+                contentInfo += failedList.get(i) + "\n";
+            } else {
+                contentInfo += failedList.get(i);
             }
-            contentInfo += item + newLine;
         }
-        Intent resultIntent = new Intent(this, PDFActivity.class);
+        Intent resultIntent = new Intent(this, MainActivity.class);
         resultIntent.putExtra(EXTRA_APP_INFO,pdfBean);
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
@@ -333,7 +352,7 @@ public class DownloadService extends Service {
 
         NotificationCompat.Builder  mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher_round)
+                        .setSmallIcon(R.drawable.ic_notification)
                         .setContentTitle(failedList.size() + pdfLabel)
                         .setAutoCancel(true)
                         .setShowWhen(false)
@@ -347,14 +366,15 @@ public class DownloadService extends Service {
 
     public void notificationSuccess(PDF.PdfBean pdfBean){
         String contentInfo = "";
-        String newLine = "";
-        for(String item : downloadedList){
-            if(item.indexOf(item)!=downloadedList.size()-1 || item.indexOf(item)!=0){
-                newLine = "\n";
+
+        for(int i = 0; i<downloadedList.size(); i++){
+            if(i!=downloadedList.size()-1){
+                contentInfo += downloadedList.get(i) + "\n";
+            } else {
+                contentInfo += downloadedList.get(i);
             }
-            contentInfo += item + newLine;
         }
-        Intent resultIntent = new Intent(this, PDFActivity.class);
+        Intent resultIntent = new Intent(this, MainActivity.class);
         resultIntent.putExtra(EXTRA_APP_INFO,pdfBean);
         PendingIntent resultPendingIntent =
                 PendingIntent.getActivity(
@@ -369,7 +389,7 @@ public class DownloadService extends Service {
         }
         NotificationCompat.Builder  mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher_round)
+                        .setSmallIcon(R.drawable.noti)
                         .setContentTitle(downloadedList.size() + pdfLabel)
                         .setShowWhen(false)
                         .setStyle(new NotificationCompat.BigTextStyle()
@@ -384,14 +404,10 @@ public class DownloadService extends Service {
 
     private void downloadNext(int prevFailed) {
       if(!downloading) {
-          if (!downloadList.isEmpty()) {
+          if (downloadList.size()!=0) {
               if (downloadList.contains(downloadList.get(0))) {
                   if(prevFailed==1) {
-                      if(!downloadedList.isEmpty()) {
-                          if (!downloadedList.contains(downloadedList.get(0))) {
-                              downloadedList.add(downloadList.get(0).getTitle());
-                          }
-                      }
+                      downloadedList.add(downloadList.get(0).getTitle());
                   }else if(prevFailed==-1) {
                       try {
                           if (!failedList.contains(downloadedList.get(0))) {
@@ -405,7 +421,11 @@ public class DownloadService extends Service {
                   positionList.remove(positionList.get(0));
               }
           } else {
-              downloadedList.clear();
+              if(downloadedList.size()+failedList.size()==downloadList.size()){
+                  Log.e("Cleared", downloadedList.size()+"");
+                  downloadedList.clear();
+                  failedList.clear();
+              }
           }
 
           if (!downloadList.isEmpty()) {

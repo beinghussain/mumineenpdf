@@ -12,5 +12,10 @@
         android:icon="@drawable/add_on_the_go"
         android:title="On the go" />
 
+    <item android:id="@+id/delele_all"
+        android:icon="@drawable/ic_delete_forever_black_24dp"
+        app:showAsAction="always"
+        android:title="Delete"/>
+
 
 </menu>

@@ -78,27 +78,41 @@ public class PDFHelper extends SQLiteOpenHelper {
     }
 
     public PDF.PdfBean getPDF(int pid) {
-        SQLiteDatabase db = this.getReadableDatabase();
+        ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
+        String selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE pid = " + pid;
+        Log.e("QUERY", selectQuery);
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
 
-        Cursor cursor = db.query(TABLE_PDF, new String[] { KEY_ID,
-                        KEY_TITLE, KEY_ALBUM, KEY_SOURCE, KEY_SIZE, KEY_SIZE }, KEY_PID+ "=?",
-                new String[] { String.valueOf(pid) }, null, null, null, null);
-        if (cursor != null) {
-            try {
-                cursor.moveToFirst();
-
-                return new PDF.PdfBean(
-                        Integer.parseInt(cursor.getString(0)),
-                        cursor.getString(1),
-                        cursor.getString(2),
-                        cursor.getString(3),
-                        cursor.getString(4),
-                        Integer.parseInt(cursor.getString(5)),
-                        Integer.parseInt(cursor.getString(5)));
-            }catch (CursorIndexOutOfBoundsException ignored){
-
-            }
-        } return null;
+        if (cursor.moveToFirst()) {
+            do {
+                String title = cursor.getString(1);
+                String album1 = cursor.getString(2);
+                PDF.PdfBean contact = new PDF.PdfBean();
+                contact.setId(Integer.parseInt(cursor.getString(0)));
+                contact.setTitle(title);
+                contact.setAlbum(album1);
+                contact.setStatus(Integer.parseInt(cursor.getString(6)));
+                contact.setSource(cursor.getString(3));
+                contact.setSize(cursor.getString(4));
+                contact.setPid(Integer.parseInt(cursor.getString(5)));
+                String c;
+                if(cursor.getString(7)==null){
+                    c = "0";
+                } else {
+                    c = cursor.getString(7);
+                }
+                contact.setPageCount(Integer.parseInt(c));
+                if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
+                    contact.setStatus(Status.STATUS_NULL);
+                }else {
+                    contact.setStatus(Status.STATUS_DOWNLOADED);
+                    updatePDF(contact);
+                }
+                arrayList.add(contact);
+            } while (cursor.moveToNext());
+        }
+        return arrayList.get(0);
     }
 
     public ArrayList<PDF.PdfBean> getAllPDFS(String album) {

@@ -1,5 +1,6 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.facebook.ads.*;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -80,7 +82,7 @@ public class PDFListFragment extends Fragment {
     public boolean isMultiSelect;
     private DownloadReceiver mReceiver;
     private ArrayList<Integer> positionList = new ArrayList<>();
-    private ArrayList<PDF.PdfBean> goList;
+    private ArrayList<Integer> goList;
 
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
@@ -176,6 +178,8 @@ public class PDFListFragment extends Fragment {
             refresh(album);
         }
 
+        goList = Utils.loadArray(getContext());
+
         return rootView;
     }
 
@@ -197,7 +201,6 @@ public class PDFListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.goList = getGoList();
         setHasOptionsMenu(true);
     }
 
@@ -273,6 +276,7 @@ public class PDFListFragment extends Fragment {
     private ActionMode.Callback mActionCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+
             MenuInflater inflater = mode.getMenuInflater();
             inflater.inflate(R.menu.multiselect, menu);
             mPDFAdapter.notifyDataSetChanged();
@@ -344,9 +348,14 @@ public class PDFListFragment extends Fragment {
                     break;
                 case R.id.navigation_add_library:
                     for(PDF.PdfBean pdfBean : multiSelect_list){
-                        goList.add(pdfBean);
+                        goList.add(pdfBean.getPid());
                     }
+                    Utils.addListOfArray(goList,getContext());
                     break;
+                case R.id.delele_all:
+                    for(PDF.PdfBean pdfBean : multiSelect_list){
+                        delete(pdfBean, getActivity(),arrayList.indexOf(pdfBean));
+                    }
             }
             return true;
         }
@@ -457,9 +466,8 @@ public class PDFListFragment extends Fragment {
                                 }
 
                             } else if(text.equals("Delete file")) {
-                                delete(pdf);
-                                pdf.setStatus(Status.STATUS_NULL);
-                                mPDFAdapter.notifyItemChanged(position);
+                                dialog.dismiss();
+                                delete(pdf, context, position);
                             } else if (text.equals("View Online")) {
                                 if (Utils.isConnected(context)) {
                                     mPDFAdapter.viewOnline(pdf, holder.getAdapterPosition(), holder);
@@ -479,11 +487,29 @@ public class PDFListFragment extends Fragment {
         }
     }
 
-    private void delete(PDF.PdfBean pdf) {
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid()+".pdf");
-        if(file.exists()){
-            file.delete();
-        }
+    private void delete(final PDF.PdfBean pdf, Context context, final int position) {
+          new MaterialDialog.Builder(context)
+                  .title("Delete file")
+                  .negativeText("Cancel")
+                  .positiveText("Delete")
+                  .onNegative(new MaterialDialog.SingleButtonCallback() {
+                      @Override
+                      public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                      }
+                  })
+                  .onPositive(new MaterialDialog.SingleButtonCallback() {
+                      @Override
+                      public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                          File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid()+".pdf");
+                            if(file.exists()){
+                                file.delete();
+                                pdf.setStatus(Status.STATUS_NULL);
+                                mPDFAdapter.notifyItemChanged(position);
+                            }
+                      }
+                  })
+                  .content("Do you really want to delete this file?").build().show();
     }
 
     public static void destory() {
@@ -506,7 +532,6 @@ public class PDFListFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-
     }
 
     @Override
@@ -574,34 +599,15 @@ public class PDFListFragment extends Fragment {
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mReceiver, intentFilter);
     }
 
-        @Override
+    @Override
     public void onDestroy() {
         super.onDestroy();
         destory();
-        saveGoList();
     }
 
     private void unRegister() {
         if (mReceiver != null) {
             LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mReceiver);
         }
-    }
-
-    private void saveGoList() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
-        String s = gson.toJson(goList);
-        editor.putString("goList",s).apply();
-    }
-
-    public ArrayList<PDF.PdfBean> getGoList() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String s = sharedPreferences.getString("downloadList", "");
-        if (s.equals("")) {
-            return new ArrayList<PDF.PdfBean>();
-        }
-        Gson gson = new Gson();
-        return gson.fromJson(s, new TypeToken<ArrayList<PDF.PdfBean>>(){}.getType());
     }
 }

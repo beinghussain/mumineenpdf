@@ -3,6 +3,7 @@ package com.mumineendownloads.mumineenpdf.Adapters;
 import android.content.Context;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,11 +19,13 @@ import com.mumineendownloads.mumineenpdf.R;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import es.dmoral.toasty.Toasty;
+
 public class GoAdapter extends RecyclerView.Adapter<GoAdapter.MyViewHolder>  {
 
     private Context context;
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
-    private PDFHelper pdfHelper;
 
     class MyViewHolder extends RecyclerView.ViewHolder {
         private final ImageButton imageButton;
@@ -43,7 +46,6 @@ public class GoAdapter extends RecyclerView.Adapter<GoAdapter.MyViewHolder>  {
     }
 
     public GoAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext) {
-        pdfHelper = new PDFHelper(applicationContext);
         this.pdfBeanArrayList = pdfList;
         this.context = applicationContext;
     }
@@ -59,6 +61,7 @@ public class GoAdapter extends RecyclerView.Adapter<GoAdapter.MyViewHolder>  {
 
     @Override
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
+        Log.e("ArrayList", String.valueOf(pdfBeanArrayList));
         final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
         holder.title.setText(pdf.getTitle());
         final String t;
