@@ -563,17 +563,6 @@ public class PDFListFragment extends Fragment {
             mActionMode.finish();
         }
     }
-    public void destoryNoList() {
-        mActionMode.finish();
-        mActionMode = null;
-        isMultiSelect = false;
-        mPDFAdapter.notifyDataSetChanged();
-        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
-            getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorPrimaryDark));
-        }
-        Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
-        Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
-    }
 
     @Override
     public void onResume() {

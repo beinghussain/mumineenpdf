@@ -166,11 +166,11 @@ public class DownloadService extends Service {
         int minute = (int) (TimeUnit.MILLISECONDS.toMinutes(remainingTime) -
                         TimeUnit.MINUTES.toMinutes(TimeUnit.MILLISECONDS.toHours(remainingTime)));
         if(minute<=0){
-            return String.format("%2d seconds remaining",
+            return String.format("%2d seconds left",
                     TimeUnit.MILLISECONDS.toSeconds(remainingTime) -
                             TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(remainingTime)));
         } else {
-            return String.format("%d minutes remaining",
+            return String.format("%d minutes left",
                     TimeUnit.MILLISECONDS.toMinutes(remainingTime) -
                             TimeUnit.MINUTES.toMinutes(TimeUnit.MILLISECONDS.toHours(remainingTime))+1);
         }
@@ -329,6 +329,7 @@ public class DownloadService extends Service {
     public void notificationFailed(PDF.PdfBean pdfBean) {
         String contentInfo = "";
 
+
         for(int i = 0; i<failedList.size(); i++){
             if(i!=failedList.size()-1){
                 contentInfo += failedList.get(i) + "\n";
@@ -345,9 +346,9 @@ public class DownloadService extends Service {
                         resultIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
-        String pdfLabel = " PDF file failed";
+        String pdfLabel = " PDF file failed to download";
         if(failedList.size()>1){
-            pdfLabel = " PDF files failed";
+            pdfLabel = " PDF files failed to download";
         }
 
         NotificationCompat.Builder  mBuilder =
@@ -410,7 +411,7 @@ public class DownloadService extends Service {
                       downloadedList.add(downloadList.get(0).getTitle());
                   }else if(prevFailed==-1) {
                       try {
-                          if (!failedList.contains(downloadedList.get(0))) {
+                          if (!failedList.contains(downloadList.get(0).getTitle())) {
                               failedList.add(downloadList.get(0).getTitle());
                           }
                       }catch (IndexOutOfBoundsException ignored){
@@ -419,12 +420,6 @@ public class DownloadService extends Service {
                   }
                   downloadList.remove(downloadList.get(0));
                   positionList.remove(positionList.get(0));
-              }
-          } else {
-              if(downloadedList.size()+failedList.size()==downloadList.size()){
-                  Log.e("Cleared", downloadedList.size()+"");
-                  downloadedList.clear();
-                  failedList.clear();
               }
           }
 
