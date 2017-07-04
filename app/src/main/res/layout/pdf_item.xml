@@ -117,9 +117,10 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
+            android:layout_marginRight="15dp"
             android:background="@android:color/transparent"
             android:tint="@android:color/darker_gray"
-            android:visibility="gone"
+            android:visibility="invisible"
             app:srcCompat="@drawable/ic_close_black_24dp" />
 
         <com.rey.material.widget.Button
@@ -130,7 +131,8 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="15dp"
-            android:text="Open" />
+            android:text="Open"
+            android:visibility="visible" />
 
     </RelativeLayout>
 

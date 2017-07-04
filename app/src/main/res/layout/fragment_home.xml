@@ -25,11 +25,13 @@
             android:id="@+id/tabs"
             android:layout_width="match_parent"
             app:elevation="0dp"
+            android:layout_gravity="center_horizontal"
             app:tabMaxWidth="0dp"
             android:layout_height="wrap_content"
             app:tabIndicatorColor="@android:color/white"
+            android:overScrollMode="never"
             app:tabGravity="fill"
-            app:tabMode="fixed" />
+            app:tabMode="scrollable" />
 
     </android.support.design.widget.AppBarLayout>
 

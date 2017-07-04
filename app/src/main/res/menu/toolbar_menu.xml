@@ -24,6 +24,9 @@
         app:showAsAction="never"
         android:title="Rate this app"/>
 
+    <item android:id="@+id/action_share"
+        app:showAsAction="never"
+        android:title="Share this app"/>
 
     <item android:id="@+id/action_info"
         app:showAsAction="never"

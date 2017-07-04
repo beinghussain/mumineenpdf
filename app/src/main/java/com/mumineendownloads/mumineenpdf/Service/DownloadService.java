@@ -191,10 +191,12 @@ public class DownloadService extends Service {
     }
 
     private void download(final PDF.PdfBean appInfo, final int position) {
-        final PDF.PdfBean old = appInfo;
 
         File mDownloadDir = Environment.getExternalStorageDirectory().getAbsoluteFile();
         File mFile = new File(mDownloadDir + "/Mumineen/");
+        if(!mFile.isDirectory()){
+            mFile.mkdir();
+        }
         final DownloadRequest request = new DownloadRequest.Builder()
                 .setName(appInfo.getPid() + ".pdf")
                 .setUri("http://mumineendownloads.com/downloadFile.php?file=" + appInfo.getSource())
@@ -314,7 +316,11 @@ public class DownloadService extends Service {
     }
 
     public void updateNotification(){
-        mNotificationManager.notify(0, mBuilder.build());
+        try {
+            mNotificationManager.notify(0, mBuilder.build());
+        }catch (IllegalArgumentException ignored){
+
+        }
     }
 
     public void clearNotification(){

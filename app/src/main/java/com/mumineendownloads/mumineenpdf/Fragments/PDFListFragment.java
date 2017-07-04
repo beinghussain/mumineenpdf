@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -48,6 +50,11 @@ import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.rey.material.widget.ProgressView;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import es.dmoral.toasty.Toasty;
 
@@ -163,6 +170,7 @@ public class PDFListFragment extends Fragment {
             refresh(album);
         }
 
+        showNativeAd();
         goList = Utils.loadArray(getContext());
 
         return rootView;
@@ -229,6 +237,18 @@ public class PDFListFragment extends Fragment {
             getActivity().startService(intent);
             mRecyclerView.setVisibility(View.GONE);
             progressView.setVisibility(View.VISIBLE);
+        }
+        if(id==R.id.action_share){
+            try {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_SUBJECT, "Mumineen PDF");
+                String sAux = "\nPDF app for Zakreins and all the mumineens.\n\n";
+                sAux = sAux + "https://play.google.com/store/apps/details?id=Orion.Soft \n\n";
+                i.putExtra(Intent.EXTRA_TEXT, sAux);
+                startActivity(Intent.createChooser(i, "Share this using"));
+            } catch(Exception ignored) {
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -316,7 +336,7 @@ public class PDFListFragment extends Fragment {
                                             downloadingList.clear();
                                             DownloadManager.getInstance().cancelAll();
                                         }
-                                    }).setAction("OK", null);
+                                    });
                             snackbar.show();
                         }
                         else {
@@ -359,8 +379,6 @@ public class PDFListFragment extends Fragment {
     };
 
     private void deleteAll(final ArrayList<PDF.PdfBean> multiSelect_list, Context context) {
-        final ArrayList<PDF.PdfBean> pdfBeanArrayList;
-        pdfBeanArrayList = multiSelect_list;
         new MaterialDialog.Builder(context)
                 .title("Delete "+ multiSelect_list.size() +" files")
                 .negativeText("Cancel")
@@ -374,51 +392,35 @@ public class PDFListFragment extends Fragment {
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        final int count = 0;
+                        int count = 0;
                         final Handler handler = new Handler();
-                        for(PDF.PdfBean p : pdfBeanArrayList){
-                            p.setStatus(Status.STATUS_NULL);
-                            mPDFAdapter.notifyItemChanged(pdfBeanArrayList.indexOf(p));
-                        }
-                        final Runnable r = new Runnable() {
-                            @Override
-                            public void run() {
-                                {
-                                    startPostDelayDelete(pdfBeanArrayList);
-                                }
+                        for(PDF.PdfBean pdfBean : multiSelect_list) {
+                            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdfBean.getPid() + ".pdf");
+                            if (file.exists()) {
+                                file.delete();
+                                count++;
+                                pdfBean.setStatus(Status.STATUS_NULL);
+                                mPDFAdapter.notifyItemChanged(arrayList.indexOf(pdfBean));
                             }
-                        };
-                        handler.postDelayed(r, 5000);
+                        }
                         final Snackbar snackbar = Snackbar
-                                .make(MainActivity.bottomNavigationView, multiSelect_list.size() + " files deleted", Snackbar.LENGTH_LONG)
-                                .setAction("UNDO", new View.OnClickListener() {
+                                .make(MainActivity.bottomNavigationView, count + " files deleted", Snackbar.LENGTH_LONG)
+                                .setAction("OK", new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                       handler.removeCallbacks(r);
-                                        for(PDF.PdfBean p : multiSelect_list){
-                                            p.setStatus(Status.STATUS_DOWNLOADED);
-                                            mPDFAdapter.notifyItemChanged(multiSelect_list.indexOf(p));
-                                        }
+
                                     }
                                 });
                         snackbar.show();
+                        destory();
+
                     }
                 })
                 .content("Do you really want to delete this files?").build().show();
-       // destory();
-
     }
 
     public void startPostDelayDelete(ArrayList<PDF.PdfBean> multiSelect_list1){
-        Log.e("List", String.valueOf(multiSelect_list1.size()));
-        for(PDF.PdfBean pdfBean : multiSelect_list1) {
-            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdfBean.getPid() + ".pdf");
-            if (file.exists()) {
-                file.delete();
-                pdfBean.setStatus(Status.STATUS_NULL);
-                mPDFAdapter.notifyItemChanged(arrayList.indexOf(pdfBean));
-            }
-        }
+
     }
 
     private void startDownloading() {
@@ -499,6 +501,8 @@ public class PDFListFragment extends Fragment {
                         public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
                             if (text.equals("Download")) {
                                 if (Utils.isConnected(context)) {
+                                    pdf.setStatus(PDF.STATUS_QUEUED);
+                                    mPDFAdapter.notifyItemChanged(position);
                                     downloadingList.clear();
                                     positionList.clear();
                                     downloadingList.add(pdf);
@@ -521,7 +525,17 @@ public class PDFListFragment extends Fragment {
                                     Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
                                 }
                             } else if (text.equals("Share")) {
-                                Toast.makeText(context, "Sharing..", Toast.LENGTH_SHORT).show();
+                                if(getFile(pdf.getPid()).exists()) {
+                                    Uri uri = FileProvider.getUriForFile(getActivity(),
+                                            getActivity().getApplicationContext().getPackageName() + ".provider", getFile(pdf.getPid()));
+                                    Intent share = new Intent();
+                                    share.setAction(Intent.ACTION_SEND);
+                                    share.setType("application/pdf");
+                                    share.putExtra(Intent.EXTRA_STREAM, uri);
+                                    startActivity(Intent.createChooser(share, "Share File"));
+                                } else {
+                                    Toasty.normal(getContext(), "File not downloaded yet").show();
+                                }
                             } else if (text.equals("Report")) {
                                 Toast.makeText(context, "Reporting...", Toast.LENGTH_SHORT).show();
                             }
@@ -531,6 +545,29 @@ public class PDFListFragment extends Fragment {
         } else {
             multi_select(position,pdf);
         }
+    }
+
+    public void copy(File src, File dst) throws IOException {
+        InputStream in = new FileInputStream(src);
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
+        }
+    }
+
+    private File getFile(int pid) {
+        return new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pid+".pdf");
     }
 
     private void delete(final PDF.PdfBean pdf, Context context, final int position) {

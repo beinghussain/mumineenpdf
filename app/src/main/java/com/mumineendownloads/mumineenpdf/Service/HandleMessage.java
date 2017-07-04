@@ -12,6 +12,6 @@ public class HandleMessage extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Log.e("Received",remoteMessage.getData().toString());
+
     }
 }

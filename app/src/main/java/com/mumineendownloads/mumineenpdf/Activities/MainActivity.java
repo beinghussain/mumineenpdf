@@ -3,21 +3,26 @@ package com.mumineendownloads.mumineenpdf.Activities;
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.Actions;
 import com.marcinorlowski.fonty.Fonty;
+import com.mumineendownloads.mumineenpdf.BuildConfig;
 import com.mumineendownloads.mumineenpdf.Fragments.Go;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
 import com.mumineendownloads.mumineenpdf.Fragments.Saved;
@@ -26,6 +31,7 @@ import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.tonyodev.fetch.Fetch;
+import com.vansuita.library.CheckNewAppVersion;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -126,7 +132,56 @@ public class MainActivity extends AppCompatActivity {
         Home home = new Home(MainActivity.this);
         transaction.replace(R.id.fragment, home.newInstance(MainActivity.this));
         transaction.commit();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int vCode = preferences.getInt("versioncode",BuildConfig.VERSION_CODE);
+        Log.e("I", String.valueOf(preferences.getBoolean("showLater",false)));
+
+        if(preferences.getBoolean("showLater",false)){
+            preferences.edit().putInt("showAfter10",0).apply();
+            int i = preferences.getInt("showAfter10",0);
+
+            Log.e("I", String.valueOf(i));
+            preferences.edit().putInt("showAfter10",i-1).apply();
+            if(i==0){
+                preferences.edit().putBoolean("showLater",false).apply();
+            }
+        }
+        if(vCode == BuildConfig.VERSION_CODE){
+            if(preferences.getBoolean("never",false) && preferences.getInt("showAfter10",0)==0) {
+                showUpdateDialog(preferences);
+            }
+        }
        // backgroundSync.execute();
+    }
+
+    private void showUpdateDialog(final SharedPreferences preferences) {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Update Available")
+                .setMessage("New version of Mumineen PDF is available on playstore")
+                .setPositiveButton("UPDATE", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        openUpdateLink();
+                    }
+                })
+                .setNegativeButton("DON'T SHOW AGAIN", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        preferences.edit().putBoolean("never",true).apply();
+                    }
+                })
+                .setNeutralButton("REMIND LATER", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        preferences.edit().putInt("showAfter10",10).apply();
+                        preferences.edit().putBoolean("showLater",true).apply();
+                    }
+                })
+                .show();
+    }
+
+    private void openUpdateLink() {
+
     }
 
     public void refresh(){
