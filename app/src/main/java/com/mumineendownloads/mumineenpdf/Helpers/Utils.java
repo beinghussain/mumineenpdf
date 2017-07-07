@@ -1,5 +1,7 @@
 package com.mumineendownloads.mumineenpdf.Helpers;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
@@ -50,12 +52,15 @@ public class Utils {
         String listJson = gson.toJson(goList);
         mEdit1.putString(sectionName,listJson);
         mEdit1.apply();
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int appWidgetIds[] = appWidgetManager.getAppWidgetIds(
+                new ComponentName(context, OnTheWidget.class));
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds,R.id.list_view);
     }
 
     public static ArrayList<Integer> loadArray(Context mContext, String sectionName) {
         SharedPreferences mSharedPreference1 =   PreferenceManager.getDefaultSharedPreferences(mContext);
         String listJson = mSharedPreference1.getString(sectionName, "[]");
-        Log.e("Lost",sectionName);
         Gson gson = new Gson();
 
         return gson.fromJson(listJson, new TypeToken<ArrayList<Integer>>() {
@@ -82,21 +87,6 @@ public class Utils {
         return  f + t + progress + "%";
     }
 
-    public static void setBadgeCount(Context context, LayerDrawable icon, int count) {
-
-        BadgeDrawable badge;
-        Drawable reuse = icon.findDrawableByLayerId(R.id.ic_badge);
-        if (reuse != null && reuse instanceof BadgeDrawable) {
-            badge = (BadgeDrawable) reuse;
-        } else {
-            badge = new BadgeDrawable(context);
-        }
-
-        badge.setCount(count);
-        icon.mutate();
-        icon.setDrawableByLayerId(R.id.ic_badge, badge);
-    }
-
     public static boolean isConnected(Context context) {
         try {
             ConnectivityManager connec =
@@ -119,7 +109,6 @@ public class Utils {
     }
 
     public static void addToSpecificList(Context ctx, ArrayList<Integer> list, String sectionName){
-        Log.e("List",list.toString());
         ArrayList<Integer> oldArrayList = loadArray(ctx, sectionName);
         for(int i = 0; i<list.size(); i++){
             if(!oldArrayList.contains(list.get(i))){
@@ -129,7 +118,6 @@ public class Utils {
         saveArray(ctx,oldArrayList,sectionName);
     }
 
-
     public static int getPDFCount(Context mCtx, String sectionName){
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mCtx);
         String json = sp.getString(sectionName, "[]");
@@ -137,6 +125,7 @@ public class Utils {
         List<Integer> list = gson.fromJson(json, new TypeToken<ArrayList<Integer>>() {}.getType());
         return list.size();
     }
+
     public static void addSectionToList(Context mContext, String sectionString){
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mContext);
         SharedPreferences.Editor mEdit1 = sp.edit();

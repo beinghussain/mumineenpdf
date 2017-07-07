@@ -14,9 +14,9 @@ import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
-import com.mumineendownloads.mumineenpdf.Widget.NewAppWidget;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static android.R.style.Widget;
 
@@ -32,12 +32,17 @@ public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsF
         this.context = context;
         appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID);
-        Log.d("AppWidgetId", String.valueOf(appWidgetId));
-        dbhelper = new PDFHelper(this.context);
+        dbhelper = new PDFHelper(context);
     }
 
     private void updateWidgetListView() {
-        this.widgetList = dbhelper.getAllPDFS("Marasiya");
+        widgetList.clear();
+        String title = OnTheWidgetConfigureActivity.loadTitlePref(context, appWidgetId);
+        List<Integer> a = Utils.loadArray(context,title);
+        for(Integer i : a){
+            PDF.PdfBean p = dbhelper.getPDF(i);
+            widgetList.add(p);
+        }
     }
 
     @Override
@@ -80,11 +85,12 @@ public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsF
         RemoteViews remoteView = new RemoteViews(context.getPackageName(),
                 R.layout.list_row);
         remoteView.setTextViewText(R.id.item, widgetList.get(position).getTitle());
-        Bundle extras = new Bundle();
-        extras.putInt(NewAppWidget.EXTRA_ITEM, position);
-        Intent fillInIntent = new Intent();
-        fillInIntent.putExtras(extras);
-        remoteView.setOnClickFillInIntent(R.id.item, fillInIntent);
+        Intent intent = new Intent();
+        PDF.PdfBean pdf = widgetList.get(position);
+        intent.putExtra("mode", 0);
+        intent.putExtra("pid", pdf.getPid());
+        intent.putExtra("title", pdf.getTitle());
+        remoteView.setOnClickFillInIntent(R.id.item, intent);
         return remoteView;
     }
 

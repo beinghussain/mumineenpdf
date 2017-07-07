@@ -440,26 +440,27 @@ public class PDFListFragment extends Fragment {
                 case R.id.navigation_add_library:
                     goList.clear();
                     for(PDF.PdfBean pdfBean : multiSelect_list){
-                        goList.add(pdfBean.getPid());
+                        if(pdfBean.getStatus()==Status.STATUS_DOWNLOADED){
+                            goList.add(pdfBean.getPid());
+                        }
                     }
                     List<String> a = Utils.getSections(getContext());
                     a.add("Create new list");
                     MaterialDialog.Builder dialog = new MaterialDialog.Builder(getActivity());
-                    dialog
-                            .title("Add "+goList.size() + " pdf to...")
-                            .items(a)
-                            .itemsCallback(new MaterialDialog.ListCallback() {
-                                @Override
-                                public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-                                    if(text.equals("Create new list")){
-                                        showNewDialog(goList);
+                        dialog
+                                .title("Add "+goList.size() + " pdf to...")
+                                .items(a)
+                                .itemsCallback(new MaterialDialog.ListCallback() {
+                                    @Override
+                                    public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                                        if(text.equals("Create new list")){
+                                            showNewDialog(goList);
+                                        } else {
+                                            Utils.addToSpecificList(getContext(),goList, String.valueOf(text));
+                                        }
                                     }
-                                    else {
-                                        Utils.addToSpecificList(getContext(),goList,String.valueOf(text));
-                                    }
-                                }
-                            });
-                    dialog.show();
+                                });
+                        dialog.show();
                     destory();
                     break;
                 case R.id.delele_all:

@@ -2,12 +2,17 @@ package com.mumineendownloads.mumineenpdf.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.intrusoft.sectionedrecyclerview.Section;
 import com.intrusoft.sectionedrecyclerview.SectionRecyclerViewAdapter;
 import com.marcinorlowski.fonty.Fonty;
@@ -33,7 +38,7 @@ import es.dmoral.toasty.Toasty;
 
 public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, PDF.PdfBean, SectionViewHolder, ChildViewHolder> {
 
-    Context context;
+    private Context context;
 
     public GoSectionAdapter(Context context, List<SectionHeader> sectionHeaderItemList) {
         super(context, sectionHeaderItemList);
@@ -56,14 +61,49 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
     @Override
     public void onBindSectionViewHolder(SectionViewHolder sectionViewHolder, final int sectionPosition, final SectionHeader sectionHeader) {
         sectionViewHolder.name.setText(sectionHeader.getSectionText());
+
         sectionViewHolder.delete.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Utils.deleteList(v.getContext(),sectionHeader.getSectionText());
-                removeSection(sectionPosition);
-                Go.notifyRemove(v.getContext());
+            public void onClick(final View v) {
+           showAlert(context,sectionPosition,sectionHeader.getSectionText());
             }
         });
+    }
+
+    private void showAlert(final Context context, final int sectionPosition, final String sectionName){
+        new MaterialDialog.Builder(context)
+                .title("Delete "+sectionName)
+                .positiveText("Delete")
+                .negativeText("Cancel")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        deleteSection(context,sectionName,sectionPosition);
+                    }
+                })
+                .content("Do you really want to delete this section?")
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
+                    }
+                }).build().show();
+    }
+
+    private void deleteSection(final Context mCtx, final String sectionName, final int sectionPosition){
+        Go.mRecyclerView.setVisibility(View.GONE);
+        Go.progress.setVisibility(View.VISIBLE);
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Utils.deleteList(mCtx,sectionName);
+                removeSection(sectionPosition);
+                Go.notifyRemove(mCtx);
+                Go.progress.setVisibility(View.GONE);
+                Go.mRecyclerView.setVisibility(View.VISIBLE);
+            }
+        }, 1000);
     }
 
     @Override

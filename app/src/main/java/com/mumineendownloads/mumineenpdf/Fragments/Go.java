@@ -54,7 +54,7 @@ import es.dmoral.toasty.Toasty;
 public class Go extends Fragment {
     private MainActivity activity;
     private ArrayList<PDF.PdfBean> arrayList;
-    private RecyclerView mRecyclerView;
+    public static RecyclerView mRecyclerView;
     private GoSectionAdapter goSectionAdapter;
     public static ViewPager viewPager;
     private static SavedViewPagerAdapter viewPagerAdapter;
@@ -63,6 +63,7 @@ public class Go extends Fragment {
     private ArrayList<PDF.PdfBean> goList;
     private PDFHelper pdfHelper;
     private static CardView empty;
+    public static ProgressView progress;
 
     public Go newInstance() {
         return new Go();
@@ -88,6 +89,7 @@ public class Go extends Fragment {
         mRecyclerView.getItemAnimator().setChangeDuration(0);
         pdfHelper = new PDFHelper(getContext());
         empty = (CardView) rootView.findViewById(R.id.emptyCard);
+        progress = (ProgressView)rootView.findViewById(R.id.progress);
         Fonty.setFonts((ViewGroup) rootView);
 
         arrayList = new ArrayList<>();
@@ -102,6 +104,7 @@ public class Go extends Fragment {
                           @Override
                           public void run() {
                               empty.setVisibility(View.VISIBLE);
+                              progress.setVisibility(View.GONE);
                           }
                       });
                     }
@@ -111,7 +114,6 @@ public class Go extends Fragment {
                         for(int i = 0; i<a.size(); i++){
                             b.add(pdfHelper.getPDF(a.get(i)));
                         }
-                        Log.e("Size", String.valueOf(a.size()));
                         sections.add(new SectionHeader(b, s));
                     }
 
@@ -120,11 +122,12 @@ public class Go extends Fragment {
                         public void run() {
                             goSectionAdapter = new GoSectionAdapter(getContext(),sections);
                             mRecyclerView.setAdapter(goSectionAdapter);
+                            progress.setVisibility(View.GONE);
+                            mRecyclerView.setVisibility(View.VISIBLE);
                         }
 
                     });
                 } catch (NullPointerException ignored) {
-                    Log.e("Crashed","Yup");
                 }
             }
         });

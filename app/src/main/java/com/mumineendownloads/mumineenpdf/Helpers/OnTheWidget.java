@@ -1,28 +1,83 @@
 package com.mumineendownloads.mumineenpdf.Helpers;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.R;
+import com.mumineendownloads.mumineenpdf.Service.WidgetService;
 
 public class OnTheWidget extends AppWidgetProvider {
+
+
+    private static final String TOAST_ACTION = "com.mumineendownloads.com.toast";
+    public static final String EXTRA_ITEM = "extra_item.mumineendownloads.com";
+
+    @Override
+    public void onReceive(Context context, Intent intent)
+    {
+        super.onReceive(context, intent);
+        Log.e("Touched","Yes");
+        AppWidgetManager mgr = AppWidgetManager.getInstance(context);
+        if (intent.getAction().equals(TOAST_ACTION)) {
+            int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    AppWidgetManager.INVALID_APPWIDGET_ID);
+            int viewIndex = intent.getIntExtra(EXTRA_ITEM, 0);
+            Toast.makeText(context, "Touched view " + viewIndex, Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
 
-        CharSequence widgetText = OnTheWidgetConfigureActivity.loadTitlePref(context, appWidgetId);
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.on_the_widget);
-        views.setTextViewText(R.id.appwidget_text, widgetText);
-        appWidgetManager.updateAppWidget(appWidgetId, views);
+        RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.new_app_widget);
+        Intent intent = new Intent(context, WidgetService.class);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
+                appWidgetId);
+        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+        rv.setRemoteAdapter(R.id.list_view, intent);
+        CharSequence s  = OnTheWidgetConfigureActivity.loadTitlePref(context,appWidgetId);
+        rv.setTextViewText(R.id.list_title,s);
+        appWidgetManager.updateAppWidget(appWidgetId, rv);
+        Intent toastIntent = new Intent(context, WidgetRemoteViewsFactory.class);
+
+        toastIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+        PendingIntent toastPendingIntent = PendingIntent.getBroadcast(context, 0, toastIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        rv.setPendingIntentTemplate(R.id.list_view, toastPendingIntent);
+        appWidgetManager.updateAppWidget(appWidgetId, rv);
     }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId);
+            RemoteViews rv = new RemoteViews(context.getPackageName(),
+                    R.layout.new_app_widget);
+
+            Intent intent = new Intent(context, WidgetService.class);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    appWidgetId);
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+            rv.setRemoteAdapter(R.id.list_view, intent);
+            CharSequence s  = OnTheWidgetConfigureActivity.loadTitlePref(context,appWidgetId);
+            rv.setTextViewText(R.id.list_title,s);
+
+            Intent startActivityIntent = new Intent(context, PDFActivity.class);
+            PendingIntent startActivityPendingIntent = PendingIntent.getActivity(context, 0, startActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            rv.setPendingIntentTemplate(R.id.list_view, startActivityPendingIntent);
+
+            appWidgetManager.updateAppWidget(appWidgetId, rv);
         }
+        super.onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
     @Override

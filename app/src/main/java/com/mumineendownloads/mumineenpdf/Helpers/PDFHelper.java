@@ -80,7 +80,6 @@ public class PDFHelper extends SQLiteOpenHelper {
     public PDF.PdfBean getPDF(int pid) {
         ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
         String selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE pid = " + pid;
-        Log.e("QUERY", selectQuery);
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 

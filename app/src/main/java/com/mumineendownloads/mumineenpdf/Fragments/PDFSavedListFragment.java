@@ -121,7 +121,6 @@ public class PDFSavedListFragment extends Fragment {
         MenuItem myActionMenuItem = menu.findItem( R.id.action_search);
         final SearchView searchView = (SearchView) myActionMenuItem.getActionView();
         searchView.setQueryHint("Search from saved pdf");
-        searchView.setMaxWidth(1100);
         search(searchView);
 
         MenuItemCompat.setOnActionExpandListener(myActionMenuItem, new MenuItemCompat.OnActionExpandListener() {
@@ -180,7 +179,6 @@ public class PDFSavedListFragment extends Fragment {
                     }
                 }).build().show();
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

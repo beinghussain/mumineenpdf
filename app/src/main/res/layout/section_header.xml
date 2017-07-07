@@ -34,16 +34,48 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <TextView
+        <ImageButton
             android:id="@+id/remove"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="14dp"
-            android:layout_marginRight="14dp"
-            android:text="Delete this list" />
+            android:layout_marginRight="8dp"
+            android:background="@android:color/transparent"
+            android:tint="@color/common_google_signin_btn_text_light_default"
+            app:srcCompat="@drawable/ic_delete_forever_black_24dp" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/remove"
+            android:layout_toLeftOf="@+id/remove"
+            android:layout_toStartOf="@+id/remove"
+            android:layout_marginRight="15dp"
+            android:layout_marginEnd="15dp">
+
+            <com.nex3z.notificationbadge.NotificationBadge
+                android:id="@+id/badge"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginLeft="-16dp"
+                android:layout_marginTop="-8dp"
+                app:nbBackground="@drawable/nb_badge_bg"
+                app:nbMaxTextLength="2" />
+
+            <ImageButton
+                android:id="@+id/download_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="14dp"
+                android:background="@android:color/transparent"
+                android:tint="?attr/colorControlNormal"
+                app:srcCompat="@drawable/ic_download_black_24dp" />
+
+
+        </RelativeLayout>
 
 
     </RelativeLayout>

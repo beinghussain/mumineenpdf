@@ -9,39 +9,33 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.marcinorlowski.fonty.Fonty;
-import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
 import com.mumineendownloads.mumineenpdf.R;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import es.dmoral.toasty.Toasty;
 
-/**
- * The configuration screen for the {@link OnTheWidget OnTheWidget} AppWidget.
- */
+
 public class OnTheWidgetConfigureActivity extends Activity {
 
     private static final String PREFS_NAME = "com.mumineendownloads.mumineenpdf.Helpers.OnTheWidget";
     private static final String PREF_PREFIX_KEY = "appwidget_";
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     RecyclerView mRecyclerView;
+    private RelativeLayout emptyView;
 
     public void itemClick(String title){
         saveTitlePref(getApplicationContext(),mAppWidgetId,title);
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getApplicationContext());
         OnTheWidget.updateAppWidget(getApplicationContext(), appWidgetManager, mAppWidgetId);
-
         Intent resultValue = new Intent();
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
         setResult(RESULT_OK, resultValue);
@@ -98,7 +92,7 @@ public class OnTheWidgetConfigureActivity extends Activity {
         public void onBindViewHolder(WidgetRViewHolder holder, int position) {
             final String title = list.get(position);
             String size = Utils.getPDFCount(getApplicationContext(),title) + " PDF Files in these list";
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
+            holder.mainView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Toasty.normal(v.getContext(),title).show();
@@ -118,10 +112,12 @@ public class OnTheWidgetConfigureActivity extends Activity {
         class WidgetRViewHolder extends RecyclerView.ViewHolder{
 
             public TextView title,size;
+            public RelativeLayout mainView;
 
             WidgetRViewHolder(View itemView) {
                 super(itemView);
                 title = (TextView) itemView.findViewById(R.id.title);
+                mainView = (RelativeLayout) itemView.findViewById(R.id.mainView);
                 size = (TextView) itemView.findViewById(R.id.size);
             }
         }
@@ -143,9 +139,15 @@ public class OnTheWidgetConfigureActivity extends Activity {
         Fonty.setFonts(toolbar);
 
                 mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_widger);
+        emptyView = (RelativeLayout) findViewById(R.id.emptyView);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(),LinearLayoutManager.VERTICAL,false));
         mRecyclerView.addItemDecoration(new CustomDivider(getApplicationContext()));
         List<String> list = Utils.getSections(getApplicationContext());
+        if(list.isEmpty()){
+            emptyView.setVisibility(View.VISIBLE);
+        }else {
+            emptyView.setVisibility(View.GONE);
+        }
         mRecyclerView.setAdapter(new WidgetRAdapter(list,getApplicationContext()));
 
         Intent intent = getIntent();
