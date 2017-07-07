@@ -26,6 +26,7 @@ import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
+import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 import com.rey.material.widget.Button;
@@ -126,13 +127,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
         final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
         holder.title.setText(pdf.getTitle());
-        final String t;
-        if (Integer.parseInt(pdf.getSize()) < 1024) {
-            t = pdf.getSize() + " KB";
-        } else {
-            Float size = Float.valueOf(pdf.getSize()) / 1024;
-            t = new DecimalFormat("##.##").format(size) + " MB";
-        }
+
         String al = "";
         final int pdfDownloadStatus = pdf.getStatus();
         if (pdfDownloadStatus == Status.STATUS_LOADING) {
@@ -162,7 +157,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADED) {
             holder.imageView.setVisibility(View.VISIBLE);
             holder.progressBarDownload.setVisibility(View.GONE);
-            holder.size.setText(getPagesString(pdf.getPageCount()) + t) ;
+            holder.size.setText(getPagesString(pdf.getPageCount()) + Utils.fileSize(pdf.getSize())) ;
             holder.button.setVisibility(View.VISIBLE);
             if(pdfListFragment.isMultiSelect){
                 holder.button.setAlpha(0.5f);
@@ -186,7 +181,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         }
         else {
             holder.cancelView.setVisibility(View.GONE);
-            holder.size.setText(t + al);
+            holder.size.setText(Utils.fileSize(pdf.getSize()) + al);
             holder.imageView.setVisibility(View.VISIBLE);
             holder.progressBarDownload.setVisibility(View.GONE);
             holder.button.setVisibility(View.GONE);

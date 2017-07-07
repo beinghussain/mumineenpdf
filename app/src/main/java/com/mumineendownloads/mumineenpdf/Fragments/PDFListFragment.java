@@ -7,7 +7,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.facebook.ads.*;
 
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
@@ -91,7 +90,6 @@ public class PDFListFragment extends Fragment {
         return multiSelect_list;
     }
     public ArrayList<PDF.PdfBean> downloadingList = new ArrayList<>();
-    private NativeAd nativeAd;
     PDFHelper helper;
 
 
@@ -349,7 +347,7 @@ public class PDFListFragment extends Fragment {
                             public void run() {
                                 progressView.setVisibility(View.GONE);
                                 mRecyclerView.setVisibility(View.VISIBLE);
-                                mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
+                                mPDFAdapter = new PDFAdapter(arrayList, getContext(), PDFListFragment.this);
                                 mRecyclerView.setAdapter(mPDFAdapter);
                             }
 
@@ -440,9 +438,7 @@ public class PDFListFragment extends Fragment {
                 case R.id.navigation_add_library:
                     goList.clear();
                     for(PDF.PdfBean pdfBean : multiSelect_list){
-                        if(pdfBean.getStatus()==Status.STATUS_DOWNLOADED){
                             goList.add(pdfBean.getPid());
-                        }
                     }
                     List<String> a = Utils.getSections(getContext());
                     a.add("Create new list");
@@ -738,7 +734,6 @@ public class PDFListFragment extends Fragment {
                 return;
             }
             final int position = intent.getIntExtra(DownloadService.EXTRA_POSITION, -1);
-            Log.e("Posting", String.valueOf(position));
             final PDF.PdfBean tmpPdf = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
             if (tmpPdf == null || position == -1) {
                 return;

@@ -48,11 +48,9 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.google.firebase:firebase-messaging:10.0.1'
     compile 'com.google.firebase:firebase-appindexing:10.0.1'
-    compile 'com.facebook.android:audience-network-sdk:4.24.0'
+    compile 'com.google.firebase:firebase-ads:10.0.1'
     compile 'com.github.javiersantos:AppUpdater:2.6.1'
     compile 'com.github.IntruderShanky:Sectioned-RecyclerView:2.1.1'
-    compile 'com.nex3z:notification-badge:0.2.0'
-
     testCompile 'junit:junit:4.12'
 }
 

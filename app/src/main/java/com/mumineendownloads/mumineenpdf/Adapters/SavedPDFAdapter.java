@@ -32,6 +32,7 @@ import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFSavedListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
+import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 import com.rey.material.widget.LinearLayout;
@@ -91,15 +92,8 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
         final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
         holder.title.setText(pdf.getTitle());
-        final String t;
-        if (Integer.parseInt(pdf.getSize()) < 1024) {
-            t = pdf.getSize() + " KB";
-        } else {
-            Float size = Float.valueOf(pdf.getSize()) / 1024;
-            t = new DecimalFormat("##.##").format(size) + " MB";
-        }
         String al = "";
-        holder.size.setText(t + al);
+        holder.size.setText(Utils.fileSize(pdf.getSize()) + al);
         holder.title.setText(pdf.getTitle());
 
         holder.mainView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -149,7 +143,7 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
         queue.add(stringRequest);
     }
 
-    private void reportApp(final PDF.PdfBean pdfBean){
+    private void reportApp(final PDF.PdfBean pdfBean, Context context){
         new MaterialDialog.Builder(context)
                 .title("Report "+pdfBean.getTitle())
                 .items(R.array.reportItems)
@@ -217,7 +211,7 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
                             }
                         }
                         else if(text.equals("Report")){
-                            reportApp(pdfBean);
+                            reportApp(pdfBean,view.getContext());
                         }
                         else if(text.equals("Delete")){
                           dialog.dismiss();

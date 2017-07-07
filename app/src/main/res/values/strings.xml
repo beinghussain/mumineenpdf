@@ -48,5 +48,6 @@
     <string name="pdf_activity">Mumineen PDF Viewer</string>
     <string name="configure">Configure</string>
     <string name="empty_there_are_no_list_found">Empty! There are no list found</string>
+    <string name="library">Libraries</string>
 
 </resources>

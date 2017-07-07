@@ -28,6 +28,10 @@ public class HandleMessage extends FirebaseMessagingService {
         if(message_type.equals("updateNotification")){
             showUpdateNotification();
         }
+        if(message_type.equals("refreshNotification")){
+            Intent intent = new Intent(getApplicationContext(),BackgroundSync.class);
+            startService(intent);
+        }
     }
 
     private void showUpdateNotification() {

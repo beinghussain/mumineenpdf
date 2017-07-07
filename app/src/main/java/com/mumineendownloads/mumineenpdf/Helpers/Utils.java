@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 
 import java.text.DecimalFormat;
@@ -66,6 +67,19 @@ public class Utils {
         return gson.fromJson(listJson, new TypeToken<ArrayList<Integer>>() {
         }.getType());
 
+    }
+
+    public static String fileSize(String s){
+        long total = Long.parseLong(s);
+        int sizeT = (int) (total / 1024);
+        String t;
+        if (total < 1000000) {
+            t = total / 1024 + " KB  ";
+        } else {
+            Float size = (float) sizeT / 1024;
+            t = new DecimalFormat("##.##").format(size) + " MB  ";
+        }
+        return t;
     }
 
     public static String getDownloadPerSize(long finished, long total, int progress) {
@@ -149,4 +163,15 @@ public class Utils {
     }
 
 
+    public static int getPDFNotDownloadedCount(Context context, String sectionText) {
+        int count = 0;
+        PDFHelper helper = new PDFHelper(context);
+        List<Integer> list = Utils.loadArray(context,sectionText);
+        for(int i : list){
+           if(helper.getPDF(i).getStatus()!=Status.STATUS_DOWNLOADED){
+               count++;
+           }
+        }
+        return count;
+    }
 }
