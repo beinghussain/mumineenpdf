@@ -208,9 +208,7 @@ public class DownloadService extends Service {
             Long startTime;
             @Override
             public void onStarted() {
-                Intent resultIntent = new Intent(getApplicationContext(), DownloadService.class);
-                resultIntent.setAction(ACTION_CANCEL);
-                resultIntent.putExtra(EXTRA_APP_INFO, appInfo);
+                Intent resultIntent = new Intent(getApplicationContext(), MainActivity.class);
                 PendingIntent resultPendingIntent =
                         PendingIntent.getActivity(
                                 getApplicationContext(),
@@ -223,8 +221,8 @@ public class DownloadService extends Service {
                         .setShowWhen(false)
                         .setContentText("Please wait..")
                         .setProgress(100, 0, true)
-                        .setOngoing(false)
-                        .addAction(0,"Cancel",resultPendingIntent)
+                        .setOngoing(true)
+                        .setContentIntent(resultPendingIntent)
                         .setTicker("Start download " + appInfo.getTitle());
                 appInfo.setStatus(Status.STATUS_DOWNLOADING);
                 updateNotification();
@@ -302,10 +300,10 @@ public class DownloadService extends Service {
 
             @Override
             public void onFailed(DownloadException e) {
+                Log.e("failed",e.toString());
                 if(e.getErrorCode()==108){
                     failedMessage = "Download failed. Server error.";
                 }
-                Toasty.normal(getApplicationContext(),String.valueOf(e.getErrorCode())).show();
                 appInfo.setStatus(Status.STATUS_NULL);
                 sendBroadCast(appInfo,position);
                 downloadNext(-1);

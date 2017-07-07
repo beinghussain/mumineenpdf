@@ -11,4 +11,16 @@
         <item>Report</item>
         <item>Delete file</item>
     </string-array>
+    <string-array name="reportItems">
+        <item>Invalid PDF</item>
+        <item>English PDF</item>
+        <item>Download Error</item>
+        <item>Incomplete PDF</item>
+        <item>Other</item>
+    </string-array>
+    <string-array name="saveItemList">
+        <item>Share</item>
+        <item>Report</item>
+        <item>Delete</item>
+    </string-array>
 </resources>

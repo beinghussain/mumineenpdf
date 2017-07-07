@@ -17,10 +17,11 @@ import java.util.Map;
 
 
 public class RegisterTokenService extends FirebaseInstanceIdService {
+
     @Override
     public void onTokenRefresh() {
+        Log.e("Token","Refresh");
         String refreshedToken = FirebaseInstanceId.getInstance().getToken();
-        Log.d("Token", "Refreshed token: " + refreshedToken);
         sendRegistrationToServer(refreshedToken);
     }
 

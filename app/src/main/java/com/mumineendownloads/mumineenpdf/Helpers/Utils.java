@@ -14,46 +14,48 @@ import com.mumineendownloads.mumineenpdf.R;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class Utils {
     private Context context;
-    private static final DecimalFormat DF = new DecimalFormat("0.00");
+    private static List<String> sections;
 
     public Utils(Context context) {
         this.context = context;
     }
 
-
-    public static void addListOfArray(ArrayList<Integer> newList, Context context){
-        ArrayList<Integer> oldArrayList = loadArray(context);
-        for(int i = 0; i<newList.size(); i++){
-            if(!oldArrayList.contains(newList.get(i))){
-                oldArrayList.add(newList.get(i));
-            }
-        }
-        saveArray(context,oldArrayList);
+    public static void deleteList(Context ctx, String sectionName){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences.Editor mEdit1 = sp.edit();
+        mEdit1.remove(sectionName);
+        mEdit1.apply();
+        removeFromList(ctx,sectionName);
     }
 
-    public static void addSingleItem(int pid, Context context){
-        ArrayList<Integer> oldArrayList=  loadArray(context);
-        oldArrayList.add(pid);
-        saveArray(context,oldArrayList);
+    private static void removeFromList(Context ctx, String sectionName) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences.Editor mEdit1 = sp.edit();
+        List<String> a = getSections(ctx);
+        a.remove(sectionName);
+        Gson gson = new Gson();
+        mEdit1.putString("list_strings",gson.toJson(a));
+        mEdit1.apply();
     }
 
-    private static void saveArray(Context context, ArrayList<Integer> goList) {
+    private static void saveArray(Context context, ArrayList<Integer> goList, String sectionName) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor mEdit1 = sp.edit();
         Gson gson = new Gson();
         String listJson = gson.toJson(goList);
-        Log.e("ListJson",listJson);
-        mEdit1.putString("list1",listJson);
+        mEdit1.putString(sectionName,listJson);
         mEdit1.apply();
     }
 
-    public static ArrayList<Integer> loadArray(Context mContext) {
+    public static ArrayList<Integer> loadArray(Context mContext, String sectionName) {
         SharedPreferences mSharedPreference1 =   PreferenceManager.getDefaultSharedPreferences(mContext);
-        String listJson = mSharedPreference1.getString("list1", "[]");
+        String listJson = mSharedPreference1.getString(sectionName, "[]");
+        Log.e("Lost",sectionName);
         Gson gson = new Gson();
 
         return gson.fromJson(listJson, new TypeToken<ArrayList<Integer>>() {
@@ -114,6 +116,47 @@ public class Utils {
 
         }
         return false;
+    }
+
+    public static void addToSpecificList(Context ctx, ArrayList<Integer> list, String sectionName){
+        Log.e("List",list.toString());
+        ArrayList<Integer> oldArrayList = loadArray(ctx, sectionName);
+        for(int i = 0; i<list.size(); i++){
+            if(!oldArrayList.contains(list.get(i))){
+                oldArrayList.add(list.get(i));
+            }
+        }
+        saveArray(ctx,oldArrayList,sectionName);
+    }
+
+
+    public static int getPDFCount(Context mCtx, String sectionName){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mCtx);
+        String json = sp.getString(sectionName, "[]");
+        Gson gson = new Gson();
+        List<Integer> list = gson.fromJson(json, new TypeToken<ArrayList<Integer>>() {}.getType());
+        return list.size();
+    }
+    public static void addSectionToList(Context mContext, String sectionString){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences.Editor mEdit1 = sp.edit();
+        List<String> sections = getSections(mContext);
+        if(!sections.contains(sectionString)){
+            sections.add(sectionString);
+        }
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(sections);
+        mEdit1.putString("list_strings",jsonString);
+        mEdit1.apply();
+    }
+
+    public static List<String> getSections(Context mContext) {
+        SharedPreferences mSharedPreference1 = PreferenceManager.getDefaultSharedPreferences(mContext);
+        String listJson = mSharedPreference1.getString("list_strings", "[]");
+        Gson gson = new Gson();
+
+        return gson.fromJson(listJson, new TypeToken<List<String>>() {
+        }.getType());
     }
 
 

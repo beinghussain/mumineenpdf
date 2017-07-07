@@ -4,10 +4,12 @@ package com.mumineendownloads.mumineenpdf.Service;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteConstraintException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
@@ -35,6 +37,8 @@ import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
+import static android.content.ContentValues.TAG;
+
 public class BackgroundSync extends Service {
     public static final String ACTION_BROADCAST_SYNC = "background_sync";
     public static final String ACTION = "com.backgroundSync" ;
@@ -56,27 +60,53 @@ public class BackgroundSync extends Service {
         return null;
     }
 
+    private boolean isThere(ArrayList<PDF.PdfBean> pdfList, int pid){
+        for(PDF.PdfBean pdfBean : pdfList){
+            if(pdfBean.getPid()==pid){
+                return true;
+            }
+        }
+        return false;
+    }
+
     private String executeF() {
         boolean connected = Utils.isConnected(getApplicationContext());
         if(connected) {
             final RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
             String url = "http://mumineendownloads.com/app/getPdfApp.php";
-
-
             final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             Gson gson = new Gson();
-                            ArrayList<PDF.PdfBean> pdfBeanArrayList;
+                            final ArrayList<PDF.PdfBean> pdfBeanArrayList;
                             pdfBeanArrayList = gson.fromJson(response, new TypeToken<ArrayList<PDF.PdfBean>>() {
                             }.getType());
-                            PDFHelper pdfHelper = new PDFHelper(getApplicationContext());
-                            for (int i = 0; i < pdfBeanArrayList.size(); i++) {
-                                PDF.PdfBean pdfBean = pdfBeanArrayList.get(i);
-                                pdfHelper.updateOrInsert(pdfBean);
-                            }
-                            updateRefresh();
+                            final PDFHelper pdfHelper = new PDFHelper(getApplicationContext());
+
+                            final Thread task = new Thread()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    ArrayList<PDF.PdfBean> localArray = pdfHelper.getAllPDFS("all");
+                                    if(pdfBeanArrayList.size()<pdfHelper.getAllPDFS("all").size()){
+                                        for(PDF.PdfBean pdfBean : localArray){
+                                            if(!isThere(pdfBeanArrayList,pdfBean.getPid())){
+                                                pdfHelper.deletePDF(pdfBean);
+                                            }
+                                        }
+                                    }
+                                    for (int i = 0; i < pdfBeanArrayList.size(); i++) {
+                                        PDF.PdfBean pdfBean = pdfBeanArrayList.get(i);
+                                        pdfHelper.updateOrInsert(pdfBean);
+                                    }
+                                    updateRefresh();
+
+                                }
+                            };
+
+                            task.start();
                         }
                     }, new Response.ErrorListener() {
                 @Override

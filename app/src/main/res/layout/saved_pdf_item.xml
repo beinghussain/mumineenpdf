@@ -1,74 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/mainView"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
-    android:clickable="true"
-    android:focusable="true"
-    android:orientation="vertical"
-    android:paddingBottom="12dp"
-    android:paddingLeft="16dp"
-    android:paddingRight="12dp"
-    android:paddingTop="12dp">
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/frameLayout"
-        android:layout_toRightOf="@+id/frameLayout"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:text="Test Title"
-        android:textColor="#212121"
-        android:textSize="13dp" />
+<android.support.v7.widget.CardView android:layout_width="match_parent"
+    android:layout_height="60dp"
+    app:cardElevation="1dp"
+    app:cardCornerRadius="0dp"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <TextView
-        android:id="@+id/size"
+    <LinearLayout
+        android:id="@+id/parentView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/title"
-        android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/title"
-        android:layout_marginTop="0dp"
-        android:text="2017 KB"
-        android:textColor="#616161"
-        android:textSize="12sp" />
+        android:layout_height="60dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="horizontal"
+        android:weightSum="16">
 
-
-    <ImageButton
-        android:id="@+id/imageButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:background="@android:color/transparent"
-        android:tint="@color/colorGrey"
-        app:srcCompat="@drawable/ic_more_vert_black_24dp" />
-
-
-    <FrameLayout
-        android:id="@+id/frameLayout"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_centerInParent="true"
-        android:layout_marginRight="12dp">
-
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="match_parent"
+        <RelativeLayout
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:contentDescription="@string/hello"
-            app:srcCompat="@drawable/pdf_downloaded" />
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentStart="false"
+            android:layout_centerInParent="false"
+            android:layout_weight="2.5">
 
-    </FrameLayout>
+            <FrameLayout
+                android:id="@+id/frameLayout"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_centerInParent="true">
+
+                <ImageView
+                    android:id="@+id/imageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/hello"
+                    app:srcCompat="@drawable/pdf_downloaded" />
+
+            </FrameLayout>
 
 
-</RelativeLayout>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/mainView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10.5"
+            android:orientation="vertical">
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="false"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentStart="false"
+                android:layout_centerInParent="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginBottom="4dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Test Title"
+                    android:textColor="#212121"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/size"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="3dp"
+                    android:layout_weight="1"
+                    android:text="2017 KB"
+                    android:textColor="#616161"
+                    android:textSize="12sp" />
+
+
+            </LinearLayout>
+
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/cancel"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:clickable="true"
+            android:padding="0dp"
+            android:visibility="visible">
+
+            <ImageButton
+                android:id="@+id/cancelButton"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="15dp"
+                android:background="@android:color/transparent"
+                android:tint="@android:color/darker_gray"
+                android:visibility="visible"
+                app:srcCompat="@drawable/ic_more_vert_black_24dp" />
+
+        </RelativeLayout>
+
+
+    </LinearLayout>
+</android.support.v7.widget.CardView>

@@ -1,18 +1,27 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
 import com.afollestad.materialdialogs.DialogAction;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.facebook.ads.*;
+
+import android.annotation.TargetApi;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -22,10 +31,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,6 +42,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -40,8 +50,8 @@ import com.aspsine.multithreaddownload.DownloadManager;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
+import com.mumineendownloads.mumineenpdf.Helpers.CustomDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
-import com.mumineendownloads.mumineenpdf.Helpers.CustomAnimator;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
@@ -50,12 +60,11 @@ import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.rey.material.widget.ProgressView;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import es.dmoral.toasty.Toasty;
 
 
@@ -75,13 +84,87 @@ public class PDFListFragment extends Fragment {
     private DownloadReceiver mReceiver;
     private ArrayList<Integer> positionList = new ArrayList<>();
     private ArrayList<Integer> goList;
+    private boolean searching;
+    private ArrayList<PDF.PdfBean> newlist;
 
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
     }
     public ArrayList<PDF.PdfBean> downloadingList = new ArrayList<>();
     private NativeAd nativeAd;
+    PDFHelper helper;
 
+
+    private void reportApp(final PDF.PdfBean pdfBean){
+        new MaterialDialog.Builder(getActivity())
+                .title("Report "+pdfBean.getTitle())
+                .items(R.array.reportItems)
+                .itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
+                    @Override
+                    public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                        sendReport(pdfBean.getPid(), text);
+                        return true;
+                    }
+                })
+                .positiveText("Choose")
+                .show();
+    }
+
+    private void sendReport(final int pid, final CharSequence text) {
+        final RequestQueue queue = Volley.newRequestQueue(getContext());
+        String url = "http://mumineendownloads.com/app/pdf_error.php";
+
+        final StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+
+        }) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                String deviceId = Settings.Secure.getString(getContext().getContentResolver(),
+                        Settings.Secure.ANDROID_ID);
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("pdf_id", String.valueOf(pid));
+                params.put("error", (String) text);
+                params.put("device_id", deviceId);
+
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+
+    private void showAppInfo(){
+        new MaterialDialog.Builder(getActivity())
+                .title("Mumineen PDF")
+                .content("App for all Zakereins and Mumineen. App developed by Hussain Idrish Dehgamwala")
+                .negativeText("OK")
+                .positiveText("CONTACT HUSSAIN")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        String url = "http://www.hddevelopers.com";
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setData(Uri.parse(url));
+                        startActivity(i);
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
+                    }
+                }).build().show();
+    }
 
     private void showNativeAd() {
 //        AdSettings.addTestDevice("387fd295a941656b4222e5215d26babd");
@@ -120,24 +203,14 @@ public class PDFListFragment extends Fragment {
     }
 
     public PDFListFragment(int position, MainActivity activity) {
+        helper = new PDFHelper(activity.getApplicationContext());
+        ArrayList<String> arrayList = helper.getAlbums();
         this.activity = activity;
         multiSelect_list = new ArrayList<>();
-        switch (position){
-            case 0:
-                album = "Marasiya";
-                break;
-            case 1:
-                album = "Madeh";
-                break;
-            case 2:
-                album = "Rasa";
-                break;
-            case 3:
-                album = "Other";
-                break;
-            case 4:
-                album = "Quran30";
-                break;
+        for(int i =0; i<arrayList.size();i++){
+            if(position==i){
+                album=arrayList.get(i);
+            }
         }
     }
 
@@ -146,33 +219,17 @@ public class PDFListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_pdflist, container, false);
         Fonty.setFonts((ViewGroup) rootView);
-
-
         mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
-
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
         progressView = (ProgressView) rootView.findViewById(R.id.progress);
-
-        mRecyclerView.addItemDecoration(new CustomAnimator(getContext()));
-        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mRecyclerView.addItemDecoration(new CustomDivider(getContext()));
         mRecyclerView.getItemAnimator().setChangeDuration(0);
         setRecyclerViewLayoutManager(mRecyclerView);
-
-        SharedPreferences settings = getContext().getSharedPreferences("settings", 0);
-        boolean added = settings.getBoolean("added",false);
-
-        if(added){
-            progressView.setVisibility(View.VISIBLE);
-            mRecyclerView.setVisibility(View.GONE);
-        } else {
-            refresh(album);
-        }
-
+        goList = new ArrayList<>();
+        refresh(album);
         showNativeAd();
-        goList = Utils.loadArray(getContext());
-
         return rootView;
     }
 
@@ -206,6 +263,7 @@ public class PDFListFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         getActivity().getMenuInflater().inflate( R.menu.toolbar_menu, menu);
 
+
         MenuItem myActionMenuItem = menu.findItem( R.id.action_search);
         final SearchView searchView = (SearchView) myActionMenuItem.getActionView();
         search(searchView);
@@ -216,6 +274,7 @@ public class PDFListFragment extends Fragment {
                 refresh("all");
                 MainActivity.toggle(true);
                 Home.toggleTab(true);
+                searching = true;
                 return true;
             }
 
@@ -224,10 +283,12 @@ public class PDFListFragment extends Fragment {
                 refresh(album);
                 MainActivity.toggle(false);
                 Home.toggleTab(false);
+                searching = false;
                 return true;
             }
         });
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -237,6 +298,12 @@ public class PDFListFragment extends Fragment {
             getActivity().startService(intent);
             mRecyclerView.setVisibility(View.GONE);
             progressView.setVisibility(View.VISIBLE);
+        }
+        if(id==R.id.action_info){
+            showAppInfo();
+        }
+        if(id==R.id.action_rate){
+            openRatings();
         }
         if(id==R.id.action_share){
             try {
@@ -253,29 +320,48 @@ public class PDFListFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void openRatings() {
+        Uri uri = Uri.parse("market://details?id=" + getActivity().getPackageName());
+        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        try {
+            startActivity(goToMarket);
+        } catch (ActivityNotFoundException e) {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://play.google.com/store/apps/details?id=" + getActivity().getPackageName())));
+        }
+    }
+
     public void refresh(final String mainAlbum){
-        mRecyclerView.setVisibility(View.GONE);
-        progressView.setVisibility(View.VISIBLE);
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    arrayList = mPDFHelper.getAllPDFS(mainAlbum);
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            progressView.setVisibility(View.GONE);
-                            mRecyclerView.setVisibility(View.VISIBLE);
-                            mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
-                            mRecyclerView.setAdapter(mPDFAdapter);
-                        }
+        try {
+            mRecyclerView.setVisibility(View.GONE);
+            progressView.setVisibility(View.VISIBLE);
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        arrayList = mPDFHelper.getAllPDFS(mainAlbum);
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressView.setVisibility(View.GONE);
+                                mRecyclerView.setVisibility(View.VISIBLE);
+                                mPDFAdapter = new PDFAdapter(arrayList, getActivity().getApplicationContext(), PDFListFragment.this);
+                                mRecyclerView.setAdapter(mPDFAdapter);
+                            }
 
-                    });
-                }catch (NullPointerException ignored){
+                        });
+                    } catch (NullPointerException ignored) {
 
+                    }
                 }
-            }
-        });
+            });
+        }catch (NullPointerException ignored){
+
+        }
     }
 
     private ActionMode.Callback mActionCallback = new ActionMode.Callback() {
@@ -352,10 +438,29 @@ public class PDFListFragment extends Fragment {
 
                     break;
                 case R.id.navigation_add_library:
+                    goList.clear();
                     for(PDF.PdfBean pdfBean : multiSelect_list){
                         goList.add(pdfBean.getPid());
                     }
-                    Utils.addListOfArray(goList,getContext());
+                    List<String> a = Utils.getSections(getContext());
+                    a.add("Create new list");
+                    MaterialDialog.Builder dialog = new MaterialDialog.Builder(getActivity());
+                    dialog
+                            .title("Add "+goList.size() + " pdf to...")
+                            .items(a)
+                            .itemsCallback(new MaterialDialog.ListCallback() {
+                                @Override
+                                public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                                    if(text.equals("Create new list")){
+                                        showNewDialog(goList);
+                                    }
+                                    else {
+                                        Utils.addToSpecificList(getContext(),goList,String.valueOf(text));
+                                    }
+                                }
+                            });
+                    dialog.show();
+                    destory();
                     break;
                 case R.id.delele_all:
                     deleteAll(multiSelect_list,getContext());
@@ -377,6 +482,19 @@ public class PDFListFragment extends Fragment {
             Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
         }
     };
+
+    private void showNewDialog(final ArrayList<Integer> pids) {
+        new MaterialDialog.Builder(getActivity())
+                .title("Enter list name")
+                .inputType(InputType.TYPE_CLASS_TEXT)
+                .input("Example: Daris Hafti", null, new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                        Utils.addSectionToList(getContext(),String.valueOf(input));
+                        Utils.addToSpecificList(getContext(),pids, String.valueOf(input));
+                    }
+                }).show();
+    }
 
     private void deleteAll(final ArrayList<PDF.PdfBean> multiSelect_list, Context context) {
         new MaterialDialog.Builder(context)
@@ -400,6 +518,7 @@ public class PDFListFragment extends Fragment {
                                 file.delete();
                                 count++;
                                 pdfBean.setStatus(Status.STATUS_NULL);
+                                mPDFHelper.updatePDF(pdfBean);
                                 mPDFAdapter.notifyItemChanged(arrayList.indexOf(pdfBean));
                             }
                         }
@@ -417,10 +536,6 @@ public class PDFListFragment extends Fragment {
                     }
                 })
                 .content("Do you really want to delete this files?").build().show();
-    }
-
-    public void startPostDelayDelete(ArrayList<PDF.PdfBean> multiSelect_list1){
-
     }
 
     private void startDownloading() {
@@ -461,7 +576,7 @@ public class PDFListFragment extends Fragment {
             @Override
             public boolean onQueryTextChange(String newText) {
                 newText=newText.toLowerCase();
-                ArrayList<PDF.PdfBean>newlist=new ArrayList<>();
+                newlist=new ArrayList<>();
                 for(PDF.PdfBean name:arrayList)
                 {
                     String getName=name.getTitle().toLowerCase();
@@ -470,7 +585,6 @@ public class PDFListFragment extends Fragment {
                     }
                 }
                 mPDFAdapter.filter(newlist);
-                arrayList = newlist;
                 return true;
             }
         });
@@ -537,32 +651,13 @@ public class PDFListFragment extends Fragment {
                                     Toasty.normal(getContext(), "File not downloaded yet").show();
                                 }
                             } else if (text.equals("Report")) {
-                                Toast.makeText(context, "Reporting...", Toast.LENGTH_SHORT).show();
+                                reportApp(pdf);
                             }
                         }
                     })
                     .show();
         } else {
             multi_select(position,pdf);
-        }
-    }
-
-    public void copy(File src, File dst) throws IOException {
-        InputStream in = new FileInputStream(src);
-        try {
-            OutputStream out = new FileOutputStream(dst);
-            try {
-                // Transfer bytes from in to out
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
-                }
-            } finally {
-                out.close();
-            }
-        } finally {
-            in.close();
         }
     }
 
@@ -589,6 +684,7 @@ public class PDFListFragment extends Fragment {
                             file.delete();
                             pdf.setStatus(Status.STATUS_NULL);
                             mPDFAdapter.notifyItemChanged(position);
+                            mPDFHelper.updatePDF(pdf);
                         }
                     }
                 })
@@ -641,6 +737,7 @@ public class PDFListFragment extends Fragment {
                 return;
             }
             final int position = intent.getIntExtra(DownloadService.EXTRA_POSITION, -1);
+            Log.e("Posting", String.valueOf(position));
             final PDF.PdfBean tmpPdf = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
             if (tmpPdf == null || position == -1) {
                 return;
@@ -669,6 +766,9 @@ public class PDFListFragment extends Fragment {
                     } else if (status==Status.STATUS_CONNECTED){
                         pdf.setStatus(Status.STATUS_CONNECTED);
                         mPDFAdapter.notifyItemChanged(position);
+                    }
+                    if(searching){
+                        mPDFAdapter.notifyDataSetChanged();
                     }
                 }
             }

@@ -15,12 +15,11 @@
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.mumineendownloads.mumineenpdf.provider"
-            android:grantUriPermissions="true"
-            android:exported="false">
+            android:exported="false"
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/providers_path" />
@@ -28,8 +27,8 @@
 
         <activity
             android:name=".Activities.MainActivity"
-            android:label="@string/app_name">
-
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="anodroid.intent.action.SEARCH" />
             </intent-filter>
@@ -56,6 +55,7 @@
         <activity
             android:name=".Activities.PDFActivity"
             android:label="@string/pdf_activity"
+            android:screenOrientation="fullSensor"
             android:theme="@style/AppTheme.ThemeDark">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -83,11 +83,30 @@
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
-        <activity android:name=".Activities.Splash" android:theme="@style/SplashTheme">
+        <activity
+            android:name=".Activities.Splash"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".Activities.Startup" />
+
+        <receiver android:name=".Helpers.OnTheWidget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/on_the_widget_info" />
+        </receiver>
+
+        <activity android:name=".Helpers.OnTheWidgetConfigureActivity">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
     </application>

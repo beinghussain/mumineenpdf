@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ecf0f1"
+    android:background="#000000"
     tools:context="com.mumineendownloads.mumineenpdf.Activities.PDFActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -28,9 +28,7 @@
         android:id="@+id/pdfView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/appBarPDf"
         android:layout_marginBottom="0dp"
-        android:layout_marginTop="56dp"
         android:background="#000000">
 
     </com.github.barteksc.pdfviewer.PDFView>

@@ -20,6 +20,7 @@ import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.FragmentPagerAdapterCustom;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
+import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 
@@ -34,7 +35,6 @@ public class Home extends Fragment {
     public static ViewPager viewPager;
     private static FragmentPagerAdapterCustom viewPagerAdapter;
     public static CstTabLayout tabLayout;
-    private SearchView searchView;
 
 
     public Home newInstance(MainActivity activity) {
@@ -57,7 +57,10 @@ public class Home extends Fragment {
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
         Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
-        viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager(), activity);
+        ArrayList<String> arrayTabList;
+        PDFHelper pdfHelper = new PDFHelper(getContext());
+        arrayTabList = pdfHelper.getAlbums();
+        viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager(), activity, arrayTabList);
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setOffscreenPageLimit(6);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -77,9 +80,6 @@ public class Home extends Fragment {
         });
         tabLayout = (CstTabLayout) rootView.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
-//        TabLayout.Tab tab = tabLayout.getTabAt(2);
-//        assert tab != null;
-//        tab.setCustomView(R.layout.tab);
         Fonty.setFonts(tabLayout);
         return rootView;
     }
@@ -89,23 +89,6 @@ public class Home extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         getActivity().getMenuInflater().inflate( R.menu.toolbar_menu, menu);
-
-        final MenuItem myActionMenuItem = menu.findItem( R.id.action_search);
-        searchView = (SearchView) myActionMenuItem.getActionView();
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if( ! searchView.isIconified()) {
-                    searchView.setIconified(true);
-                }
-                myActionMenuItem.collapseActionView();
-                return false;
-            }
-            @Override
-            public boolean onQueryTextChange(String s) {
-                return false;
-            }
-        });
     }
 
     @Override

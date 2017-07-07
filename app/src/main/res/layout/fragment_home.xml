@@ -21,6 +21,7 @@
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:layout_scrollFlags="scroll|enterAlways" />
 
+
         <com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout
             android:id="@+id/tabs"
             android:layout_width="match_parent"

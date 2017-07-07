@@ -2,8 +2,10 @@ package com.mumineendownloads.mumineenpdf.Activities;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -12,11 +14,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.LinearInterpolator;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import com.github.barteksc.pdfviewer.PDFView;
+import com.github.barteksc.pdfviewer.listener.OnRenderListener;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomScrollHandle;
@@ -33,6 +38,7 @@ public class PDFActivity extends AppCompatActivity {
     private PDFView pdfView;
     private WebView webView;
     private Toolbar toolbar;
+    private boolean fullscreen = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,24 +47,50 @@ public class PDFActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setShowHideAnimationEnabled(true);
         Fonty.setFonts(toolbar);
 
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
+        pdfView = (PDFView) findViewById(R.id.pdfView);
+        pdfView.documentFitsView();
+        pdfView.setMinZoom(3f);
+        pdfView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(fullscreen) {
+                    fullscreen = false;
+                    getSupportActionBar().hide();
+                }else {
+                    fullscreen = true;
+                    getSupportActionBar().show();
+                }
+            }
+        });
+
+        getSupportActionBar().hide();
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         final PDF.PdfBean pdfBean = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
         if(pdfBean!=null){
             getSupportActionBar().setTitle(pdfBean.getTitle());
-            pdfView = (PDFView) findViewById(R.id.pdfView);
             File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdfBean.getPid() + ".pdf");
             pdfView.fromFile(file)
                     .enableSwipe(true)
-                    .spacing(25)
+                    .onRender(new OnRenderListener() {
+                        @Override
+                        public void onInitiallyRendered(int nbPages, float pageWidth, float pageHeight) {
+                            pdfView.fitToWidth();
+                        }
+                    })
+                    .spacing(2)
                     .scrollHandle(new CustomScrollHandle(this))
                     .load();
+
             pdfView.useBestQuality(true);
         }
+
 
 
         if (Intent.ACTION_DEFAULT.equals(action) && type != null) {
@@ -83,9 +115,18 @@ public class PDFActivity extends AppCompatActivity {
                 File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + id + ".pdf");
                 pdfView.fromFile(file)
                         .enableSwipe(true)
-                        .spacing(25)
+                        .spacing(2)
+                        .onRender(new OnRenderListener() {
+                            @Override
+                            public void onInitiallyRendered(int nbPages, float pageWidth, float pageHeight) {
+                                pdfView.fitToWidth();
+                                pdfView.documentFitsView();
+                                pdfView.setMinZoom(3.0f);
+                            }
+                        })
                         .scrollHandle(new CustomScrollHandle(this))
                         .load();
+                pdfView.setMinZoom(3.0f);
                 pdfView.useBestQuality(true);
             }
 
@@ -96,7 +137,13 @@ public class PDFActivity extends AppCompatActivity {
         pdfView = (PDFView) findViewById(R.id.pdfView);
         pdfView.fromUri(intent.getData())
                 .enableSwipe(true)
-                .spacing(25)
+
+                .onRender(new OnRenderListener() {
+                    @Override
+                    public void onInitiallyRendered(int nbPages, float pageWidth, float pageHeight) {
+                        pdfView.fitToWidth();
+                    }
+                })
                 .scrollHandle(new CustomScrollHandle(this))
                 .load();
         pdfView.useBestQuality(true);
@@ -114,7 +161,6 @@ public class PDFActivity extends AppCompatActivity {
             }
         });
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

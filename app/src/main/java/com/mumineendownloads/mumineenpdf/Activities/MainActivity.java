@@ -1,12 +1,14 @@
 package com.mumineendownloads.mumineenpdf.Activities;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -18,9 +20,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+
+import com.github.javiersantos.appupdater.AppUpdater;
+import com.github.javiersantos.appupdater.enums.Display;
+import com.github.javiersantos.appupdater.enums.UpdateFrom;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.Actions;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.BuildConfig;
 import com.mumineendownloads.mumineenpdf.Fragments.Go;
@@ -30,28 +38,23 @@ import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
-import com.tonyodev.fetch.Fetch;
-import com.vansuita.library.CheckNewAppVersion;
+import com.mumineendownloads.mumineenpdf.Service.HandleMessage;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity {
 
-    public Fetch fetch;
-
 
     public MainActivity(){
 
     }
-
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
           refresh();
         }
     };
-
     private static final int RC_STORAGE = 1;
     public static BottomNavigationView bottomNavigationView;
 
@@ -81,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView.OnNavigationItemSelectedListener bottomNavigationListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            fetch = Fetch.newInstance(MainActivity.this);
             Fragment selectedFragment = null;
             Home home = new Home(MainActivity.this);
             Saved savedFragment = new Saved();
@@ -123,6 +125,25 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Fonty.setFonts(this);
+        Intent intent = getIntent();
+        try {
+            String id = intent.getStringExtra(HandleMessage.UPDATE_APP);
+            if(id.equals("update")){
+                Uri uri = Uri.parse("market://details?id=" + getPackageName());
+                Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                try {
+                    startActivity(goToMarket);
+                } catch (ActivityNotFoundException e) {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
+                }
+            }
+        } catch (NullPointerException ignored) {
+
+        }
         methodRequiresTwoPermission();
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(bottomNavigationListener);
@@ -132,26 +153,14 @@ public class MainActivity extends AppCompatActivity {
         Home home = new Home(MainActivity.this);
         transaction.replace(R.id.fragment, home.newInstance(MainActivity.this));
         transaction.commit();
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        int vCode = preferences.getInt("versioncode",BuildConfig.VERSION_CODE);
-        Log.e("I", String.valueOf(preferences.getBoolean("showLater",false)));
 
-        if(preferences.getBoolean("showLater",false)){
-            preferences.edit().putInt("showAfter10",0).apply();
-            int i = preferences.getInt("showAfter10",0);
+        AppUpdater appUpdater = new AppUpdater(this);
+        appUpdater
+                .setUpdateFrom(UpdateFrom.GOOGLE_PLAY)
+                .setDisplay(Display.DIALOG)
+                .setTitleOnUpdateAvailable("Update Available")
+                .start();
 
-            Log.e("I", String.valueOf(i));
-            preferences.edit().putInt("showAfter10",i-1).apply();
-            if(i==0){
-                preferences.edit().putBoolean("showLater",false).apply();
-            }
-        }
-        if(vCode == BuildConfig.VERSION_CODE){
-            if(preferences.getBoolean("never",false) && preferences.getInt("showAfter10",0)==0) {
-                showUpdateDialog(preferences);
-            }
-        }
-       // backgroundSync.execute();
     }
 
     private void showUpdateDialog(final SharedPreferences preferences) {
@@ -186,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void refresh(){
         Home.viewPager.getAdapter().notifyDataSetChanged();
+        Fonty.setFonts(Home.viewPager);
     }
 
     @Override

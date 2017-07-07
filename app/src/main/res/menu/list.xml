@@ -1,0 +1,7 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/share" android:title="Share"/>
+    <item android:id="@+id/upload" android:title="Upload"/>
+    <group android:id="@+id/helpgroup">
+        <item android:id="@+id/help" android:title="Add New"/>
+    </group>
+</menu>

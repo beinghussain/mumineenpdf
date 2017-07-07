@@ -206,10 +206,12 @@ public class PDFHelper extends SQLiteOpenHelper {
                 initialValues.put(KEY_ALBUM, pdf.getAlbum());
                 initialValues.put(KEY_TITLE, pdf.getTitle());
                 initialValues.put(KEY_PID, pdf.getPid());
-
-                int id = (int) db.insertWithOnConflict(TABLE_PDF, null, initialValues, SQLiteDatabase.CONFLICT_IGNORE);
-                if (id == -1) {
-                    db.update(TABLE_PDF, initialValues, "pid = ?", new String[] {String.valueOf(pdf.getPid())});
+                try {
+                    int id = (int) db.insertWithOnConflict(TABLE_PDF, null, initialValues, SQLiteDatabase.CONFLICT_IGNORE);
+                    if (id == -1) {
+                        db.update(TABLE_PDF, initialValues, "pid = ?", new String[]{String.valueOf(pdf.getPid())});
+                    }
+                }catch (IllegalStateException ignored){
                 }
             }
         });
@@ -229,11 +231,26 @@ public class PDFHelper extends SQLiteOpenHelper {
         return arrayList;
     }
 
+    public ArrayList<String> getAlbums(){
+        ArrayList<String> arrayList = new ArrayList<>();
+        String selectQuery = "SELECT distinct album FROM " + TABLE_PDF;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                arrayList.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        return arrayList;
+    }
+
+
     public ArrayList<PDF.PdfBean> getDownloaded(String album) {
         String selectQuery;
         switch (album) {
             case "all":
-                selectQuery = "SELECT  * FROM " + TABLE_PDF + " ORDER BY title";
+                selectQuery = "SELECT  * FROM " + TABLE_PDF + " where status = 6 ORDER BY title";
                 break;
             case "Quran30":
                 selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') AND status = 6 ORDER BY title";

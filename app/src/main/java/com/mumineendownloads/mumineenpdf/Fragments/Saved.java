@@ -69,8 +69,7 @@ public class Saved extends Fragment {
         mActivityActionBarToolbar.setTitle("Saved PDF");
         Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
-        int noOfTabs = 3;
-        ArrayList<String> arrayList = new ArrayList<>();
+        ArrayList<String> arrayList;
         PDFHelper pdfHelper = new PDFHelper(getContext());
         arrayList = pdfHelper.getAlbumName();
         viewPagerAdapter = new SavedViewPagerAdapter(getChildFragmentManager(), arrayList);
@@ -88,14 +87,10 @@ public class Saved extends Fragment {
 
             @Override
             public void onPageScrollStateChanged(int state) {
-                PDFSavedListFragment.destory();
             }
         });
         tabLayout = (CstTabLayout) rootView.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
-//        TabLayout.Tab tab = tabLayout.getTabAt(2);
-//        assert tab != null;
-//        tab.setCustomView(R.layout.tab);
         Fonty.setFonts(tabLayout);
         return rootView;
     }
@@ -103,25 +98,6 @@ public class Saved extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        getActivity().getMenuInflater().inflate( R.menu.toolbar_menu, menu);
-
-        final MenuItem myActionMenuItem = menu.findItem( R.id.action_search);
-        searchView = (SearchView) myActionMenuItem.getActionView();
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if( ! searchView.isIconified()) {
-                    searchView.setIconified(true);
-                }
-                myActionMenuItem.collapseActionView();
-                return false;
-            }
-            @Override
-            public boolean onQueryTextChange(String s) {
-                return false;
-            }
-        });
     }
 
     @Override

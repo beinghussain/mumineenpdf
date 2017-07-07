@@ -6,14 +6,18 @@ import android.support.v4.app.FragmentPagerAdapter;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 
+import java.util.ArrayList;
+import java.util.Objects;
 
 
 public class FragmentPagerAdapterCustom extends FragmentPagerAdapter {
+    private final ArrayList<String> arrayTabList;
     MainActivity activity;
 
-    public FragmentPagerAdapterCustom(FragmentManager fm, MainActivity activity) {
+    public FragmentPagerAdapterCustom(FragmentManager fm, MainActivity activity, ArrayList<String> arrayTabList) {
         super(fm);
         this.activity = activity;
+        this.arrayTabList = arrayTabList;
     }
 
     @Override
@@ -23,7 +27,7 @@ public class FragmentPagerAdapterCustom extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 5;
+        return arrayTabList.size();
     }
 
     public int getItemPosition(Object object){
@@ -33,25 +37,11 @@ public class FragmentPagerAdapterCustom extends FragmentPagerAdapter {
     @Override
     public CharSequence getPageTitle(int position) {
         String title = null;
-        if (position == 0)
-        {
-            title = "Marasiya";
-        }
-        else if (position == 1)
-        {
-            title = "Madeh";
-        }
-        else if (position == 2)
-        {
-            title = "Rasa";
-        }
-        else if (position == 3)
-        {
-            title = "Other";
-        }
-        else if (position == 4)
-        {
-            title = "Quran";
+        for(int i = 0; i<arrayTabList.size(); i++){
+            if(!arrayTabList.get(i).equals("0"))
+            if(position==i){
+                title = arrayTabList.get(i);
+            }
         }
         return title;
     }

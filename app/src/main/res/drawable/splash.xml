@@ -9,7 +9,7 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/noti"
+            android:src="@drawable/splash_icon"
             tools:ignore="VectorDrawableCompat" />
     </item>
 

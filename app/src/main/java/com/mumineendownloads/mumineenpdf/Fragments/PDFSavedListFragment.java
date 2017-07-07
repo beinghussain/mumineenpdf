@@ -1,15 +1,19 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
 
+import android.annotation.TargetApi;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -30,12 +34,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.SavedPDFAdapter;
+import com.mumineendownloads.mumineenpdf.Helpers.CustomDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomAnimator;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
@@ -85,19 +91,13 @@ public class PDFSavedListFragment extends Fragment {
         mRecyclerView.setLayoutManager(mLayoutManager);
         progressView = (ProgressView) rootView.findViewById(R.id.progress);
 
-        mRecyclerView.addItemDecoration(new CustomAnimator(getContext()));
-        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mRecyclerView.addItemDecoration(new CustomDivider(getContext()));
         mRecyclerView.getItemAnimator().setChangeDuration(0);
 
         SharedPreferences settings = getContext().getSharedPreferences("settings", 0);
         boolean added = settings.getBoolean("added",false);
+        refresh(album);
 
-        if(added){
-            progressView.setVisibility(View.VISIBLE);
-            mRecyclerView.setVisibility(View.GONE);
-        } else {
-            refresh(album);
-        }
 
         return rootView;
     }
@@ -120,6 +120,8 @@ public class PDFSavedListFragment extends Fragment {
 
         MenuItem myActionMenuItem = menu.findItem( R.id.action_search);
         final SearchView searchView = (SearchView) myActionMenuItem.getActionView();
+        searchView.setQueryHint("Search from saved pdf");
+        searchView.setMaxWidth(1100);
         search(searchView);
 
         MenuItemCompat.setOnActionExpandListener(myActionMenuItem, new MenuItemCompat.OnActionExpandListener() {
@@ -127,7 +129,7 @@ public class PDFSavedListFragment extends Fragment {
             public boolean onMenuItemActionExpand(MenuItem item) {
                 refresh("all");
                 MainActivity.toggle(true);
-                Home.toggleTab(true);
+                Saved.toggleTab(true);
                 return true;
             }
 
@@ -135,11 +137,50 @@ public class PDFSavedListFragment extends Fragment {
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 refresh(album);
                 MainActivity.toggle(false);
-                Home.toggleTab(false);
+                Saved.toggleTab(false);
                 return true;
             }
         });
     }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void openRatings() {
+        Uri uri = Uri.parse("market://details?id=" + getActivity().getPackageName());
+        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        try {
+            startActivity(goToMarket);
+        } catch (ActivityNotFoundException e) {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://play.google.com/store/apps/details?id=" + getActivity().getPackageName())));
+        }
+    }
+
+    private void showAppInfo(){
+        new MaterialDialog.Builder(getActivity())
+                .title("Mumineen PDF")
+                .content("App for all Zakereins and Mumineen. App developed by Hussain Idrish Dehgamwala")
+                .negativeText("OK")
+                .positiveText("CONTACT HUSSAIN")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        String url = "http://www.hddevelopers.com";
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setData(Uri.parse(url));
+                        startActivity(i);
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
+                    }
+                }).build().show();
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -147,6 +188,24 @@ public class PDFSavedListFragment extends Fragment {
         if(id==R.id.action_sync){
             Intent intent = new Intent(getActivity(),BackgroundSync.class);
             getActivity().startService(intent);
+        }
+        if(id==R.id.action_info){
+            showAppInfo();
+        }
+        if(id==R.id.action_rate){
+            openRatings();
+        }
+        if(id==R.id.action_share){
+            try {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_SUBJECT, "Mumineen PDF");
+                String sAux = "\nPDF app for Zakreins and all the mumineens.\n\n";
+                sAux = sAux + "https://play.google.com/store/apps/details?id=Orion.Soft \n\n";
+                i.putExtra(Intent.EXTRA_TEXT, sAux);
+                startActivity(Intent.createChooser(i, "Share this using"));
+            } catch(Exception ignored) {
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -177,115 +236,6 @@ public class PDFSavedListFragment extends Fragment {
         });
     }
 
-    private ActionMode.Callback mActionCallback = new ActionMode.Callback() {
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            MenuInflater inflater = mode.getMenuInflater();
-            inflater.inflate(R.menu.multiselect, menu);
-            mPDFAdapter.notifyDataSetChanged();
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorActionModeDark));
-            }
-            Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorActionMode));
-            Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorActionMode));
-            return true;
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            int id = item.getItemId();
-            switch (id){
-                case R.id.navigation_download:
-                    final ArrayList<PDF.PdfBean> m = new ArrayList<>();
-                    for(int i =0; i<multiSelect_list.size(); i++){
-                        if(multiSelect_list.get(i).getStatus()!= Status.STATUS_DOWNLOADED) {
-                            m.add(multiSelect_list.get(i));
-                        }
-                    }
-                    if(m.size()>0){
-                        if(Utils.isConnected(getContext())) {
-                            for(int i =0; i<m.size(); i++) {
-                            }
-                            Snackbar snackbar = Snackbar
-                                    .make(mRecyclerView, "Downloading " + m.size() + " files", Snackbar.LENGTH_LONG)
-                                    .setAction("CANCEL", new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            DownloadManager.getInstance().cancelAll();
-                                        }
-                                    });
-                            snackbar.show();
-                        }else {
-                            Toasty.error(getContext(),"No internet connection").show();
-                        }
-                        destory();
-                    }else {
-                        Toasty.info(getContext(),"No files to download").show();
-                    }
-
-                    break;
-                case R.id.navigation_add_library:
-                    break;
-            }
-            return true;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            mActionMode = mode;
-            mActionMode = null;
-            isMultiSelect = false;
-            multiSelect_list.clear();
-            mPDFAdapter.notifyDataSetChanged();
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorPrimaryDark));
-            }
-            Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
-            Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
-        }
-    };
-
-    private void selectAll(MenuItem item) {
-        if(item.getTitle().equals("Deselect All")){
-            destory();
-        }else {
-            for (PDF.PdfBean pdfBean : arrayList) {
-                multiSelect_list.add(pdfBean);
-                pdfBean.setSelected(true);
-            }
-            item.setTitle("Deselect All");
-        }
-        mPDFAdapter.notifyDataSetChanged();
-    }
-
-    public void multi_select(int position, PDF.PdfBean pdfBean) {
-        MenuItem item = null;
-        if (mActionMode != null) {
-            item = mActionMode.getMenu().findItem(R.id.navigation_download);
-            if (multiSelect_list.contains(pdfBean)) {
-                multiSelect_list.remove(pdfBean);
-                pdfBean.setSelected(false);
-            }
-            else {
-                multiSelect_list.add(pdfBean);
-                pdfBean.setSelected(true);
-            }
-            if (multiSelect_list.size() > 0)
-                mActionMode.setTitle( multiSelect_list.size() + " Selected");
-            else
-            {
-                mActionMode.finish();
-            }
-
-            mPDFAdapter.notifyItemChanged(position);
-        }
-    }
-
     private void search(SearchView searchView) {
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -309,59 +259,6 @@ public class PDFSavedListFragment extends Fragment {
                 return true;
             }
         });
-    }
-
-    public void enableMultiSelect(int position, PDF.PdfBean pdf) {
-        if(!isMultiSelect){
-            multiSelect_list = new ArrayList<PDF.PdfBean>();
-            isMultiSelect = true;
-            if (mActionMode == null) {
-                mActionMode = ((AppCompatActivity)getActivity()).startSupportActionMode(mActionCallback);
-                multi_select(position,pdf);
-            }
-        }
-    }
-
-    public void openDialog(final Context context, int position, final PDF.PdfBean pdf) {
-        if(!isMultiSelect) {
-            final PDFAdapter.MyViewHolder holder = getViewHolder(position);
-            int array = R.array.preference_values;
-            if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
-                array = R.array.preference_values_downloaded;
-            }
-            new MaterialDialog.Builder(context)
-                    .items(array)
-                    .itemsCallback(new MaterialDialog.ListCallback() {
-                        @Override
-                        public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-                            if (text.equals("Download")) {
-                                if (Utils.isConnected(context)) {
-                                } else {
-                                    Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
-                                }
-                            } else if (text.equals("View Online")) {
-                                if (Utils.isConnected(context)) {
-
-                                } else {
-                                    Toasty.error(context, "Internet connection not found!", Toast.LENGTH_SHORT, true).show();
-                                }
-                            } else if (text.equals("Share")) {
-                                Toast.makeText(context, "Sharing..", Toast.LENGTH_SHORT).show();
-                            } else if (text.equals("Report")) {
-                                Toast.makeText(context, "Reporting...", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    })
-                    .show();
-        } else {
-            multi_select(position,pdf);
-        }
-    }
-
-    public static void destory() {
-        if(mActionMode!=null) {
-            mActionMode.finish();
-        }
     }
 
     public void update() {
