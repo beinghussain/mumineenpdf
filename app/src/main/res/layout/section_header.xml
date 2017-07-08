@@ -24,7 +24,8 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="8dp">
 
         <TextView
             android:id="@+id/sectionHeader"
@@ -32,7 +33,7 @@
             android:layout_height="wrap_content"
             android:padding="10dp"
             android:text="Mumineen"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <TextView
@@ -46,27 +47,26 @@
             android:textColor="@color/colorPrimary" />
 
         <ImageButton
-            android:id="@+id/download_all"
-            android:layout_width="wrap_content"
+            android:id="@+id/remove"
+            android:layout_width="48dp"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:layout_marginRight="8dp"
             android:background="@android:color/transparent"
             android:padding="8dp"
             android:tint="@color/colorGrey"
             app:srcCompat="@drawable/ic_delete_forever_black_24dp" />
 
         <ImageButton
-            android:id="@+id/remove"
-            android:layout_width="wrap_content"
+            android:id="@+id/download_all"
+            android:layout_width="48dp"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
-            android:layout_toLeftOf="@+id/download_all"
-            android:layout_toStartOf="@+id/download_all"
+            android:layout_toLeftOf="@+id/remove"
+            android:layout_toStartOf="@+id/remove"
             android:background="@android:color/transparent"
             android:padding="8dp"
             android:tint="@color/colorPrimary"

@@ -2,11 +2,15 @@ package com.mumineendownloads.mumineenpdf.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.content.FileProvider;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -27,12 +31,14 @@ import com.mumineendownloads.mumineenpdf.ViewHolder.SectionViewHolder;
 import java.util.ArrayList;
 import java.util.List;
 
+import es.dmoral.toasty.Toasty;
 
 
 public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, PDF.PdfBean, SectionViewHolder, ChildViewHolder> {
 
     private Context context;
     private int download_left = 0;
+    private String sectionHeader;
 
     public GoSectionAdapter(Context context, List<SectionHeader> sectionHeaderItemList) {
         super(context, sectionHeaderItemList);
@@ -62,14 +68,13 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
                 showDownloadDialog(v.getContext(), sectionHeader.getSectionText());
             }
         });
-
+        this.sectionHeader = sectionHeader.getSectionText();
         if(download_left!=0){
            sectionViewHolder.download_all.setVisibility(View.VISIBLE);
             sectionViewHolder.downloadLeft.setText(download_left + " files not downloaded");
        } else {
-           sectionViewHolder.download_all.setVisibility(View.GONE);
+           sectionViewHolder.download_all.setVisibility(View.INVISIBLE);
        }
-
         sectionViewHolder.delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
@@ -151,7 +156,7 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
     }
 
     @Override
-    public void onBindChildViewHolder(ChildViewHolder childViewHolder, int sectionPosition, int childPosition, final PDF.PdfBean child) {
+    public void onBindChildViewHolder(ChildViewHolder childViewHolder, final int sectionPosition, final int childPosition, final PDF.PdfBean child) {
         String t;
         childViewHolder.mainView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -161,10 +166,51 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
         });
         childViewHolder.title.setText(child.getTitle());
         childViewHolder.size.setText(child.getAlbum() + " • " + Utils.fileSize(child.getSize()));
-
         if(child.getStatus()!=Status.STATUS_DOWNLOADED){
+          childViewHolder.imageButton.setVisibility(View.VISIBLE);
 
         }
+
+        childViewHolder.mainView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                showOptionDialog(v.getContext(),child,sectionPosition,childPosition);
+                return true;
+            }
+        });
+
+    }
+
+    private void showOptionDialog(final Context context, final PDF.PdfBean pdfBean, final int sectionPosition, final int position) {
+        List<String> list = new ArrayList<>();
+        list.add("Remove from list");
+        new MaterialDialog.Builder(context)
+                .items(list)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                        if (text.equals("Remove from list")) {
+                           showSingleRemoveDialog(view.getContext(),pdfBean,sectionPosition,position);
+                        }
+                    }
+                })
+                .show();
+    }
+
+    private void showSingleRemoveDialog(final Context context, final PDF.PdfBean pdfBean, final int sectionPosition, final int position)
+    {
+        new MaterialDialog.Builder(context)
+                .title("Remove "+pdfBean.getTitle()+" ?")
+                .content("Do you really want to remove pdf from this list")
+                .positiveText("Remove")
+                .negativeText("Cancel")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        Utils.removeSpecificItemFromList(context,pdfBean.getPid(),sectionHeader);
+                        removeChild(sectionPosition,position);
+                    }
+                }).build().show();
     }
 
     private void openPDF(PDF.PdfBean pdf) {

@@ -9,10 +9,10 @@ import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import java.util.ArrayList;
 import java.util.Objects;
 
-
 public class FragmentPagerAdapterCustom extends FragmentPagerAdapter {
+
     private final ArrayList<String> arrayTabList;
-    MainActivity activity;
+    private MainActivity activity;
 
     public FragmentPagerAdapterCustom(FragmentManager fm, MainActivity activity, ArrayList<String> arrayTabList) {
         super(fm);

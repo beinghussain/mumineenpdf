@@ -29,6 +29,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFSavedListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
@@ -96,6 +97,13 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
         holder.size.setText(Utils.fileSize(pdf.getSize()) + al);
         holder.title.setText(pdf.getTitle());
 
+        holder.mainView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openPDF(pdf);
+            }
+        });
+
         holder.mainView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -109,6 +117,14 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
                 showDialog(v.getContext(),pdf,position);
             }
         });
+    }
+
+    private void openPDF(PDF.PdfBean pdf) {
+        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+        intent.putExtra("mode", 0);
+        intent.putExtra("pid", pdf.getPid());
+        intent.putExtra("title", pdf.getTitle());
+        pdfListFragment.startActivity(intent);
     }
 
     private void sendReport(final int pid, final CharSequence text) {
@@ -189,7 +205,6 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
     private File getFile(int pid) {
         return new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pid+".pdf");
     }
-
 
     private void showDialog(final Context context, final PDF.PdfBean pdfBean, final int position) {
         new MaterialDialog.Builder(context)

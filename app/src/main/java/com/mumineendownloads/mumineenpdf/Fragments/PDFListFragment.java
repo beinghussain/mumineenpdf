@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.Settings;
+import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -46,6 +47,7 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
+import com.aspsine.multithreaddownload.util.L;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
@@ -69,7 +71,6 @@ import es.dmoral.toasty.Toasty;
 
 
 public class PDFListFragment extends Fragment {
-    private final MainActivity activity;
     private String album;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
@@ -85,13 +86,11 @@ public class PDFListFragment extends Fragment {
     private ArrayList<Integer> goList;
     private boolean searching;
     private ArrayList<PDF.PdfBean> newlist;
-
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
     }
     public ArrayList<PDF.PdfBean> downloadingList = new ArrayList<>();
     PDFHelper helper;
-
 
     private void reportApp(final PDF.PdfBean pdfBean){
         new MaterialDialog.Builder(getActivity())
@@ -203,7 +202,6 @@ public class PDFListFragment extends Fragment {
     public PDFListFragment(int position, MainActivity activity) {
         helper = new PDFHelper(activity.getApplicationContext());
         ArrayList<String> arrayList = helper.getAlbums();
-        this.activity = activity;
         multiSelect_list = new ArrayList<>();
         for(int i =0; i<arrayList.size();i++){
             if(position==i){
@@ -650,12 +648,38 @@ public class PDFListFragment extends Fragment {
                             } else if (text.equals("Report")) {
                                 reportApp(pdf);
                             }
+                            else if(text.equals("Add to list")){
+                                showDialogListAdd(pdf);
+                            }
                         }
                     })
                     .show();
         } else {
             multi_select(position,pdf);
         }
+    }
+
+    private void showDialogListAdd(final PDF.PdfBean pdf) {
+        List<String> a = Utils.getSections(getContext());
+        a.add("Create new list");
+        final ArrayList<Integer> list = new ArrayList<>();
+        list.add(pdf.getPid());
+        MaterialDialog.Builder dialog = new MaterialDialog.Builder(getActivity());
+        dialog
+                .title("Add "+pdf.getTitle() + " to...")
+                .items(a)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                        if(text.equals("Create new list")){
+                            showNewDialog(list);
+                        } else {
+
+                            Utils.addToSpecificList(getContext(),list, String.valueOf(text));
+                        }
+                    }
+                });
+        dialog.show();
     }
 
     private File getFile(int pid) {
@@ -723,6 +747,15 @@ public class PDFListFragment extends Fragment {
         return first <= position && position <= last;
     }
 
+    private PDF.PdfBean getPDF(int pid){
+        for(PDF.PdfBean pdfBean : arrayList){
+            if(pdfBean.getPid()==pid){
+                return pdfBean;
+            }
+        }
+        return arrayList.get(0);
+    }
+
     class DownloadReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -739,7 +772,7 @@ public class PDFListFragment extends Fragment {
                 return;
             }
             if(isCurrentListViewItemVisible(position)) {
-                final PDF.PdfBean pdf = arrayList.get(position);
+                final PDF.PdfBean pdf = getPDF(tmpPdf.getPid());
                 final int status = tmpPdf.getStatus();
                 if(status!=Status.STATUS_DOWNLOADING){
                     mPDFHelper.updatePDF(tmpPdf);

@@ -1,18 +1,16 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -24,47 +22,43 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.intrusoft.sectionedrecyclerview.Section;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
-import com.mumineendownloads.mumineenpdf.Adapters.FragmentPagerAdapterCustom;
+import com.mumineendownloads.mumineenpdf.Adapters.BasePDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.GoSectionAdapter;
-import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
-import com.mumineendownloads.mumineenpdf.Adapters.SavedViewPagerAdapter;
+import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapterCat;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
-import com.mumineendownloads.mumineenpdf.Helpers.CustomAnimator;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.SectionHeader;
+import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
+import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.rey.material.widget.ProgressView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-import es.dmoral.toasty.Toasty;
 
-
-public class Go extends Fragment {
+public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
     private MainActivity activity;
     private ArrayList<PDF.PdfBean> arrayList;
     public static RecyclerView mRecyclerView;
     private GoSectionAdapter goSectionAdapter;
-    public static ViewPager viewPager;
-    private static SavedViewPagerAdapter viewPagerAdapter;
     public static CstTabLayout tabLayout;
     private SearchView searchView;
     private ArrayList<PDF.PdfBean> goList;
     private PDFHelper pdfHelper;
     private static CardView empty;
     public static ProgressView progress;
-
+    private DownloadReceiver mReceiver;
+    private Comparator<PDF.PdfBean> pdfBeanComparator;
+    private BasePDFAdapter mSectionedRecyclerAdapter;
     public Go newInstance() {
         return new Go();
     }
@@ -100,13 +94,13 @@ public class Go extends Fragment {
                     final ArrayList<SectionHeader> sections = new ArrayList<>();
                     List<String> sectionList = Utils.getSections(getContext());
                     if(sectionList.size()==0){
-                      getActivity().runOnUiThread(new Runnable() {
-                          @Override
-                          public void run() {
-                              empty.setVisibility(View.VISIBLE);
-                              progress.setVisibility(View.GONE);
-                          }
-                      });
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                empty.setVisibility(View.VISIBLE);
+                                progress.setVisibility(View.GONE);
+                            }
+                        });
                     }
                     for(String s : sectionList){
                         ArrayList<Integer> a = Utils.loadArray(getContext(),s);
@@ -175,4 +169,61 @@ public class Go extends Fragment {
             empty.setVisibility(View.VISIBLE);
         }
     }
+
+    @Override
+    public void onItemClicked(PDF.PdfBean pdf) {
+
+    }
+
+    class DownloadReceiver extends BroadcastReceiver {
+        int i = 0;
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(arrayList==null){
+                return;
+            }
+            final String action = intent.getAction();
+            if (action == null || !action.equals(DownloadService.ACTION_DOWNLOAD_BROAD_CAST)) {
+                return;
+            }
+            final int position = intent.getIntExtra(DownloadService.EXTRA_POSITION, -1);
+            final PDF.PdfBean tmpPdf = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
+            if (tmpPdf == null || position == -1) {
+                return;
+            }
+            int status = tmpPdf.getStatus();
+            if(status==Status.STATUS_DOWNLOADED){
+                i++;
+                if(i==1){
+                    i = 0;
+                    Log.e("Downloaded", String.valueOf(i));
+                }
+
+            }
+        }
+    }
+
+    public void onPause() {
+        super.onPause();
+        unRegister();
+    }
+
+    public void onResume() {
+        super.onResume();
+        register();
+    }
+
+    private void register() {
+        mReceiver = new Go.DownloadReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_BROAD_CAST);
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mReceiver, intentFilter);
+    }
+
+    private void unRegister() {
+        if (mReceiver != null) {
+            LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mReceiver);
+        }
+    }
+
 }

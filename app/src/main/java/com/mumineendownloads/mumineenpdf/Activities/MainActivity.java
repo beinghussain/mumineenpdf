@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -119,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -161,32 +159,6 @@ public class MainActivity extends AppCompatActivity {
                 .setTitleOnUpdateAvailable("Update Available")
                 .start();
 
-    }
-
-    private void showUpdateDialog(final SharedPreferences preferences) {
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Update Available")
-                .setMessage("New version of Mumineen PDF is available on playstore")
-                .setPositiveButton("UPDATE", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        openUpdateLink();
-                    }
-                })
-                .setNegativeButton("DON'T SHOW AGAIN", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        preferences.edit().putBoolean("never",true).apply();
-                    }
-                })
-                .setNeutralButton("REMIND LATER", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        preferences.edit().putInt("showAfter10",10).apply();
-                        preferences.edit().putBoolean("showLater",true).apply();
-                    }
-                })
-                .show();
     }
 
     private void openUpdateLink() {

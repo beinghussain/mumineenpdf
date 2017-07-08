@@ -40,8 +40,9 @@ public class PDF {
         private int pageCount;
         private boolean isSearchingMode;
         private boolean selected;
-        private int go;
+        private String go;
         private String downloadPerSize;
+        private String cat;
 
         public String getStatusText() {
             switch (status) {
@@ -188,12 +189,20 @@ public class PDF {
             this.selected = selected;
         }
 
-        public void setGo(int go){
+        public void setGo(String go){
             this.go = go;
         }
 
-        public int getGo() {
+        public String getGo() {
             return go;
+        }
+
+        public String getCat() {
+            return cat;
+        }
+
+        public void setCat(String cat) {
+            this.cat = cat;
         }
     }
 }

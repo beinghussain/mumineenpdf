@@ -16,6 +16,7 @@ import com.mumineendownloads.mumineenpdf.Model.PDF;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class PDFHelper extends SQLiteOpenHelper {
@@ -36,6 +37,7 @@ public class PDFHelper extends SQLiteOpenHelper {
     private static final String KEY_VIEWED = "viewed";
     private static final String KEY_PAGE = "pages";
     private static final String KEY_GO = "go";
+    private static final String KEY_CAT = "sub_cat";
     private Context context;
     private ArrayList<PDF.PdfBean> downloaded;
 
@@ -49,7 +51,7 @@ public class PDFHelper extends SQLiteOpenHelper {
         String CREATE_CONTACTS_TABLE = "CREATE TABLE " + TABLE_PDF + "("
                 + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TITLE + " TEXT,"
                 + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," +
-                KEY_PID  + " INTEGER UNIQUE," + KEY_STATUS + " INTEGER," + KEY_PAGE + " INTEGER,"+  KEY_GO + " INTEGER" + ")";
+                KEY_PID  + " INTEGER UNIQUE," + KEY_STATUS + " INTEGER," + KEY_PAGE + " INTEGER,"+  KEY_GO + " INTEGER," + KEY_CAT + " TEXT" + ")";
         db.execSQL(CREATE_CONTACTS_TABLE);
     }
 
@@ -70,6 +72,7 @@ public class PDFHelper extends SQLiteOpenHelper {
         values.put(KEY_PID, pdf.getPid());
         values.put(KEY_PID, pdf.getStatus());
         values.put(KEY_GO, pdf.getGo());
+        values.put(KEY_CAT, pdf.getCat());
             db.insert(TABLE_PDF, null, values);
         }catch (SQLiteConstraintException ignored){
 
@@ -104,6 +107,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setPageCount(Integer.parseInt(c));
                 if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
                     contact.setStatus(Status.STATUS_NULL);
+                    updatePDF(contact);
                 }else {
                     contact.setStatus(Status.STATUS_DOWNLOADED);
                     updatePDF(contact);
@@ -115,6 +119,7 @@ public class PDFHelper extends SQLiteOpenHelper {
     }
 
     public ArrayList<PDF.PdfBean> getAllPDFS(String album) {
+        List<String> files = Utils.getFiles();
         ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
         String selectQuery;
         switch (album) {
@@ -147,23 +152,22 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setSource(cursor.getString(3));
                 contact.setSize(cursor.getString(4));
                 contact.setPid(Integer.parseInt(cursor.getString(5)));
+                contact.setCat(cursor.getString(9));
                 String c;
                 if(cursor.getString(7)==null){
                    c = "0";
                 } else {
                     c = cursor.getString(7);
                 }
-                contact.setPageCount(Integer.parseInt(c));
-                if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
-                    contact.setStatus(Status.STATUS_NULL);
-                }else {
+                if(files.contains(String.valueOf(contact.getPid()))){
                     contact.setStatus(Status.STATUS_DOWNLOADED);
-                    updatePDF(contact);
+                }else {
+                    contact.setStatus(Status.STATUS_NULL);
                 }
+                contact.setPageCount(Integer.parseInt(c));
                 arrayList.add(contact);
             } while (cursor.moveToNext());
-        }
-        return arrayList;
+        }return arrayList;
     }
 
     private boolean isDownloaded(int pid,int size) {
@@ -178,9 +182,6 @@ public class PDFHelper extends SQLiteOpenHelper {
         values.put(KEY_STATUS, pdf.getStatus());
         if(pdf.getPageCount()!=0) {
             values.put(KEY_PAGE, pdf.getPageCount());
-        }
-        if(pdf.getGo()!=0) {
-            values.put(KEY_GO, pdf.getGo());
         }
         return db.update(TABLE_PDF, values, KEY_PID + " = ?",
                 new String[] { String.valueOf(pdf.getPid()) });
@@ -199,12 +200,12 @@ public class PDFHelper extends SQLiteOpenHelper {
             @Override
             public void run() {
                 ContentValues initialValues = new ContentValues();
-                initialValues.put(KEY_STATUS, pdf.getStatus());
                 initialValues.put(KEY_SIZE, pdf.getSize());
                 initialValues.put(KEY_SOURCE, pdf.getSource());
                 initialValues.put(KEY_ALBUM, pdf.getAlbum());
                 initialValues.put(KEY_TITLE, pdf.getTitle());
                 initialValues.put(KEY_PID, pdf.getPid());
+                initialValues.put(KEY_CAT,pdf.getCat());
                 try {
                     int id = (int) db.insertWithOnConflict(TABLE_PDF, null, initialValues, SQLiteDatabase.CONFLICT_IGNORE);
                     if (id == -1) {
@@ -243,7 +244,6 @@ public class PDFHelper extends SQLiteOpenHelper {
         }
         return arrayList;
     }
-
 
     public ArrayList<PDF.PdfBean> getDownloaded(String album) {
         String selectQuery;

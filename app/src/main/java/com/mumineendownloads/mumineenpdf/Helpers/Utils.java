@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.net.ConnectivityManager;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -15,6 +16,7 @@ import com.google.gson.reflect.TypeToken;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -162,7 +164,6 @@ public class Utils {
         }.getType());
     }
 
-
     public static int getPDFNotDownloadedCount(Context context, String sectionText) {
         int count = 0;
         PDFHelper helper = new PDFHelper(context);
@@ -173,5 +174,25 @@ public class Utils {
            }
         }
         return count;
+    }
+
+    public static void removeSpecificItemFromList(Context context, int pid, String sectionName) {
+        ArrayList<Integer> i = loadArray(context,sectionName);
+        int a = i.indexOf(pid);
+        if(i.contains(pid)){
+            i.remove(a);
+        }
+        saveArray(context,i,sectionName);
+    }
+
+    public static List<String> getFiles(){
+        List<String> files = new ArrayList<>();
+        String path = Environment.getExternalStorageDirectory().toString()+"/Mumineen/";
+        File directory = new File(path);
+
+        for(File file : directory.listFiles()){
+            files.add(file.getName().replace(".pdf",""));
+        }
+        return files;
     }
 }

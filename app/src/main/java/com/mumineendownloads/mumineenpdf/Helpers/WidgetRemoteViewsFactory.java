@@ -85,12 +85,13 @@ public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsF
         RemoteViews remoteView = new RemoteViews(context.getPackageName(),
                 R.layout.list_row);
         remoteView.setTextViewText(R.id.item, widgetList.get(position).getTitle());
+        remoteView.setTextViewText(R.id.album, widgetList.get(position).getAlbum());
         Intent intent = new Intent();
         PDF.PdfBean pdf = widgetList.get(position);
         intent.putExtra("mode", 0);
         intent.putExtra("pid", pdf.getPid());
         intent.putExtra("title", pdf.getTitle());
-        remoteView.setOnClickFillInIntent(R.id.item, intent);
+        remoteView.setOnClickFillInIntent(R.id.mainView, intent);
         return remoteView;
     }
 

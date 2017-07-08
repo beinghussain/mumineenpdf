@@ -2,9 +2,9 @@
 <resources>
     <string-array name="preference_values">
         <item>Download</item>
-        <item>View Online</item>
         <item>Share</item>
         <item>Report</item>
+        <item>Add to list</item>
     </string-array>
     <string-array name="preference_values_downloaded">
         <item>Share</item>
