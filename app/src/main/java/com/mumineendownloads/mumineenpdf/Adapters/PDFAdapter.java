@@ -261,7 +261,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         });
     }
 
-    public void viewOnline(PDF.PdfBean pdf, int adapterPosition, MyViewHolder holder) {
+    public void viewOnline(PDF.PdfBean pdf, int adapterPosition, BasePDFAdapter.PDFViewHolder holder) {
         Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
         intent.putExtra("mode",1);
         intent.putExtra("pid", pdf.getPid());

@@ -20,4 +20,11 @@ http://developer.android.com/guide/topics/appwidgets/index.html#CreatingLayout
     <dimen name="widget_margin">8dp</dimen>
     <dimen name="content_inset_half">8dp</dimen>
     <dimen name="content_inset">16dp</dimen>
+
+    <dimen name="customTitle">14sp</dimen>
+    <dimen name="customEntry">18sp</dimen>
+    <dimen name="sample_button_spacing">2dp</dimen>
+    <dimen name="headerTitle">20sp</dimen>
+    <dimen name="headerMarginVertical">16dp</dimen>
+    <dimen name="headerMarginStart">12dp</dimen>
 </resources>

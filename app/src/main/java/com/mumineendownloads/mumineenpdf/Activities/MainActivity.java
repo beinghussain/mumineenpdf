@@ -33,6 +33,7 @@ import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.BuildConfig;
 import com.mumineendownloads.mumineenpdf.Fragments.Go;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
+import com.mumineendownloads.mumineenpdf.Fragments.RequestPage;
 import com.mumineendownloads.mumineenpdf.Fragments.Saved;
 import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
 import com.mumineendownloads.mumineenpdf.R;
@@ -86,13 +87,14 @@ public class MainActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
             Home home = new Home(MainActivity.this);
             Saved savedFragment = new Saved();
+            RequestPage requestPage = new RequestPage();
             Go goFragment = new Go();
             switch (item.getItemId()) {
                 case R.id.navigation_home:
                     selectedFragment = home.newInstance(MainActivity.this);
                     break;
                 case R.id.navigation_request:
-                    selectedFragment = savedFragment.newInstance();
+                    selectedFragment = requestPage.newInstance();
                     break;
                 case R.id.navigation_saved:
                     selectedFragment = savedFragment.newInstance();

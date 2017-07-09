@@ -14,6 +14,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
+import com.mumineendownloads.mumineenpdf.Model.User;
 import com.mumineendownloads.mumineenpdf.R;
 
 import java.io.File;
@@ -194,5 +195,34 @@ public class Utils {
             files.add(file.getName().replace(".pdf",""));
         }
         return files;
+    }
+
+    public static User getUser(Context context){
+        SharedPreferences preferences  = PreferenceManager.getDefaultSharedPreferences(context);
+        String name = preferences.getString("name","");
+        String email = preferences.getString("email","");
+        int user_id = preferences.getInt("user_id",0);
+
+        User user = new User();
+        user.setEmail(email);
+        user.setName(name);
+        user.setUserId(user_id);
+
+        return user;
+    }
+
+    public static boolean isLogged(Context context){
+        SharedPreferences preferences  = PreferenceManager.getDefaultSharedPreferences(context);
+        return preferences.getBoolean("registered",false);
+    }
+
+    public static void registerUser(String name, String email, int id, Context context){
+        SharedPreferences preferences  = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("email",email);
+        editor.putString("name",name);
+        editor.putInt("user_id",id);
+        editor.putBoolean("registered",true);
+        editor.apply();
     }
 }

@@ -15,7 +15,7 @@ public class App extends Application {
                 .context(this)
                 .regularTypeface("myfonts.ttf")
                 .italicTypeface("myfonts.ttf")
-                .boldTypeface("myfonts.ttf")
+                .boldTypeface("myfontsbold.ttf")
                 .done();
     }
 

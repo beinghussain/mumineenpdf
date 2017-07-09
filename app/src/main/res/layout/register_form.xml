@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+
+    <com.rengwuxian.materialedittext.MaterialEditText
+        android:layout_width="match_parent"
+        android:id="@+id/name"
+        android:layout_height="wrap_content"
+        android:hint="Name"
+        app:met_typeface="fonts/myfonts.ttf"
+        app:met_floatingLabel="none" />
+
+    <com.rengwuxian.materialedittext.MaterialEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email"
+        app:met_autoValidate="true"
+        android:id="@+id/email"
+        android:inputType="textEmailAddress"
+        app:met_typeface="fonts/myfonts.ttf"
+        app:met_floatingLabel="none" />
+
+    <com.rengwuxian.materialedittext.MaterialEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:hint="Password"
+        android:id="@+id/pass"
+        app:met_typeface="fonts/myfonts.ttf"
+        app:met_floatingLabel="none" />
+
+</LinearLayout>

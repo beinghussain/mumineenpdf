@@ -49,5 +49,7 @@
     <string name="configure">Configure</string>
     <string name="empty_there_are_no_list_found">Empty! There are no list found</string>
     <string name="library">Libraries</string>
+    <string name="type_request_here">Type request here..</string>
+    <string name="dot">•</string>
 
 </resources>

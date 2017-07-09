@@ -88,8 +88,8 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Test Title"
-                android:textColor="#212121"
-                android:textSize="13sp" />
+                android:textColor="#424242"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/size"
@@ -99,7 +99,7 @@
                 android:layout_weight="1"
                 android:text="2017 KB"
                 android:textColor="#616161"
-                android:textSize="12sp" />
+                android:textSize="13sp" />
 
 
         </LinearLayout>
