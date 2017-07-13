@@ -77,10 +77,10 @@ public class Utils {
         int sizeT = (int) (total / 1024);
         String t;
         if (total < 1000000) {
-            t = total / 1024 + " KB  ";
+            t = total / 1024 + "kb  ";
         } else {
             Float size = (float) sizeT / 1024;
-            t = new DecimalFormat("##.##").format(size) + " MB  ";
+            t = new DecimalFormat("##.##").format(size) + "mb  ";
         }
         return t;
     }
@@ -90,16 +90,16 @@ public class Utils {
         int sizeF = (int) (finished / 1024);
         int sizeT = (int) (total / 1024);
         if (total < 1000000) {
-            t = total / 1024 + " KB  ";
+            t = total / 1024 + "kb  ";
         } else {
             Float size = (float) sizeT / 1024;
-            t = new DecimalFormat("##.##").format(size) + " MB  ";
+            t = new DecimalFormat("##.##").format(size) + "mb  ";
         }
         if (finished < 1000000) {
-            f = finished / 1024 + "KB / ";
+            f = finished / 1024 + "kb / ";
         } else {
             Float size = (float) sizeF / 1024;
-            f = new DecimalFormat("##.##").format(size) + " MB / ";
+            f = new DecimalFormat("##.##").format(size) + "mb / ";
         }
         return  f + t + progress + "%";
     }
@@ -187,14 +187,18 @@ public class Utils {
     }
 
     public static List<String> getFiles(){
-        List<String> files = new ArrayList<>();
-        String path = Environment.getExternalStorageDirectory().toString()+"/Mumineen/";
-        File directory = new File(path);
+        try {
+            List<String> files = new ArrayList<>();
+            String path = Environment.getExternalStorageDirectory().toString() + "/Mumineen/";
+            File directory = new File(path);
 
-        for(File file : directory.listFiles()){
-            files.add(file.getName().replace(".pdf",""));
+            for (File file : directory.listFiles()) {
+                files.add(file.getName().replace(".pdf", ""));
+            }
+            return files;
+        }catch (NullPointerException ignored){
+            return new ArrayList<>();
         }
-        return files;
     }
 
     public static User getUser(Context context){

@@ -20,8 +20,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
-        app:itemIconTint="@drawable/bottom_nav_icon"
-        app:itemTextColor="@drawable/bottom_nav_icon"
-        app:menu="@menu/navigation"/>
+        app:itemIconTint="@drawable/bottom_nav"
+        app:itemTextColor="@drawable/bottom_nav"
+        app:menu="@menu/navigation" />
 
 </LinearLayout>

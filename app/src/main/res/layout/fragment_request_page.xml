@@ -41,7 +41,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_weight="0.85"
                 android:background="@drawable/rounder_corners"
-                android:hint="@string/type_request_here"
+                android:hint="Type pdf file name here..."
                 android:inputType="textMultiLine"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
@@ -60,25 +60,20 @@
                 app:srcCompat="@drawable/ic_send_black_24dp" />
 
         </LinearLayout>
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe"
-        android:layout_width="wrap_content"
-        android:layout_below="@id/appBarLayout"
-        android:layout_above="@+id/chatControls"
-        android:layout_height="wrap_content">
+
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/messagesContainer"
             android:layout_width="match_parent"
+            android:layout_below="@id/appBarLayout"
             android:layout_height="match_parent"
+            android:layout_above="@id/chatControls"
             android:layout_alignParentLeft="false"
             android:overScrollMode="never"
             android:layout_alignParentTop="false"
             android:layout_marginTop="10dp"
             android:listSelector="@android:color/transparent"
             android:transcriptMode="alwaysScroll" />
-
-    </android.support.v4.widget.SwipeRefreshLayout>
 
 
 </RelativeLayout>

@@ -11,7 +11,7 @@
         <item name="windowActionModeOverlay">true</item>
         <item name="md_regular_font">myfonts.ttf</item>
         <item name="md_medium_font">myfontsbold.ttf</item>
-        <item name="actionModeBackground">@color/colorActionMode</item>
+        <item name="actionModeBackground">@color/colorPrimary</item>
     </style>
 
 
@@ -66,6 +66,8 @@
 
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/splash</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
     </style>
 
     <color name="colorBackground">#ECEFF1</color>

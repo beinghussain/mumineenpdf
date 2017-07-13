@@ -32,6 +32,7 @@ import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Adapters.RequestAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.ChatDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
+import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.Model.PDFReq;
 import com.mumineendownloads.mumineenpdf.Model.User;
 import com.mumineendownloads.mumineenpdf.R;
@@ -48,6 +49,8 @@ public class RequestPage extends Fragment {
     private RequestAdapter mRequestAdapter;
     ArrayList<PDFReq.Request> mRequests;
     private Toolbar mActivityActionBarToolbar;
+    private EditText editText;
+    private User user;
 
     public RequestPage newInstance() {
         return new RequestPage();
@@ -58,38 +61,23 @@ public class RequestPage extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             Bundle savedInstanceState)     {
         final View v = inflater.inflate(R.layout.fragment_request_page, container, false);
-        final User user = Utils.getUser(getContext());
+         user = Utils.getUser(getContext());
         mRecyclerView = (RecyclerView) v.findViewById(R.id.messagesContainer);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext(),LinearLayoutManager.VERTICAL,true);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mActivityActionBarToolbar = (Toolbar) v.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
-        mActivityActionBarToolbar.setTitle("Mumineen Downloads - Request PDF");
+        mActivityActionBarToolbar.setTitle("Request PDF");
         Fonty.setFonts(mActivityActionBarToolbar);
         ImageButton imageButton = (ImageButton) v.findViewById(R.id.chatSendButton);
-        SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swipe);
-        final EditText editText = (EditText) v.findViewById(R.id.messageEdit);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                getRequest();
-            }
-        });
+        editText = (EditText) v.findViewById(R.id.messageEdit);
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(editText.getText().toString().length()!=0) {
-                    submitRequest(editText.getText().toString());
-                    PDFReq.Request request = new PDFReq.Request();
-                    request.setUser_id(String.valueOf(user.getUserId()));
-                    request.setRequest(editText.getText().toString());
-                    request.setId(mRequests.get(mRequests.size()-1).getId()+1);
-                    mRequests.add(0,request);
-                    mRecyclerView.scrollToPosition(0);
-                    mRequestAdapter.notifyItemInserted(0);
-                    editText.setText("");
+                    submitRequest(editText.getText().toString(),editText,user);
                 }
             }
         });
@@ -97,9 +85,18 @@ public class RequestPage extends Fragment {
         return v;
     }
 
-    private void submitRequest(String message) {
+    private void submitRequest(String message, EditText editText, User user) {
         if(Utils.isLogged(getContext())) {
             sendRequest(message);
+            PDFReq.Request request = new PDFReq.Request();
+            request.setUser_id(String.valueOf(user.getUserId()));
+            request.setRequest(editText.getText().toString());
+            request.setId(mRequests.get(mRequests.size()-1).getId()+1);
+            request.setStatus(String.valueOf(PDFReq.PENDING));
+            mRequests.add(0,request);
+            mRecyclerView.scrollToPosition(0);
+            mRequestAdapter.notifyItemInserted(0);
+            editText.setText("");
         }else {
             showRegister(message);
         }
@@ -138,9 +135,9 @@ public class RequestPage extends Fragment {
     }
 
     private void showLoginDialog(final String message) {
-        new MaterialDialog.Builder(getActivity())
+        final MaterialDialog dialog = new MaterialDialog.Builder(getActivity())
                 .title("Login")
-                .customView(R.layout.register_form,true)
+                .customView(R.layout.login_form,true)
                 .positiveText("Login")
                 .negativeText("Cancel")
                 .neutralText("Register")
@@ -150,8 +147,76 @@ public class RequestPage extends Fragment {
                         showRegister(message);
                     }
                 })
-                .build()
-                .show();
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                    }
+                })
+                .build();
+        dialog.show();
+        dialog.getActionButton(DialogAction.POSITIVE).setOnClickListener(new View.OnClickListener() {
+            View view = dialog.getCustomView();
+            MaterialEditText email = (MaterialEditText) view.findViewById(R.id.email);
+            MaterialEditText pass = (MaterialEditText) view.findViewById(R.id.pass);
+            @Override
+            public void onClick(View v) {
+                login(dialog,email,pass,message);
+            }
+        });
+
+
+    }
+
+    private void login(final MaterialDialog dialog, final MaterialEditText email, final MaterialEditText pass, final String message) {
+        final String emailString = email.getText().toString();
+        final String passString = pass.getText().toString();
+        final RequestQueue queue = Volley.newRequestQueue(getContext());
+        final String url = "http://mumineendownloads.com/app/login_pdf_app.php";
+        final StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        switch (response) {
+                            case "wp":
+                                pass.setError("Invalid Pass");
+                                break;
+                            case "-1":
+                                break;
+                            default:
+                                Gson gson = new Gson();
+                                String[] a = gson.fromJson(response, new TypeToken<String[]>() {
+                                }.getType());
+                                User user1 = new User();
+                                user1.setUserId(Integer.parseInt(a[0]));
+                                user1.setName(a[1]);
+                                user1.setEmail(a[2]);
+                                dialog.dismiss();
+                                registerLocally(user1.getUserId(), user1.getEmail(), user1.getName(),message);
+                                break;
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+
+        }) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("pass", passString);
+                params.put("email", emailString);
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+
+    }
+
+    public void loginLocally(String message){
+
     }
 
     public boolean isValidEmailAddress(String email) {
@@ -204,6 +269,7 @@ public class RequestPage extends Fragment {
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
+                            Log.e("RR",response);
                             switch (response) {
                                 case "exists":
                                     email.setError("Email already registered");
@@ -233,7 +299,7 @@ public class RequestPage extends Fragment {
                     Map<String, String>  params = new HashMap<String, String>();
                     params.put("name", nameString);
                     params.put("email", emailString);
-                    params.put("password", passwordString);
+                    params.put("pass", passwordString);
                     return params;
                 }
             };
@@ -246,6 +312,15 @@ public class RequestPage extends Fragment {
     private void registerLocally(int id, String email, String name, String message) {
         Utils.registerUser(name,email,id,getContext());
         sendRequest(message);
+        PDFReq.Request request = new PDFReq.Request();
+        request.setUser_id(String.valueOf(id));
+        request.setRequest(editText.getText().toString());
+        request.setId(mRequests.get(mRequests.size()-1).getId()+1);
+        request.setStatus(String.valueOf(PDFReq.PENDING));
+        mRequests.add(0,request);
+        mRecyclerView.scrollToPosition(0);
+        mRequestAdapter.notifyItemInserted(0);
+        editText.setText("");
     }
 
     private void sendRequest(final String message) {
@@ -280,8 +355,7 @@ public class RequestPage extends Fragment {
 
     public void getRequest(){
         RequestQueue queue = Volley.newRequestQueue(getActivity());
-        String url ="http://www.mumineendownloads.com/app/getRequests.php";
-
+        String url ="http://www.mumineendownloads.com/app/getRequests.php?u="+user.getUserId();
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
@@ -306,8 +380,4 @@ public class RequestPage extends Fragment {
         mRecyclerView.setAdapter(mRequestAdapter);
     }
 
-    public boolean getRegistered() {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getContext());
-        return pref.getBoolean("registered",false);
-    }
 }

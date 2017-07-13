@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:drawable/list_selector_background"
+    android:background="#fcfcfc"
     android:orientation="vertical"
     android:layout_marginBottom="@dimen/card_zero_margin"
     android:layout_marginTop="8dp"
@@ -16,7 +16,7 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="0.5dp"
+        android:layout_height="0dp"
         android:layout_marginTop="5dp"
         android:layout_gravity="bottom"
         android:background="#22424242"/>
@@ -25,52 +25,41 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
+        android:background="#fcfcfc"
         android:padding="8dp">
 
         <TextView
             android:id="@+id/sectionHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="10dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="4dp"
             android:text="Mumineen"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textColor="#494A51"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/download_left"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toEndOf="@+id/sectionHeader"
-            android:layout_toRightOf="@+id/sectionHeader"
-            android:text=""
-            android:textColor="@color/colorPrimary" />
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/sectionHeader"
+            android:layout_marginLeft="8dp"
+            android:text="@string/all_files_downloaded"
+            android:textColor="@color/transparentBlack"
+            android:textSize="12sp" />
 
-        <ImageButton
+        <TextView
             android:id="@+id/remove"
-            android:layout_width="48dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:background="@android:color/transparent"
             android:padding="8dp"
-            android:tint="@color/colorGrey"
-            app:srcCompat="@drawable/ic_delete_forever_black_24dp" />
-
-        <ImageButton
-            android:id="@+id/download_all"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_toLeftOf="@+id/remove"
-            android:layout_toStartOf="@+id/remove"
-            android:background="@android:color/transparent"
-            android:padding="8dp"
-            android:tint="@color/colorPrimary"
-            app:srcCompat="@android:drawable/stat_sys_download_done" />
+            android:textColor="@color/colorGrey"
+            android:text="Delete" />
 
     </RelativeLayout>
 

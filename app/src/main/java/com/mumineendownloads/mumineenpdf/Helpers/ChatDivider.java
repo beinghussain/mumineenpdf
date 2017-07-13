@@ -32,16 +32,7 @@ public class ChatDivider extends RecyclerView.ItemDecoration {
         super.getItemOffsets(outRect, view, parent, state);
         outRect.right = 24;
         outRect.left = 24;
-
-        if(parent.getChildAdapterPosition(view) == state.getItemCount()-1){
-            outRect.bottom = 24;
-            outRect.top = 0;
-        }else {
-            outRect.bottom = 24;
-        }
-        if(parent.getChildAdapterPosition(view) == 0){
-            outRect.top = 24;
-            outRect.bottom = 12;
-        }
+        outRect.top = 12;
+        outRect.bottom = 12;
     }
 }

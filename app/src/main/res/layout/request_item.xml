@@ -57,6 +57,7 @@
                     android:layout_marginLeft="4dp"
                     android:layout_toEndOf="@+id/time"
                     android:layout_toLeftOf="@+id/time"
+                    android:visibility="gone"
                     android:text="@string/dot"
                     android:textAlignment="textEnd"
                     android:textColor="@color/colorPrimary"

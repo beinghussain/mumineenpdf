@@ -1,0 +1,64 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.mumineendownloads.mumineenpdf.Fragments.SearchFragment">
+
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:elevation="0dp"
+        android:id="@+id/appBarLayout">
+
+    <com.mancj.materialsearchbar.MaterialSearchBar
+        app:mt_hint="Search PDF"
+        app:mt_navIconEnabled="false"
+        app:mt_maxSuggestionsCount="10"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/searchBar" />
+
+    </android.support.design.widget.AppBarLayout>
+
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/searchRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/appBarLayout"
+        android:visibility="visible" />
+
+
+    <RelativeLayout
+        android:id="@+id/noItemFound"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+
+        <ImageView
+            android:id="@+id/imageView3"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:alpha="0.2"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:tint="@color/cardview_dark_background"
+            app:srcCompat="@drawable/ic_mail_inbox_empty" />
+
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/imageView3"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="234dp"
+            android:text="No Item Found" />
+    </RelativeLayout>
+
+
+
+</RelativeLayout>

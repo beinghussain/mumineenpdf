@@ -102,6 +102,9 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.navigation_upload:
                     selectedFragment = goFragment.newInstance();
                     break;
+                case R.id.navigation_library:
+                    selectedFragment = goFragment.newInstance();
+                    break;
             }
 
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();

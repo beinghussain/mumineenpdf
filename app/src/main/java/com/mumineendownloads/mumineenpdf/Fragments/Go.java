@@ -43,6 +43,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+
+import es.dmoral.toasty.Toasty;
 
 
 public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
@@ -74,7 +77,7 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
         View rootView = inflater.inflate(R.layout.fragment_go, container, false);
         mActivityActionBarToolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
-        mActivityActionBarToolbar.setTitle("Mumineen PDF - OTG Lists");
+        mActivityActionBarToolbar.setTitle("Library");
         Fonty.setFonts(mActivityActionBarToolbar);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.goList);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
@@ -106,7 +109,9 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
                         ArrayList<Integer> a = Utils.loadArray(getContext(),s);
                         ArrayList<PDF.PdfBean> b = new ArrayList<PDF.PdfBean>();
                         for(int i = 0; i<a.size(); i++){
-                            b.add(pdfHelper.getPDF(a.get(i)));
+                            PDF.PdfBean pdf = pdfHelper.getPDF(a.get(i));
+                            b.add(pdf);
+                            arrayList.add(pdf);
                         }
                         sections.add(new SectionHeader(b, s));
                     }
@@ -176,7 +181,6 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
     }
 
     class DownloadReceiver extends BroadcastReceiver {
-        int i = 0;
         @Override
         public void onReceive(Context context, Intent intent) {
             if(arrayList==null){
@@ -191,16 +195,50 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
             if (tmpPdf == null || position == -1) {
                 return;
             }
-            int status = tmpPdf.getStatus();
-            if(status==Status.STATUS_DOWNLOADED){
-                i++;
-                if(i==1){
-                    i = 0;
-                    Log.e("Downloaded", String.valueOf(i));
+            if(isCurrentListViewItemVisible(position)) {
+                final PDF.PdfBean pdf = getPDF(tmpPdf.getPid());
+                final int status = tmpPdf.getStatus();
+                if(status!=Status.STATUS_DOWNLOADING){
+                    pdfHelper.updatePDF(tmpPdf);
                 }
-
+                if (pdf.getPid() == tmpPdf.getPid()) {
+                    if (status == Status.STATUS_LOADING) {
+                        pdf.setStatus(Status.STATUS_LOADING);
+                        goSectionAdapter.notifyDataSetChanged();
+                    } else if (status == Status.STATUS_DOWNLOADING) {
+                        pdf.setStatus(Status.STATUS_DOWNLOADING);
+                        pdf.setDownloadPerSize(tmpPdf.getDownloadPerSize());
+                        pdf.setProgress(tmpPdf.getProgress());
+                        goSectionAdapter.notifyDataSetChanged();
+                    } else if (status == Status.STATUS_NULL) {
+                        pdf.setStatus(Status.STATUS_NULL);
+                        goSectionAdapter.notifyDataSetChanged();
+                    } else if (status==Status.STATUS_DOWNLOADED){
+                        pdf.setStatus(Status.STATUS_DOWNLOADED);
+                        goSectionAdapter.notifyDataSetChanged();
+                    } else if (status==Status.STATUS_CONNECTED){
+                        pdf.setStatus(Status.STATUS_CONNECTED);
+                        goSectionAdapter.notifyDataSetChanged();
+                    }
+                }
             }
         }
+    }
+
+    private boolean isCurrentListViewItemVisible(int position) {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        int first = layoutManager.findFirstVisibleItemPosition();
+        int last = layoutManager.findLastVisibleItemPosition();
+        return first <= position && position <= last;
+    }
+
+    private PDF.PdfBean getPDF(int pid){
+        for(PDF.PdfBean pdfBean : arrayList){
+            if(pdfBean.getPid()==pid){
+                return pdfBean;
+            }
+        }
+        return arrayList.get(0);
     }
 
     public void onPause() {

@@ -4,9 +4,10 @@
         <item>Download</item>
         <item>Share</item>
         <item>Report</item>
-        <item>Add to list</item>
+        <item>Add to My Library</item>
     </string-array>
     <string-array name="preference_values_downloaded">
+        <item>Add to My Library</item>
         <item>Share</item>
         <item>Report</item>
         <item>Delete file</item>
@@ -19,6 +20,7 @@
         <item>Other</item>
     </string-array>
     <string-array name="saveItemList">
+        <item>Add to My Library</item>
         <item>Share</item>
         <item>Report</item>
         <item>Delete</item>

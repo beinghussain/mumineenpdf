@@ -23,6 +23,7 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.marcinorlowski.fonty.Fonty;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Fragments.SearchFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
@@ -44,7 +45,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     ArrayList<PDF.PdfBean> downloadRequest = new ArrayList<>();
 
     private Context context;
-    private PDFListFragment pdfListFragment;
+    private SearchFragment pdfListFragment;
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
     private PDFHelper pdfHelper;
     private int size = 0;
@@ -91,7 +92,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         notifyDataSetChanged();
     }
 
-    public PDFAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, PDFListFragment pdfListFragment) {
+    public PDFAdapter(ArrayList<PDF.PdfBean> pdfList, Context applicationContext, SearchFragment pdfListFragment) {
         pdfHelper = new PDFHelper(applicationContext);
         this.pdfBeanArrayList = pdfList;
         this.context = applicationContext;
@@ -189,15 +190,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             holder.cancel.setVisibility(View.GONE);
         }
 
-
-        if(pdfListFragment.getMultiSelect_list().contains(pdf)){
-            holder.imageView.setImageResource(R.drawable.pdf_downloaded_selected);
-            holder.parentView.setBackgroundColor(Color.parseColor("#F3F4F3"));
-        }else {
-            holder.imageView.setImageResource(R.drawable.pdf_downloaded);
-            holder.parentView.setBackgroundColor(Color.parseColor("#ffffff"));
-        }
-
         holder.cancelView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -245,13 +237,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             }
         });
 
-        holder.parentView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                pdfListFragment.enableMultiSelect(position, pdf);
-                return true;
-            }
-        });
 
         holder.parentView.setOnClickListener(new View.OnClickListener() {
             @Override

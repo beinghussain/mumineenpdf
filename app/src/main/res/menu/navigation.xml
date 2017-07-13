@@ -11,11 +11,16 @@
         android:icon="@drawable/ic_swap_vert_black_24dp"
         android:title="@string/title_request" />
 
+    <item
+        android:id="@+id/navigation_library"
+        android:icon="@drawable/ic_library_books_black_24dp"
+        android:title="Library" />
+
 
     <item
         android:id="@+id/navigation_upload"
-        android:icon="@drawable/ic_send_black_24dp"
-        android:title="On The Go" />
+        android:icon="@drawable/ic_bookmark_black_24dp"
+        android:title="My Library" />
 
     <item
         android:id="@+id/navigation_saved"

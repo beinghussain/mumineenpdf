@@ -2,15 +2,12 @@ package com.mumineendownloads.mumineenpdf.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.FileProvider;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -18,7 +15,6 @@ import com.intrusoft.sectionedrecyclerview.SectionRecyclerViewAdapter;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Fragments.Go;
-import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.SectionHeader;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
@@ -28,10 +24,9 @@ import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.mumineendownloads.mumineenpdf.ViewHolder.ChildViewHolder;
 import com.mumineendownloads.mumineenpdf.ViewHolder.SectionViewHolder;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import es.dmoral.toasty.Toasty;
 
 
 public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, PDF.PdfBean, SectionViewHolder, ChildViewHolder> {
@@ -39,6 +34,7 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
     private Context context;
     private int download_left = 0;
     private String sectionHeader;
+    public static MaterialDialog dialog;
 
     public GoSectionAdapter(Context context, List<SectionHeader> sectionHeaderItemList) {
         super(context, sectionHeaderItemList);
@@ -59,64 +55,22 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
     }
 
     @Override
-    public void onBindSectionViewHolder(SectionViewHolder sectionViewHolder, final int sectionPosition, final SectionHeader sectionHeader) {
-        sectionViewHolder.name.setText(sectionHeader.getSectionText());
+    public void onBindSectionViewHolder(SectionViewHolder sectionViewHolder, final int sectionPosition, final SectionHeader sectionHeader)
+    {
+        String title = sectionHeader.getSectionText();
+        String output = title.substring(0,1).toUpperCase() + title.substring(1).toLowerCase();
+        sectionViewHolder.name.setText(output);
         download_left = Utils.getPDFNotDownloadedCount(context,sectionHeader.getSectionText());
-        sectionViewHolder.download_all.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDownloadDialog(v.getContext(), sectionHeader.getSectionText());
-            }
-        });
         this.sectionHeader = sectionHeader.getSectionText();
         if(download_left!=0){
-           sectionViewHolder.download_all.setVisibility(View.VISIBLE);
             sectionViewHolder.downloadLeft.setText(download_left + " files not downloaded");
-       } else {
-           sectionViewHolder.download_all.setVisibility(View.INVISIBLE);
-       }
+        }
         sectionViewHolder.delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
            showAlert(context,sectionPosition,sectionHeader.getSectionText());
             }
         });
-    }
-
-    private void showDownloadDialog(final Context context, String sectionText) {
-        int count = Utils.getPDFNotDownloadedCount(context,sectionText);
-        List<Integer> pid = Utils.loadArray(context,sectionText);
-        final ArrayList<PDF.PdfBean> pdfBeanArrayList = new ArrayList<>();
-        final ArrayList<Integer> fakePositionList = new ArrayList<>();
-        PDFHelper p = new PDFHelper(context);
-        for(int i : pid){
-            PDF.PdfBean pdfBean = p.getPDF(i);
-            if(pdfBean.getStatus()!= Status.STATUS_DOWNLOADED){
-                pdfBeanArrayList.add(pdfBean);
-                fakePositionList.add(i);
-            }
-        }
-        new MaterialDialog.Builder(context)
-                .title("Download "+count + " files")
-                .negativeText("Cancel")
-                .positiveText("Download")
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                       showDownloading(context,pdfBeanArrayList,fakePositionList);
-                    }
-                }).build().show();
-    }
-
-    private void showDownloading(Context context, ArrayList<PDF.PdfBean> pdfBeanArrayList, ArrayList<Integer> fakePositionList) {
-        DownloadService.intentDownload(fakePositionList,pdfBeanArrayList,context);
-        MaterialDialog.Builder builder = new MaterialDialog.Builder(context);
-                builder.title("Downloading " + pdfBeanArrayList.size() + " Files")
-                .content("Please wait..")
-                .cancelable(false)
-                .progress(true,100)
-                .progressIndeterminateStyle(true)
-                .build().show();
     }
 
     private void showAlert(final Context context, final int sectionPosition, final String sectionName){
@@ -156,45 +110,103 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
     }
 
     @Override
-    public void onBindChildViewHolder(ChildViewHolder childViewHolder, final int sectionPosition, final int childPosition, final PDF.PdfBean child) {
-        String t;
-        childViewHolder.mainView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openPDF(child);
-            }
-        });
-        childViewHolder.title.setText(child.getTitle());
-        childViewHolder.size.setText(child.getAlbum() + " • " + Utils.fileSize(child.getSize()));
-        if(child.getStatus()!=Status.STATUS_DOWNLOADED){
-          childViewHolder.imageButton.setVisibility(View.VISIBLE);
-
+    public void onBindChildViewHolder(final ChildViewHolder holder, final int sectionPosition, final int position, final PDF.PdfBean child) {
+        String output = child.getTitle().substring(0, 1).toUpperCase() + child.getTitle().substring(1).toLowerCase();
+        holder.title.setText(output);
+        final int pdfDownloadStatus = child.getStatus();
+        if (pdfDownloadStatus == Status.STATUS_LOADING) {
+            holder.imageView.setVisibility(View.GONE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.size.setText("Connecting..");
+            holder.cancel.setVisibility(View.VISIBLE);
+            holder.cancelView.setVisibility(View.VISIBLE);
+            holder.loading.setVisibility(View.VISIBLE);
+        } else if (pdfDownloadStatus == PDF.STATUS_QUEUED) {
+            holder.imageView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.size.setText("Queued..");
+            holder.cancel.setVisibility(View.GONE);
+            holder.cancelView.setVisibility(View.GONE);
+        } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADING) {
+            holder.imageView.setVisibility(View.GONE);
+            holder.progressBarDownload.setVisibility(View.VISIBLE);
+            holder.button.setVisibility(View.GONE);
+            holder.loading.setVisibility(View.GONE);
+            holder.cancel.setVisibility(View.VISIBLE);
+            holder.cancelView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setProgress(child.getProgress());
+            holder.size.setText(child.getDownloadPerSize());
+        } else if (pdfDownloadStatus == Status.STATUS_DOWNLOADED) {
+            holder.cancelView.setVisibility(View.GONE);
+            holder.size.setText(getPagesString(child.getPageCount()) + Utils.fileSize(child.getSize()));
+            holder.imageView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.button.setVisibility(View.GONE);
+            holder.loading.setVisibility(View.GONE);
+            holder.cancel.setVisibility(View.GONE);
+        } else if (pdfDownloadStatus == Status.STATUS_CONNECTED) {
+            holder.size.setText("Downloading..");
+            holder.loading.setVisibility(View.INVISIBLE);
+            holder.imageView.setVisibility(View.INVISIBLE);
+            holder.cancel.setVisibility(View.VISIBLE);
+            holder.cancelView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.VISIBLE);
+            holder.button.setVisibility(View.GONE);
+        } else {
+            holder.imageView.setVisibility(View.VISIBLE);
+            holder.progressBarDownload.setVisibility(View.GONE);
+            holder.size.setText(getPagesString(child.getPageCount()) + Utils.fileSize(child.getSize()));
+            holder.button.setVisibility(View.VISIBLE);
+            holder.loading.setVisibility(View.GONE);
+            holder.cancel.setVisibility(View.GONE);
+            holder.cancelView.setVisibility(View.VISIBLE);
         }
 
-        childViewHolder.mainView.setOnLongClickListener(new View.OnLongClickListener() {
+
+        holder.cancelView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
-                showOptionDialog(v.getContext(),child,sectionPosition,childPosition);
-                return true;
+            public void onClick(View v) {
+               ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
+               ArrayList<Integer> positionList = new ArrayList<Integer>();
+                arrayList.add(child);
+                positionList.add(position);
+                DownloadService.intentDownload(positionList,arrayList,context);
+                child.setStatus(PDF.STATUS_QUEUED);
             }
         });
 
+
+        holder.button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
+                ArrayList<Integer> positionList = new ArrayList<Integer>();
+                arrayList.add(child);
+                positionList.add(position);
+                DownloadService.intentDownload(positionList,arrayList,context);
+                child.setStatus(PDF.STATUS_QUEUED);
+            }
+        });
+
+
+        holder.parentView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openPDF(child, position);
+            }
+        });
     }
 
-    private void showOptionDialog(final Context context, final PDF.PdfBean pdfBean, final int sectionPosition, final int position) {
-        List<String> list = new ArrayList<>();
-        list.add("Remove from list");
-        new MaterialDialog.Builder(context)
-                .items(list)
-                .itemsCallback(new MaterialDialog.ListCallback() {
-                    @Override
-                    public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-                        if (text.equals("Remove from list")) {
-                           showSingleRemoveDialog(view.getContext(),pdfBean,sectionPosition,position);
-                        }
-                    }
-                })
-                .show();
+    private String getPagesString(int filePages) {
+        if(filePages==0){
+            return "";
+        }
+        if(filePages>1){
+            return filePages + " pages • ";
+        }
+        return filePages + " page • ";
     }
 
     private void showSingleRemoveDialog(final Context context, final PDF.PdfBean pdfBean, final int sectionPosition, final int position)
@@ -213,11 +225,29 @@ public class GoSectionAdapter extends SectionRecyclerViewAdapter<SectionHeader, 
                 }).build().show();
     }
 
-    private void openPDF(PDF.PdfBean pdf) {
+    private void openPDF(final PDF.PdfBean pdf, final int position)
+    {
+        File f = new File(Environment.getExternalStorageDirectory().getAbsoluteFile()+"/Mumineen/"+pdf.getPid()+".pdf");
+        if(f.exists()) {
             Intent intent = new Intent(context, PDFActivity.class);
-            intent.putExtra("mode",0);
+            intent.putExtra("mode", 0);
             intent.putExtra("pid", pdf.getPid());
             intent.putExtra("title", pdf.getTitle());
             context.startActivity(intent);
+        }else {
+            new MaterialDialog.Builder(context).title("File not downloaded").content("Do you want to download the file")
+                    .positiveText("Download")
+                    .negativeText("Cancel")
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
+                            ArrayList<Integer> positionList = new ArrayList<Integer>();
+                            arrayList.add(pdf);
+                            positionList.add(position);
+                            DownloadService.intentDownload(positionList,arrayList,context);
+                        }
+                    }).build().show();
+        }
     }
 }

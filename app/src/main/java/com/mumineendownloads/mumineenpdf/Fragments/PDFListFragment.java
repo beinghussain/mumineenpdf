@@ -25,6 +25,7 @@ import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
@@ -256,10 +257,6 @@ public class PDFListFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
-    private BasePDFAdapter.PDFViewHolder getViewHolder(int position) {
-        return (BasePDFAdapter.PDFViewHolder) mRecyclerView.findViewHolderForLayoutPosition(position);
-    }
-
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
@@ -270,25 +267,36 @@ public class PDFListFragment extends Fragment {
         final SearchView searchView = (SearchView) myActionMenuItem.getActionView();
         search(searchView);
 
-        MenuItemCompat.setOnActionExpandListener(myActionMenuItem, new MenuItemCompat.OnActionExpandListener() {
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                refresh("all");
-                MainActivity.toggle(true);
-                Home.toggleTab(true);
-                searching = true;
-                return true;
-            }
-
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                refresh(album);
-                MainActivity.toggle(false);
-                Home.toggleTab(false);
-                searching = false;
-                return true;
+            public void onClick(View v) {
+                SearchFragment selectedFragment = SearchFragment.newInstance();
+                FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
+                transaction.replace(R.id.fragment, selectedFragment);
+                transaction.addToBackStack("pdfList");
+                transaction.commit();
             }
         });
+
+//        MenuItemCompat.setOnActionExpandListener(myActionMenuItem, new MenuItemCompat.OnActionExpandListener() {
+//            @Override
+//            public boolean onMenuItemActionExpand(MenuItem item) {
+//                refresh("all");
+//                MainActivity.toggle(true);
+//                Home.toggleTab(true);
+//                searching = true;
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onMenuItemActionCollapse(MenuItem item) {
+//                refresh(album);
+//                MainActivity.toggle(false);
+//                Home.toggleTab(false);
+//                searching = false;
+//                return true;
+//            }
+//        });
     }
 
 
@@ -375,7 +383,7 @@ public class PDFListFragment extends Fragment {
     private ActionMode.Callback mActionCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-
+            Fonty.setFonts((ViewGroup) mode.getCustomView());
             MenuInflater inflater = mode.getMenuInflater();
             inflater.inflate(R.menu.multiselect, menu);
             sectionedRecyclerAdapter.notifyDataSetChanged();
@@ -385,10 +393,10 @@ public class PDFListFragment extends Fragment {
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
-                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorActionModeDark));
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(),R.color.colorPrimaryDark));
             }
-            Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorActionMode));
-            Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorActionMode));
+            Home.tabLayout.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
+            Home.mActivityActionBarToolbar.setBackgroundColor(ContextCompat.getColor(getContext(),R.color.colorPrimary));
             return true;
         }
 
@@ -463,6 +471,7 @@ public class PDFListFragment extends Fragment {
                                             showNewDialog(goList);
                                         } else {
                                             Utils.addToSpecificList(getContext(),goList, String.valueOf(text));
+                                            Toasty.normal(getContext(),"Added " + goList.size() + " PDF to " + text).show();
                                         }
                                     }
                                 });
@@ -499,6 +508,7 @@ public class PDFListFragment extends Fragment {
                     public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
                         Utils.addSectionToList(getContext(),String.valueOf(input));
                         Utils.addToSpecificList(getContext(),pids, String.valueOf(input));
+                        Toasty.normal(getContext(),"Added " + pids.size() + " PDF to " + String.valueOf(input)).show();
                     }
                 }).show();
     }
@@ -529,15 +539,17 @@ public class PDFListFragment extends Fragment {
                                 sectionedRecyclerAdapter.notifyItemChangedAtPosition(arrayList.indexOf(pdfBean));
                             }
                         }
-                        final Snackbar snackbar = Snackbar
-                                .make(MainActivity.bottomNavigationView, count + " files deleted", Snackbar.LENGTH_LONG)
-                                .setAction("OK", new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
+                        if(count!=0) {
+                            final Snackbar snackbar = Snackbar
+                                    .make(MainActivity.bottomNavigationView, count + " files deleted", Snackbar.LENGTH_LONG)
+                                    .setAction("OK", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
 
-                                    }
-                                });
-                        snackbar.show();
+                                        }
+                                    });
+                            snackbar.show();
+                        }
                         destory();
 
                     }
@@ -610,7 +622,6 @@ public class PDFListFragment extends Fragment {
 
     public void openDialog(final Context context, final int position, final PDF.PdfBean pdf) {
         if(!isMultiSelect) {
-            final BasePDFAdapter.PDFViewHolder holder = getViewHolder(position);
             int array = R.array.preference_values;
             if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
                 array = R.array.preference_values_downloaded;
@@ -654,7 +665,7 @@ public class PDFListFragment extends Fragment {
                             } else if (text.equals("Report")) {
                                 reportApp(pdf);
                             }
-                            else if(text.equals("Add to list")){
+                            else if(text.equals("Add to My Library")){
                                 showDialogListAdd(pdf);
                             }
                         }
@@ -680,8 +691,8 @@ public class PDFListFragment extends Fragment {
                         if(text.equals("Create new list")){
                             showNewDialog(list);
                         } else {
-
                             Utils.addToSpecificList(getContext(),list, String.valueOf(text));
+                            Toasty.normal(getContext(),"Added " + list.size() + " PDF to " + text).show();
                         }
                     }
                 });
@@ -692,7 +703,7 @@ public class PDFListFragment extends Fragment {
         return new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pid+".pdf");
     }
 
-    private void delete(final PDF.PdfBean pdf, Context context, final int position) {
+    private void delete(final PDF.PdfBean pdf, final Context context, final int position) {
         new MaterialDialog.Builder(context)
                 .title("Delete file")
                 .negativeText("Cancel")
@@ -712,6 +723,7 @@ public class PDFListFragment extends Fragment {
                             pdf.setStatus(Status.STATUS_NULL);
                             sectionedRecyclerAdapter.notifyItemChangedAtPosition(position);
                             mPDFHelper.updatePDF(pdf);
+                            Toasty.normal(context,"File Deleted Successfully").show();
                         }
                     }
                 })
@@ -797,6 +809,7 @@ public class PDFListFragment extends Fragment {
                         sectionedRecyclerAdapter.notifyItemChangedAtPosition(position);
                     } else if (status==Status.STATUS_DOWNLOADED){
                         pdf.setStatus(Status.STATUS_DOWNLOADED);
+                        pdf.setPageCount(tmpPdf.getPageCount());
                         sectionedRecyclerAdapter.notifyItemChangedAtPosition(position);
                     } else if (status==Status.STATUS_CONNECTED){
                         pdf.setStatus(Status.STATUS_CONNECTED);

@@ -28,6 +28,7 @@ import com.aspsine.multithreaddownload.DownloadRequest;
 import com.aspsine.multithreaddownload.util.L;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
@@ -70,6 +71,7 @@ public class DownloadService extends Service {
     public static final String EXTRA_APP_INFO_OLD = "extra_app_info_old";
     private static final String EXTRA_APP_POSITION_LIST = "extra_pdf_position_list";
     private static final String EXTRA_APP_INFO_LIST = "extra_pdf_list";
+    public static final String ACTION_END = "stop_download";
     private File mDownloadDir;
     private DownloadManager mDownloadManager;
     List<Integer> positionList = new ArrayList<>();
@@ -426,7 +428,6 @@ public class DownloadService extends Service {
                   positionList.remove(positionList.get(0));
               }
           }
-
           if (!downloadList.isEmpty()) {
               download(downloadList.get(0), positionList.get(0));
           }

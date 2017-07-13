@@ -83,22 +83,22 @@
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="2dp"
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Test Title"
-                android:textColor="#424242"
+                android:textColor="#595052"
                 android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/size"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginTop="3dp"
+                android:layout_marginTop="1dp"
                 android:layout_weight="1"
                 android:text="2017 KB"
-                android:textColor="#616161"
+                android:textColor="@color/colorGrey"
                 android:textSize="13sp" />
 
 

@@ -8,6 +8,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -17,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.marcinorlowski.fonty.Fonty;
@@ -43,6 +45,7 @@ public class Saved extends Fragment {
     private static SavedViewPagerAdapter viewPagerAdapter;
     public static CstTabLayout tabLayout;
     private SearchView searchView;
+    private CardView noItemFound;
 
 
     public Saved newInstance() {
@@ -69,9 +72,11 @@ public class Saved extends Fragment {
         mActivityActionBarToolbar.setTitle("Saved PDF");
         Fonty.setFonts(mActivityActionBarToolbar);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
+        noItemFound = (CardView) rootView.findViewById(R.id.emptyCard);
         ArrayList<String> arrayList;
         PDFHelper pdfHelper = new PDFHelper(getContext());
         arrayList = pdfHelper.getAlbumName();
+
         viewPagerAdapter = new SavedViewPagerAdapter(getChildFragmentManager(), arrayList);
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setOffscreenPageLimit(6);
@@ -91,6 +96,10 @@ public class Saved extends Fragment {
         });
         tabLayout = (CstTabLayout) rootView.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
+        if(arrayList.size()==0){
+            noItemFound.setVisibility(View.VISIBLE);
+            toggleTab(true);
+        }
         Fonty.setFonts(tabLayout);
         return rootView;
     }

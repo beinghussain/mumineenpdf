@@ -60,6 +60,7 @@ public class Home extends Fragment {
         ArrayList<String> arrayTabList;
         PDFHelper pdfHelper = new PDFHelper(getContext());
         arrayTabList = pdfHelper.getAlbums();
+        mActivityActionBarToolbar.setTitle("Home");
         viewPagerAdapter = new FragmentPagerAdapterCustom(getChildFragmentManager(), activity, arrayTabList);
         viewPager.setAdapter(viewPagerAdapter);
         viewPager.setOffscreenPageLimit(6);

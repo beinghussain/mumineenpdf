@@ -32,6 +32,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -65,6 +66,8 @@ public class PDFSavedListFragment extends Fragment {
     private static ActionMode mActionMode;
     private ArrayList<PDF.PdfBean> multiSelect_list;
     public boolean isMultiSelect;
+    private RelativeLayout noItemFound;
+
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
     }
@@ -94,8 +97,10 @@ public class PDFSavedListFragment extends Fragment {
         mRecyclerView.addItemDecoration(new CustomDivider(getContext()));
         mRecyclerView.getItemAnimator().setChangeDuration(0);
 
+        noItemFound = (RelativeLayout) rootView.findViewById(R.id.noItemFound);
+
+
         SharedPreferences settings = getContext().getSharedPreferences("settings", 0);
-        boolean added = settings.getBoolean("added",false);
         refresh(album);
 
 

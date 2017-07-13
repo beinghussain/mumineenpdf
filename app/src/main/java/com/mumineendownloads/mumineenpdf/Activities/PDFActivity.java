@@ -56,6 +56,7 @@ public class PDFActivity extends AppCompatActivity {
         pdfView = (PDFView) findViewById(R.id.pdfView);
         pdfView.documentFitsView();
         pdfView.setMinZoom(3f);
+        pdfView.enableAnnotationRendering(true);
         pdfView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -106,7 +107,6 @@ public class PDFActivity extends AppCompatActivity {
         if(id!=0) {
             String title = intent1.getStringExtra("title");
             getSupportActionBar().setTitle(title);
-            pdfView = (PDFView) findViewById(R.id.pdfView);
             if (mode == 1) {
                 String url = intent.getStringExtra("url");
                 url = url.replace("http", "https");
@@ -134,7 +134,6 @@ public class PDFActivity extends AppCompatActivity {
     }
 
     private void handlePdf(Intent intent) {
-        pdfView = (PDFView) findViewById(R.id.pdfView);
         pdfView.fromUri(intent.getData())
                 .enableSwipe(true)
 

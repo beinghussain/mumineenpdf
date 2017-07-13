@@ -3,7 +3,6 @@ package com.mumineendownloads.mumineenpdf.Helpers;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -11,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
-import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 
 import java.io.File;
@@ -94,7 +92,11 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setId(Integer.parseInt(cursor.getString(0)));
                 contact.setTitle(title);
                 contact.setAlbum(album1);
-                contact.setStatus(Integer.parseInt(cursor.getString(6)));
+                try {
+                    contact.setStatus(Integer.parseInt(cursor.getString(6)));
+                }catch (NumberFormatException ignored){
+                    contact.setStatus(0);
+                }
                 contact.setSource(cursor.getString(3));
                 contact.setSize(cursor.getString(4));
                 contact.setPid(Integer.parseInt(cursor.getString(5)));
@@ -148,7 +150,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setId(Integer.parseInt(cursor.getString(0)));
                 contact.setTitle(title);
                 contact.setAlbum(album1);
-                contact.setStatus(Integer.parseInt(cursor.getString(6)));
+//                contact.setStatus(Integer.parseInt(cursor.getString(6)));
                 contact.setSource(cursor.getString(3));
                 contact.setSize(cursor.getString(4));
                 contact.setPid(Integer.parseInt(cursor.getString(5)));
@@ -206,6 +208,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 initialValues.put(KEY_TITLE, pdf.getTitle());
                 initialValues.put(KEY_PID, pdf.getPid());
                 initialValues.put(KEY_CAT,pdf.getCat());
+                initialValues.put(KEY_PAGE, pdf.getPageCount());
                 try {
                     int id = (int) db.insertWithOnConflict(TABLE_PDF, null, initialValues, SQLiteDatabase.CONFLICT_IGNORE);
                     if (id == -1) {
@@ -258,7 +261,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' AND status = 6 ORDER BY title";
                 break;
         }
-        ArrayList arrayList = new ArrayList();
+        ArrayList<PDF.PdfBean> arrayList = new ArrayList<>();
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -281,6 +284,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setStatus(Integer.parseInt(cursor.getString(6)));
                 if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
                     contact.setStatus(Status.STATUS_NULL);
+                    updatePDF(contact);
                 }else {
                     contact.setStatus(Status.STATUS_DOWNLOADED);
                     updatePDF(contact);

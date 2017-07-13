@@ -51,5 +51,8 @@
     <string name="library">Libraries</string>
     <string name="type_request_here">Type request here..</string>
     <string name="dot">•</string>
+    <string name="all_files_downloaded">All files downloaded</string>
+    <string name="login">Login</string>
+    <string name="info">Info</string>
 
 </resources>

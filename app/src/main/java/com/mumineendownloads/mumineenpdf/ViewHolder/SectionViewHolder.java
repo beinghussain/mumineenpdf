@@ -15,7 +15,7 @@ import com.rey.material.widget.Button;
 public class SectionViewHolder extends RecyclerView.ViewHolder {
 
     public TextView name;
-    public ImageButton delete;
+    public TextView delete;
     public ImageButton download_all;
     public TextView downloadLeft;
 
@@ -23,8 +23,7 @@ public class SectionViewHolder extends RecyclerView.ViewHolder {
         super(itemView);
         Fonty.setFonts((ViewGroup) itemView);
         name = (TextView) itemView.findViewById(R.id.sectionHeader);
-        delete = (ImageButton) itemView.findViewById(R.id.remove);
+        delete = (TextView) itemView.findViewById(R.id.remove);
         downloadLeft = (TextView) itemView.findViewById(R.id.download_left);
-        download_all = (ImageButton) itemView.findViewById(R.id.download_all);
     }
 }
