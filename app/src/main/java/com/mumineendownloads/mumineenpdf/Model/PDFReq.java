@@ -8,7 +8,7 @@ public class PDFReq {
 
     public static final int PENDING = 0;
     public static final int APPROVE = 1;
-    public static final int REJECT = 2;
+    public static final int REJECT = -1;
 
     private List<Request> requests;
 

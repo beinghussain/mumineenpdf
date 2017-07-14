@@ -2,6 +2,7 @@ package com.mumineendownloads.mumineenpdf.Adapters;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
@@ -106,7 +108,14 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
                             .build().show();
                 } else {
                     String cont = getStatusString(Integer.parseInt(request.getStatus()));
-                    new MaterialDialog.Builder(v.getContext()).content(cont).positiveText("OK").build().show();
+                    new MaterialDialog.Builder(v.getContext()).title("Request" +
+                            " Status").content(cont).positiveText("OK").negativeText("Delete this request")
+                            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                @Override
+                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                                }
+                            }).build().show();
                 }
             }
         });
@@ -115,13 +124,13 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
     private String getStatusString(int status) {
         String s = "";
         if(status==PDFReq.APPROVE){
-            s= "Your request is been shown in the app to all the users";
+            s= "Your request is been shown in the app to all the users.";
         }
         if(status==PDFReq.PENDING){
-            s= "Your request is pending";
+            s= "Your request is pending. Your request is not yet shown in the app to all users.";
         }
         if(status==PDFReq.REJECT){
-            s= "Your request has been rejected due to some reason. Please type in proper name of file you want!";
+            s= "Your request has been rejected due to some reason. Please type in proper name of file you want.";
         }
         return s;
     }

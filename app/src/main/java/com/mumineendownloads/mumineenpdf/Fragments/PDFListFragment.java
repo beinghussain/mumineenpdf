@@ -383,7 +383,6 @@ public class PDFListFragment extends Fragment {
     private ActionMode.Callback mActionCallback = new ActionMode.Callback() {
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            Fonty.setFonts((ViewGroup) mode.getCustomView());
             MenuInflater inflater = mode.getMenuInflater();
             inflater.inflate(R.menu.multiselect, menu);
             sectionedRecyclerAdapter.notifyDataSetChanged();
