@@ -27,4 +27,5 @@ http://developer.android.com/guide/topics/appwidgets/index.html#CreatingLayout
     <dimen name="headerTitle">20sp</dimen>
     <dimen name="headerMarginVertical">16dp</dimen>
     <dimen name="headerMarginStart">12dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
 </resources>

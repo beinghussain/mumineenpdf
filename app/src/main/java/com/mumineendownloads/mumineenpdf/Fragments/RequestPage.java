@@ -1,16 +1,20 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,26 +35,35 @@ import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Adapters.RequestAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.ChatDivider;
+import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.Model.PDFReq;
+import com.mumineendownloads.mumineenpdf.Model.SelectFile;
 import com.mumineendownloads.mumineenpdf.Model.User;
 import com.mumineendownloads.mumineenpdf.R;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import es.dmoral.toasty.Toasty;
+
+import static com.mumineendownloads.mumineenpdf.Fragments.SelectFileFragment.RESULT_FILE;
+
 
 public class RequestPage extends Fragment {
-    RecyclerView mRecyclerView;
+    public RecyclerView mRecyclerView;
     private RequestAdapter mRequestAdapter;
     ArrayList<PDFReq.Request> mRequests;
     private Toolbar mActivityActionBarToolbar;
     private EditText editText;
     private User user;
+    private boolean isUpload;
+    private ImageButton imageButton;
 
     public RequestPage newInstance() {
         return new RequestPage();
@@ -71,28 +84,73 @@ public class RequestPage extends Fragment {
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
         mActivityActionBarToolbar.setTitle("Request PDF");
         Fonty.setFonts(mActivityActionBarToolbar);
-        ImageButton imageButton = (ImageButton) v.findViewById(R.id.chatSendButton);
+        imageButton = (ImageButton) v.findViewById(R.id.chatSendButton);
         editText = (EditText) v.findViewById(R.id.messageEdit);
-        imageButton.setOnClickListener(new View.OnClickListener() {
+        imageButton.setImageResource(R.drawable.ic_file_upload_black_24dp);
+        editText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View v) {
-                if(editText.getText().toString().length()!=0) {
-                    submitRequest(editText.getText().toString(),editText,user);
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(s.length()==0){
+                   isUpload = true;
+                    changeButton();
+                }else {
+                    isUpload=false;
+                    changeButton();
                 }
             }
         });
+
         getRequest();
         return v;
     }
 
+    private void changeButton() {
+        if(isUpload){
+           imageButton.setImageResource(R.drawable.ic_file_upload_black_24dp);
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                   Toasty.normal(getContext(),"Uploading").show();
+                }
+            });
+        }else {
+            imageButton.setImageResource(R.drawable.ic_send_black_24dp);
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(editText.getText().toString().length()!=0) {
+                        submitRequest(editText.getText().toString(),editText,user);
+                    }
+                }
+            });
+        }
+    }
+
     private void submitRequest(String message, EditText editText, User user) {
         if(Utils.isLogged(getContext())) {
-            sendRequest(message);
             PDFReq.Request request = new PDFReq.Request();
             request.setUser_id(String.valueOf(user.getUserId()));
             request.setRequest(editText.getText().toString());
-            request.setId(mRequests.get(mRequests.size()-1).getId()+1);
+            try {
+                request.setId(mRequests.get(mRequests.size() - 1).getId() + 1);
+            }catch (IndexOutOfBoundsException ignored){
+                request.setId("0");
+            }
             request.setStatus(String.valueOf(PDFReq.PENDING));
+            request.setDate(System.currentTimeMillis());
+            request.setType(0);
+            request.setUser_name(user.getName());
+            sendRequest(request);
             mRequests.add(0,request);
             mRecyclerView.scrollToPosition(0);
             mRequestAdapter.notifyItemInserted(0);
@@ -192,7 +250,7 @@ public class RequestPage extends Fragment {
                                 user1.setName(a[1]);
                                 user1.setEmail(a[2]);
                                 dialog.dismiss();
-                                registerLocally(user1.getUserId(), user1.getEmail(), user1.getName(),message);
+                                registerLocally(user1.getUserId(), user1.getEmail(), user1.getName());
                                 break;
                         }
                     }
@@ -280,7 +338,7 @@ public class RequestPage extends Fragment {
                                     dialog.dismiss();
                                     try {
                                         int id = Integer.parseInt(response);
-                                        registerLocally(id, email.getText().toString(), name.getText().toString(),message);
+                                        registerLocally(id, email.getText().toString(), name.getText().toString());
                                     }catch (NumberFormatException ignored){
 
                                     }
@@ -309,21 +367,23 @@ public class RequestPage extends Fragment {
 
     }
 
-    private void registerLocally(int id, String email, String name, String message) {
+    private void registerLocally(int id, String email, String name) {
         Utils.registerUser(name,email,id,getContext());
-        sendRequest(message);
         PDFReq.Request request = new PDFReq.Request();
         request.setUser_id(String.valueOf(id));
         request.setRequest(editText.getText().toString());
         request.setId(mRequests.get(mRequests.size()-1).getId()+1);
         request.setStatus(String.valueOf(PDFReq.PENDING));
+        request.setDate(System.currentTimeMillis());
+        request.setType(0);
+        sendRequest(request);
         mRequests.add(0,request);
         mRecyclerView.scrollToPosition(0);
         mRequestAdapter.notifyItemInserted(0);
         editText.setText("");
     }
 
-    private void sendRequest(final String message) {
+    private void sendRequest(final PDFReq.Request request) {
         final RequestQueue queue = Volley.newRequestQueue(getContext());
         final String url = "http://mumineendownloads.com/app/sendRequest.php";
 
@@ -342,11 +402,13 @@ public class RequestPage extends Fragment {
             @Override
             protected Map<String, String> getParams()
             {
-                User user = Utils.getUser(getContext());
                 Map<String, String>  params = new HashMap<String, String>();
-                params.put("user_id", String.valueOf(user.getUserId()));
-                params.put("user_name", user.getName());
-                params.put("message", message);
+                params.put("user_id", request.getUser_id());
+                params.put("user_name", request.getUser_name());
+                params.put("message", request.getRequest());
+                params.put("status", request.getStatus());
+                params.put("time", String.valueOf(request.getDate()));
+                params.put("type", String.valueOf(request.getType()));
                 return params;
             }
         };
@@ -360,6 +422,7 @@ public class RequestPage extends Fragment {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        Log.e("Response",response);
                       parseData(response);
                     }
                 }, new Response.ErrorListener() {
@@ -375,9 +438,33 @@ public class RequestPage extends Fragment {
         Gson gson = new Gson();
         mRequests = gson.fromJson(response, new TypeToken<ArrayList<PDFReq.Request>>() {
         }.getType());
-        mRequestAdapter = new RequestAdapter(mRequests,getContext());
+        mRequestAdapter = new RequestAdapter(mRequests,getContext(),RequestPage.this);
         mRecyclerView.addItemDecoration(new ChatDivider(getContext()));
         mRecyclerView.setAdapter(mRequestAdapter);
     }
 
+    public void setFile(final SelectFile file) {
+        new MaterialDialog.Builder(getActivity()).content("Do you want to upload "+file.getFilename() + "?")
+                .positiveText("UPLOAD")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        uploadPDF(file);
+                    }
+                })
+                .negativeText("Cancel").build().show();
+    }
+
+    private void uploadPDF(SelectFile file) {
+        PDFReq.Request request = new PDFReq.Request();
+        request.setUser_name(user.getName());
+        request.setUser_id(String.valueOf(user.getUserId()));
+        request.setDate(System.currentTimeMillis());
+        request.setRequest("PDF File Uploaded : " + file.getFilename());
+        request.setType(PDFReq.TYPE_PDF);
+        request.setStatus(String.valueOf(PDFReq.PENDING));
+        sendRequest(request);
+        mRequests.add(0,request);
+        mRequestAdapter.notifyItemInserted(0);
+    }
 }

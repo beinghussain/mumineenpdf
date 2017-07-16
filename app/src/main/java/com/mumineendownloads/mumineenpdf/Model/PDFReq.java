@@ -8,7 +8,8 @@ public class PDFReq {
 
     public static final int PENDING = 0;
     public static final int APPROVE = 1;
-    public static final int REJECT = 2;
+    public static final int REJECT = -1;
+    public static final int TYPE_PDF = 1;
 
     private List<Request> requests;
 
@@ -27,13 +28,16 @@ public class PDFReq {
         private String user_name;
         private String request;
         private String status;
-        private Date date;
+        private long date;
+        private int type;
+        private int pid;
+        private int response;
 
-        public Date getDate() {
+        public long getDate() {
             return date;
         }
 
-        public void setDate(Date date) {
+        public void setDate(long date) {
             this.date = date;
         }
 
@@ -75,6 +79,26 @@ public class PDFReq {
 
         public void setStatus(String status) {
             this.status = status;
+        }
+
+        public void setType(int type) {
+            this.type = type;
+        }
+
+        public int getType() {
+            return type;
+        }
+
+        public int getPid() {
+            return pid;
+        }
+
+        public void setPid(int pid) {
+            this.pid = pid;
+        }
+
+        public int getResponse() {
+            return response;
         }
     }
 }

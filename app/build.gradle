@@ -28,6 +28,7 @@ dependencies {
     })
 
     compile project(':DownloadMan');
+    compile 'org.ocpsoft.prettytime:prettytime:4.0.1.Final'
     compile 'com.android.volley:volley:1.0.0'
     compile 'com.github.mancj:MaterialSearchBar:0.7'
     compile 'pub.devrel:easypermissions:0.4.2'
@@ -51,8 +52,10 @@ dependencies {
     compile 'com.github.zhukic:sectioned-recyclerview:1.0.1'
     compile 'com.github.javiersantos:AppUpdater:2.6.1'
     compile 'com.github.IntruderShanky:Sectioned-RecyclerView:2.1.1'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
     testCompile 'junit:junit:4.12'
 }
+
 
 
 

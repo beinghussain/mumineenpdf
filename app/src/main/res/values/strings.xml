@@ -54,5 +54,6 @@
     <string name="all_files_downloaded">All files downloaded</string>
     <string name="login">Login</string>
     <string name="info">Info</string>
+    <string name="search">Search</string>
 
 </resources>
