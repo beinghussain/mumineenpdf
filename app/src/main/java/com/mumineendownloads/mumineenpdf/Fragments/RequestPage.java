@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -64,6 +65,7 @@ public class RequestPage extends Fragment {
     private User user;
     private boolean isUpload;
     private ImageButton imageButton;
+    private RelativeLayout loading;
 
     public RequestPage newInstance() {
         return new RequestPage();
@@ -84,9 +86,19 @@ public class RequestPage extends Fragment {
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
         mActivityActionBarToolbar.setTitle("Request PDF");
         Fonty.setFonts(mActivityActionBarToolbar);
+        loading = (RelativeLayout) v.findViewById(R.id.loading);
+        loading.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.GONE);
         imageButton = (ImageButton) v.findViewById(R.id.chatSendButton);
         editText = (EditText) v.findViewById(R.id.messageEdit);
         imageButton.setImageResource(R.drawable.ic_file_upload_black_24dp);
+        imageButton.setImageResource(R.drawable.ic_file_upload_black_24dp);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toasty.normal(getContext(),"Uploading").show();
+            }
+        });
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -423,6 +435,8 @@ public class RequestPage extends Fragment {
                     @Override
                     public void onResponse(String response) {
                         Log.e("Response",response);
+                        loading.setVisibility(View.GONE);
+                        mRecyclerView.setVisibility(View.VISIBLE);
                       parseData(response);
                     }
                 }, new Response.ErrorListener() {

@@ -152,18 +152,7 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
         PrettyTime prettyTime = new PrettyTime(Locale.getDefault());
         String ago = prettyTime.format(new Date(request.getDate()));
         holder.time.setText(ago);
-
-        if(request.getType()!=PDFReq.TYPE_PDF) {
-            if (request.getResponse() != 0) {
-                holder.pdfView.setImageResource(R.drawable.ic_check_white_48dp);
-                holder.pdfView.setVisibility(View.VISIBLE);
-            } else {
-                holder.pdfView.setImageResource(R.drawable.pdf);
-                holder.pdfView.setVisibility(View.GONE);
-            }
-        }else {
-            holder.pdfView.setImageResource(R.drawable.pdf);
-        }
+        
 
         holder.contentWithBG.setOnClickListener(new View.OnClickListener() {
             @Override
