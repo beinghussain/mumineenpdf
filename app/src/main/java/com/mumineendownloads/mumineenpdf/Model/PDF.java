@@ -3,6 +3,7 @@ package com.mumineendownloads.mumineenpdf.Model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class PDF {
     public static final int STATUS_NOT_DOWNLOAD = 0;
@@ -43,6 +44,8 @@ public class PDF {
         private String go;
         private String downloadPerSize;
         private String cat;
+        private long time;
+        private Date date;
 
         public String getStatusText() {
             switch (status) {
@@ -203,6 +206,15 @@ public class PDF {
 
         public void setCat(String cat) {
             this.cat = cat;
+        }
+
+
+        public Date getDate() {
+            return date;
+        }
+
+        public void setDate(Date date) {
+            this.date = date;
         }
     }
 }

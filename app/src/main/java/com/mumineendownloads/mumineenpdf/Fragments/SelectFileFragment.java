@@ -82,6 +82,7 @@ public class SelectFileFragment extends DialogFragment {
                             SelectFile file = new SelectFile();
                             file.setFilename(aListFile.getName());
                             file.setFileSize(aListFile.length());
+                            file.setFileUrl(aListFile.getAbsolutePath());
                             arrayListFiles.add(file);
                         }
                     }

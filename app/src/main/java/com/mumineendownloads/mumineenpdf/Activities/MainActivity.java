@@ -4,18 +4,14 @@ import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
@@ -24,18 +20,15 @@ import android.view.View;
 import com.github.javiersantos.appupdater.AppUpdater;
 import com.github.javiersantos.appupdater.enums.Display;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.Actions;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.marcinorlowski.fonty.Fonty;
-import com.mumineendownloads.mumineenpdf.BuildConfig;
 import com.mumineendownloads.mumineenpdf.Fragments.Go;
 import com.mumineendownloads.mumineenpdf.Fragments.Home;
+import com.mumineendownloads.mumineenpdf.Fragments.LibraryFragment;
 import com.mumineendownloads.mumineenpdf.Fragments.RequestPage;
 import com.mumineendownloads.mumineenpdf.Fragments.Saved;
-import com.mumineendownloads.mumineenpdf.Fragments.SelectFileFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.BottomNavigationViewHelper;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
@@ -90,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
             Saved savedFragment = new Saved();
             RequestPage requestPage = new RequestPage();
             Go goFragment = new Go();
+            LibraryFragment library =new LibraryFragment();
 
             switch (item.getItemId()) {
                 case R.id.navigation_home:
@@ -105,7 +99,8 @@ public class MainActivity extends AppCompatActivity {
                     selectedFragment = goFragment.newInstance();
                     break;
                 case R.id.navigation_library:
-                    selectedFragment = goFragment.newInstance();
+                    Log.e("Clicked","Library");
+                    selectedFragment = library.newInstance();
                     break;
             }
 

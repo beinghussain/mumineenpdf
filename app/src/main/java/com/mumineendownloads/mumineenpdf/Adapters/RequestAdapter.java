@@ -136,7 +136,6 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
 
         setAlignment(holder,isMe);
         if(request.getType()== PDFReq.TYPE_PDF){
-            Log.e("TYPE", String.valueOf(request.getType()));
             holder.contentWithBG.setBackground(ContextCompat.getDrawable(mCtx,R.drawable.card_pdf));
             holder.txtMessage.setTextColor(ContextCompat.getColor(mCtx,android.R.color.white));
             holder.time.setTextColor(ContextCompat.getColor(mCtx,android.R.color.white));
@@ -149,10 +148,12 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
             holder.txtMessage.setTextColor(ContextCompat.getColor(mCtx,android.R.color.black  ));
             holder.pdfView.setVisibility(View.GONE);
         }
+
+
         PrettyTime prettyTime = new PrettyTime(Locale.getDefault());
         String ago = prettyTime.format(new Date(request.getDate()));
         holder.time.setText(ago);
-        
+
 
         holder.contentWithBG.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,29 +178,6 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
                                 .negativeText("Cancel")
                                 .content("This file was been uploaded by " + user.getName() + " and is been update in the app. You can download it from here as well")
                                 .build().show();
-                    }else {
-                        if (request.getResponse() != 0) {
-                            int pi = request.getResponse();
-                            int pos = findPos(pi);
-                            requestPage.mRecyclerView.scrollToPosition(pos);
-                        } else {
-                            new MaterialDialog.Builder(v.getContext())
-                                    .title("Response to this request")
-                                    .positiveText("Upload this file")
-                                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                        @Override
-                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                            FragmentManager fm = requestPage.getChildFragmentManager();
-                                            SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(requestPage);
-                                            selectFileFragment.show(fm, "");
-
-                                        }
-                                    })
-                                    .negativeText("Cancel")
-                                    .neutralText("Report")
-                                    .content("If you have the requested file. You can upload it here. Once approve it will be updated in the app.")
-                                    .build().show();
-                        }
                     }
                 } else {
                     if(request.getType()==PDFReq.TYPE_PDF){
@@ -214,7 +192,6 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
                                         }
                                     }).build().show();
                         }else {
-                            String cont = getStatusStringUploaded(Integer.parseInt(request.getStatus()));
                             new MaterialDialog.Builder(v.getContext()).title("Request" +
                                     " Status").content("Your file is been uploaded and updated in the app.").positiveText("OK").build().show();
                         }

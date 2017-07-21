@@ -664,7 +664,7 @@ public class PDFListFragment extends Fragment {
                             } else if (text.equals("Report")) {
                                 reportApp(pdf);
                             }
-                            else if(text.equals("Add to My Library")){
+                            else if(text.equals("Add to My LibraryFragment")){
                                 showDialogListAdd(pdf);
                             }
                         }

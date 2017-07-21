@@ -1,12 +1,14 @@
 package com.mumineendownloads.mumineenpdf.Fragments;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -44,6 +46,12 @@ import com.mumineendownloads.mumineenpdf.Model.SelectFile;
 import com.mumineendownloads.mumineenpdf.Model.User;
 import com.mumineendownloads.mumineenpdf.R;
 import com.rengwuxian.materialedittext.MaterialEditText;
+
+import net.gotev.uploadservice.MultipartUploadRequest;
+import net.gotev.uploadservice.ServerResponse;
+import net.gotev.uploadservice.UploadInfo;
+import net.gotev.uploadservice.UploadNotificationConfig;
+import net.gotev.uploadservice.UploadStatusDelegate;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -96,7 +104,14 @@ public class RequestPage extends Fragment {
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toasty.normal(getContext(),"Uploading").show();
+                imageButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        FragmentManager fm = getChildFragmentManager();
+                        SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
+                        selectFileFragment.show(fm, "");
+                    }
+                });
             }
         });
         editText.addTextChangedListener(new TextWatcher() {
@@ -132,7 +147,9 @@ public class RequestPage extends Fragment {
             imageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                   Toasty.normal(getContext(),"Uploading").show();
+                    FragmentManager fm = getChildFragmentManager();
+                    SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
+                    selectFileFragment.show(fm, "");
                 }
             });
         }else {
@@ -282,10 +299,6 @@ public class RequestPage extends Fragment {
             }
         };
         queue.add(stringRequest);
-
-    }
-
-    public void loginLocally(String message){
 
     }
 
@@ -477,8 +490,44 @@ public class RequestPage extends Fragment {
         request.setRequest("PDF File Uploaded : " + file.getFilename());
         request.setType(PDFReq.TYPE_PDF);
         request.setStatus(String.valueOf(PDFReq.PENDING));
+
+        uploadFileToServer(file);
+
         sendRequest(request);
         mRequests.add(0,request);
         mRequestAdapter.notifyItemInserted(0);
+        mRecyclerView.scrollToPosition(0);
+    }
+
+    private void uploadFileToServer(SelectFile file) {
+        Log.e("File",file.getFilename());
+        try {
+            String uploadId =
+                    new MultipartUploadRequest(getContext(), "http://mumineendownloads.com/app/upload.php")
+                            .addFileToUpload(file.getFileUrl(), "uploaded_file")
+                            .setNotificationConfig(new UploadNotificationConfig())
+                            .setMaxRetries(2)
+                            .setDelegate(new UploadStatusDelegate() {
+                                @Override
+                                public void onProgress(Context context, UploadInfo uploadInfo) {
+                                }
+
+                                @Override
+                                public void onError(Context context, UploadInfo uploadInfo, Exception exception) {
+                                }
+
+                                @Override
+                                public void onCompleted(Context context, UploadInfo uploadInfo, ServerResponse serverResponse) {
+
+                                }
+
+                                @Override
+                                public void onCancelled(Context context, UploadInfo uploadInfo) {
+                                }
+                            })
+                            .startUpload();
+        } catch (Exception exc) {
+            Log.e("AndroidUploadService", exc.getMessage(), exc);
+        }
     }
 }

@@ -39,14 +39,14 @@ import static com.mumineendownloads.mumineenpdf.R.id.sectionHeader;
  */
 
 
-public class GoSectionAdapter extends BaseLibraryAdapter {
+public class LibraryAdapter extends BaseLibraryAdapter {
 
     private final Context context;
     private ArrayList<PDF.PdfBean> pdfBeanArrayList;
-    private Go pdfListFragment;
+    private LibraryFragment pdfListFragment;
     private PDFHelper pdfHelper;
 
-    public GoSectionAdapter(ArrayList<PDF.PdfBean> itemList, Context context, Go pdfListFragment) {
+    public LibraryAdapter(ArrayList<PDF.PdfBean> itemList, Context context, LibraryFragment pdfListFragment) {
         super(itemList);
         pdfHelper = new PDFHelper(context);
         this.pdfBeanArrayList = itemList;

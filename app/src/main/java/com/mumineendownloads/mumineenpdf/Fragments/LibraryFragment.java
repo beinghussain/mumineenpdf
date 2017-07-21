@@ -23,50 +23,57 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.BasePDFAdapter;
-import com.mumineendownloads.mumineenpdf.Adapters.GoSectionAdapter;
-import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapterCat;
+import com.mumineendownloads.mumineenpdf.Adapters.LibraryAdapter;
+import com.mumineendownloads.mumineenpdf.Adapters.RequestAdapter;
+import com.mumineendownloads.mumineenpdf.Helpers.ChatDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.SectionHeader;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
-import com.mumineendownloads.mumineenpdf.Helpers.Utils;
+import com.mumineendownloads.mumineenpdf.Model.Library;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
+import com.mumineendownloads.mumineenpdf.Model.PDFReq;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.rey.material.widget.ProgressView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
-import java.util.Objects;
-
-import es.dmoral.toasty.Toasty;
 
 
-public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
+public class LibraryFragment extends Fragment {
     private MainActivity activity;
-    private ArrayList<PDF.PdfBean> arrayList;
+    private ArrayList<PDF.PdfBean> arrayList = new ArrayList<>();
     public static RecyclerView mRecyclerView;
-    private GoSectionAdapter goSectionAdapter;
+    private LibraryAdapter goSectionAdapter;
     public static CstTabLayout tabLayout;
     private SearchView searchView;
-    private ArrayList<PDF.PdfBean> goList;
+    private ArrayList<Library> libraries;
     private PDFHelper pdfHelper;
     private static CardView empty;
     public static ProgressView progress;
     private DownloadReceiver mReceiver;
-    private Comparator<PDF.PdfBean> pdfBeanComparator;
-    private BasePDFAdapter mSectionedRecyclerAdapter;
-    public Go newInstance() {
-        return new Go();
+    public LibraryFragment newInstance() {
+        return new LibraryFragment();
     }
 
-    public Go() {
+    public LibraryFragment() {
     }
 
     public static Toolbar mActivityActionBarToolbar;
@@ -77,7 +84,7 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
         View rootView = inflater.inflate(R.layout.fragment_go, container, false);
         mActivityActionBarToolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
-        mActivityActionBarToolbar.setTitle("Library");
+        mActivityActionBarToolbar.setTitle("Libraries");
         Fonty.setFonts(mActivityActionBarToolbar);
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.goList);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
@@ -90,49 +97,11 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
         Fonty.setFonts((ViewGroup) rootView);
 
         arrayList = new ArrayList<>();
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final ArrayList<SectionHeader> sections = new ArrayList<>();
-                    List<String> sectionList = Utils.getSections(getContext());
-                    if(sectionList.size()==0){
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                empty.setVisibility(View.VISIBLE);
-                                progress.setVisibility(View.GONE);
-                            }
-                        });
-                    }
-                    for(String s : sectionList){
-                        ArrayList<Integer> a = Utils.loadArray(getContext(),s);
-                        ArrayList<PDF.PdfBean> b = new ArrayList<PDF.PdfBean>();
-                        for(int i = 0; i<a.size(); i++){
-                            PDF.PdfBean pdf = pdfHelper.getPDF(a.get(i));
-                            b.add(pdf);
-                            pdf.setGo(s);
-                            arrayList.add(pdf);
-                        }
-                        sections.add(new SectionHeader(b, s));
-                    }
 
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            goSectionAdapter = new GoSectionAdapter(arrayList,getContext(),Go.this);
-                            mRecyclerView.setAdapter(goSectionAdapter);
-                            progress.setVisibility(View.GONE);
-                            mRecyclerView.setVisibility(View.VISIBLE);
-                        }
-
-                    });
-                } catch (NullPointerException ignored) {
-                }
-            }
-        });
 
         Fonty.setFonts(tabLayout);
+
+        getRequest();
         return rootView;
     }
 
@@ -170,16 +139,13 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
     }
 
     public static void notifyRemove(Context context) {
-        List<String> sectionList = Utils.getSections(context);
-        if(sectionList.size()==0){
-            empty.setVisibility(View.VISIBLE);
-        }
+       // List<String> sectionList = Utils.getSections(context);
+//        if(sectionList.size()==0){
+//            empty.setVisibility(View.VISIBLE);
+//        }
     }
 
-    @Override
-    public void onItemClicked(PDF.PdfBean pdf) {
-
-    }
+  
 
     class DownloadReceiver extends BroadcastReceiver {
         @Override
@@ -208,12 +174,13 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
                         goSectionAdapter.notifyItemChangedAtPosition(position);
                     } else if (status == Status.STATUS_DOWNLOADING) {
                         pdf.setStatus(Status.STATUS_DOWNLOADING);
+                        Log.e(tmpPdf.getTitle(), String.valueOf(position));
                         pdf.setDownloadPerSize(tmpPdf.getDownloadPerSize());
                         pdf.setProgress(tmpPdf.getProgress());
                         goSectionAdapter.notifyItemChangedAtPosition(position);
                     } else if (status == Status.STATUS_NULL) {
                         pdf.setStatus(Status.STATUS_NULL);
-                        goSectionAdapter.notifyItemChangedAtPosition(position);
+                        goSectionAdapter.notifyItemChanged(position);
                     } else if (status==Status.STATUS_DOWNLOADED){
                         pdf.setStatus(Status.STATUS_DOWNLOADED);
                         goSectionAdapter.notifyItemChangedAtPosition(position);
@@ -253,7 +220,7 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
     }
 
     private void register() {
-        mReceiver = new Go.DownloadReceiver();
+        mReceiver = new LibraryFragment.DownloadReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_BROAD_CAST);
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mReceiver, intentFilter);
@@ -262,6 +229,75 @@ public class Go extends Fragment implements BasePDFAdapter.OnItemClickListener {
     private void unRegister() {
         if (mReceiver != null) {
             LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mReceiver);
+        }
+    }
+
+    public void getRequest(){
+        RequestQueue queue = Volley.newRequestQueue(getActivity());
+        String url ="http://www.pdf.mumineendownloads.com/api/libr/getLibraries.php";
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        progress.setVisibility(View.GONE);
+                        mRecyclerView.setVisibility(View.VISIBLE);
+                        parseData(response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        queue.add(stringRequest);
+    }
+
+    private void parseData(final String response) {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Gson gson = new Gson();
+                    libraries = gson.fromJson(response, new TypeToken<ArrayList<Library>>() {
+                    }.getType());
+                    for(Library library : libraries){
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTimeInMillis(Long.parseLong(library.getCreated()));
+                        getPdfs(library.getData(),library.getName(),cal.getTime());
+                    }
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Collections.sort(arrayList, new Comparator<PDF.PdfBean>() {
+                                @Override
+                                public int compare(PDF.PdfBean o1, PDF.PdfBean o2) {
+                                    return o2.getDate().compareTo(o1.getDate());
+                                }
+                            });
+                            goSectionAdapter = new LibraryAdapter(arrayList, getContext(), LibraryFragment.this);
+                            mRecyclerView.setAdapter(goSectionAdapter);
+                            progress.setVisibility(View.GONE);
+                            mRecyclerView.setVisibility(View.VISIBLE);
+                        }
+
+                    });
+                } catch (InstantiationException ignored) {
+                }
+            }
+        });
+    }
+
+    private void getPdfs(String data, String name, Date time) {
+        Gson gson = new Gson();
+        List<Integer> pids;
+        pids = gson.fromJson(data, new TypeToken<List<Integer>>() {
+        }.getType());
+
+        for(Integer i:pids){
+            PDF.PdfBean p = pdfHelper.getPDF(i);
+            p.setGo(name);
+            p.setDate(time);
+            arrayList.add(p);
         }
     }
 

@@ -10,6 +10,7 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import es.dmoral.toasty.Toasty;
@@ -225,6 +227,9 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
                                 Toasty.normal(context, "File not downloaded yet").show();
                             }
                         }
+                        else if(text.equals("Add to My LibraryFragment")){
+                            showDialogListAdd(pdfBean, view.getContext());
+                        }
                         else if(text.equals("Report")){
                             reportApp(pdfBean,view.getContext());
                         }
@@ -235,6 +240,43 @@ public class SavedPDFAdapter extends RecyclerView.Adapter<SavedPDFAdapter.MyView
                     }
                 })
                 .show();
+    }
+
+    private void showDialogListAdd(final PDF.PdfBean pdf, final Context context) {
+        List<String> a = Utils.getSections(context);
+        a.add("Create new list");
+        final ArrayList<Integer> list = new ArrayList<>();
+        list.add(pdf.getPid());
+        MaterialDialog.Builder dialog = new MaterialDialog.Builder(context);
+        dialog
+                .title("Add "+pdf.getTitle() + " to...")
+                .items(a)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                        if(text.equals("Create new list")){
+                            showNewDialog(list);
+                        } else {
+                            Utils.addToSpecificList(context,list, String.valueOf(text));
+                            Toasty.normal(context,"Added " + list.size() + " PDF to " + text).show();
+                        }
+                    }
+                });
+        dialog.show();
+    }
+
+    private void showNewDialog(final ArrayList<Integer> pids) {
+        new MaterialDialog.Builder(context)
+                .title("Enter list name")
+                .inputType(InputType.TYPE_CLASS_TEXT)
+                .input("Example: Daris Hafti", null, new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                        Utils.addSectionToList(context,String.valueOf(input));
+                        Utils.addToSpecificList(context,pids, String.valueOf(input));
+                        Toasty.normal(context,"Added " + pids.size() + " PDF to " + String.valueOf(input)).show();
+                    }
+                }).show();
     }
 
     @Override

@@ -307,7 +307,7 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
                                     snackbar.show();
                                 }
 
-                            } if(text.equals("Add to My Library")){
+                            } if(text.equals("Add to My LibraryFragment")){
                                 showDialogListAdd(pdf);
                             }
                         }

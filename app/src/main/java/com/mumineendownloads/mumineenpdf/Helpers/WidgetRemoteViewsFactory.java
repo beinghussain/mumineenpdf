@@ -18,6 +18,8 @@ import com.mumineendownloads.mumineenpdf.R;
 import java.util.ArrayList;
 import java.util.List;
 
+import es.dmoral.toasty.Toasty;
+
 import static android.R.style.Widget;
 
 public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
@@ -84,14 +86,26 @@ public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsF
     public RemoteViews getViewAt(int position) {
         RemoteViews remoteView = new RemoteViews(context.getPackageName(),
                 R.layout.list_row);
+        String downloaded = "";
+        boolean downloadBool = false;
+        if(widgetList.get(position).getStatus()==Status.STATUS_DOWNLOADED){
+            downloaded = "Downloaded";
+            downloadBool = true;
+        }else {
+            downloaded = "Not Downloaded";
+            downloadBool = false;
+        }
         remoteView.setTextViewText(R.id.item, widgetList.get(position).getTitle());
         remoteView.setTextViewText(R.id.album, widgetList.get(position).getAlbum());
+        remoteView.setTextViewText(R.id.downloaded,downloaded);
         Intent intent = new Intent();
         PDF.PdfBean pdf = widgetList.get(position);
-        intent.putExtra("mode", 0);
+        intent.putExtra("mode", 2);
         intent.putExtra("pid", pdf.getPid());
         intent.putExtra("title", pdf.getTitle());
-        remoteView.setOnClickFillInIntent(R.id.mainView, intent);
+        if(downloadBool) {
+            remoteView.setOnClickFillInIntent(R.id.mainView, intent);
+        }
         return remoteView;
     }
 

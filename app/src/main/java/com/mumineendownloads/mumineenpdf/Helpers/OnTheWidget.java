@@ -30,7 +30,6 @@ public class OnTheWidget extends AppWidgetProvider {
             int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID);
             int viewIndex = intent.getIntExtra(EXTRA_ITEM, 0);
-            Toast.makeText(context, "Touched view " + viewIndex, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -48,12 +47,11 @@ public class OnTheWidget extends AppWidgetProvider {
         rv.setTextViewText(R.id.list_title,s);
         appWidgetManager.updateAppWidget(appWidgetId, rv);
         Intent toastIntent = new Intent(context, WidgetRemoteViewsFactory.class);
-
         toastIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
         PendingIntent toastPendingIntent = PendingIntent.getBroadcast(context, 0, toastIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        rv.setPendingIntentTemplate(R.id.list_view, toastPendingIntent);
+        rv.setPendingIntentTemplate(R.id.list_title  , toastPendingIntent);
         appWidgetManager.updateAppWidget(appWidgetId, rv);
     }
 
