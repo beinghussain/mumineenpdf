@@ -70,6 +70,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         public ProgressView loading;
         Button button;
         ImageButton cancel;
+        public ImageView audio;
 
         MyViewHolder(View view) {
             super(view);
@@ -188,6 +189,12 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             holder.button.setVisibility(View.GONE);
             holder.loading.setVisibility(View.GONE);
             holder.cancel.setVisibility(View.GONE);
+        }
+
+        if(pdf.getAudio()!=1) {
+            holder.imageView.setImageResource(R.drawable.pdf_downloaded);
+        }else {
+            holder.imageView.setImageResource(R.drawable.pdf_downloaded_audio);
         }
 
         holder.cancelView.setOnClickListener(new View.OnClickListener() {

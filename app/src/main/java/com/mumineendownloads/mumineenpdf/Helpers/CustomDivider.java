@@ -10,6 +10,10 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 
+import com.mumineendownloads.mumineenpdf.Model.PDF;
+
+import java.util.ArrayList;
+
 /**
  * Created by Hussain on 7/6/2017.
  */
@@ -18,13 +22,15 @@ public class CustomDivider extends RecyclerView.ItemDecoration {
 
     private static final int[] ATTRS = new int[]{android.R.attr.listDivider};
 
-    private Drawable divider;
 
+    private Drawable divider;
+    private ArrayList<PDF.PdfBean> arrayList;
     /**
      * Default divider will be used
      */
-    public CustomDivider(Context context) {
+    public CustomDivider(Context context, ArrayList<PDF.PdfBean> arrayList) {
         final TypedArray styledAttributes = context.obtainStyledAttributes(ATTRS);
+        this.arrayList = arrayList;
         styledAttributes.recycle();
     }
 
@@ -35,11 +41,14 @@ public class CustomDivider extends RecyclerView.ItemDecoration {
         divider = ContextCompat.getDrawable(context, resId);
     }
 
+    public CustomDivider(Context context) {
+        final TypedArray styledAttributes = context.obtainStyledAttributes(ATTRS);
+        styledAttributes.recycle();
+    }
+
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
         super.getItemOffsets(outRect, view, parent, state);
-        outRect.right = 24;
-        outRect.left = 24;
 
         if(parent.getChildAdapterPosition(view) == state.getItemCount()-1){
             outRect.bottom = 24;

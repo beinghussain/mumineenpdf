@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
@@ -36,6 +37,7 @@ import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
+import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.RequestAdapter;
 import com.mumineendownloads.mumineenpdf.Helpers.ChatDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
@@ -74,6 +76,7 @@ public class RequestPage extends Fragment {
     private boolean isUpload;
     private ImageButton imageButton;
     private RelativeLayout loading;
+    private RelativeLayout noInternetConnection;
 
     public RequestPage newInstance() {
         return new RequestPage();
@@ -86,7 +89,7 @@ public class RequestPage extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)     {
         final View v = inflater.inflate(R.layout.fragment_request_page, container, false);
-         user = Utils.getUser(getContext());
+        user = Utils.getUser(getContext());
         mRecyclerView = (RecyclerView) v.findViewById(R.id.messagesContainer);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext(),LinearLayoutManager.VERTICAL,true);
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -101,17 +104,17 @@ public class RequestPage extends Fragment {
         editText = (EditText) v.findViewById(R.id.messageEdit);
         imageButton.setImageResource(R.drawable.ic_file_upload_black_24dp);
         imageButton.setImageResource(R.drawable.ic_file_upload_black_24dp);
+        noInternetConnection = (RelativeLayout) v.findViewById(R.id.noInternetLayout);
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                imageButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        FragmentManager fm = getChildFragmentManager();
-                        SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
-                        selectFileFragment.show(fm, "");
-                    }
-                });
+                if(Utils.isLogged(getContext())) {
+                    FragmentManager fm = getChildFragmentManager();
+                    SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
+                    selectFileFragment.show(fm, "");
+                }else {
+                    showRegister("");
+                }
             }
         });
         editText.addTextChangedListener(new TextWatcher() {
@@ -147,9 +150,13 @@ public class RequestPage extends Fragment {
             imageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    FragmentManager fm = getChildFragmentManager();
-                    SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
-                    selectFileFragment.show(fm, "");
+                    if(Utils.isLogged(getContext())) {
+                        FragmentManager fm = getChildFragmentManager();
+                        SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
+                        selectFileFragment.show(fm, "");
+                    }else {
+                        showRegister("");
+                    }
                 }
             });
         }else {
@@ -251,8 +258,6 @@ public class RequestPage extends Fragment {
                 login(dialog,email,pass,message);
             }
         });
-
-
     }
 
     private void login(final MaterialDialog dialog, final MaterialEditText email, final MaterialEditText pass, final String message) {
@@ -441,24 +446,31 @@ public class RequestPage extends Fragment {
     }
 
     public void getRequest(){
-        RequestQueue queue = Volley.newRequestQueue(getActivity());
-        String url ="http://www.mumineendownloads.com/app/getRequests.php?u="+user.getUserId();
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Log.e("Response",response);
-                        loading.setVisibility(View.GONE);
-                        mRecyclerView.setVisibility(View.VISIBLE);
-                      parseData(response);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        });
-        queue.add(stringRequest);
+        if(Utils.isConnected(getContext())) {
+            RequestQueue queue = Volley.newRequestQueue(getActivity());
+            String url = "http://www.mumineendownloads.com/app/getRequests.php?u=" + user.getUserId();
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            Log.e("Response", response);
+                            noInternetConnection.setVisibility(View.GONE);
+                            loading.setVisibility(View.GONE);
+                            mRecyclerView.setVisibility(View.VISIBLE);
+                            parseData(response);
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    noInternetConnection.setVisibility(View.GONE);
+                }
+            });
+            queue.add(stringRequest);
+        }else {
+            loading.setVisibility(View.GONE);
+            mRecyclerView.setVisibility(View.GONE);
+            noInternetConnection.setVisibility(View.VISIBLE);
+        }
     }
 
     private void parseData(String response) {
@@ -500,12 +512,17 @@ public class RequestPage extends Fragment {
     }
 
     private void uploadFileToServer(SelectFile file) {
-        Log.e("File",file.getFilename());
         try {
             String uploadId =
                     new MultipartUploadRequest(getContext(), "http://mumineendownloads.com/app/upload.php")
                             .addFileToUpload(file.getFileUrl(), "uploaded_file")
-                            .setNotificationConfig(new UploadNotificationConfig())
+                            .setNotificationConfig(new UploadNotificationConfig()
+                                    .setIcon(android.R.drawable.stat_sys_upload)
+                                    .setCompletedIcon(R.drawable.noti)
+                                    .setInProgressMessage("Uploading file")
+                                    .setTitle(file.getFilename())
+                                    .setCompletedMessage("File Uploaded Successfully")
+                            )
                             .setMaxRetries(2)
                             .setDelegate(new UploadStatusDelegate() {
                                 @Override

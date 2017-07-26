@@ -3,39 +3,32 @@ package com.mumineendownloads.mumineenpdf.Adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.util.Log;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.itextpdf.text.pdf.PdfReader;
-import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
-import com.mumineendownloads.mumineenpdf.Fragments.Go;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
-import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import es.dmoral.toasty.Toasty;
 
-import static com.mumineendownloads.mumineenpdf.R.id.sectionHeader;
 
-/**
- * Created by Hussain on 7/8/2017.
- */
 
 
 public class PDFAdapterCat extends BasePDFAdapter {
@@ -49,20 +42,23 @@ public class PDFAdapterCat extends BasePDFAdapter {
         super(itemList);
         pdfHelper = new PDFHelper(context);
         this.pdfBeanArrayList = itemList;
+
         this.context = context;
         this.pdfListFragment = pdfListFragment;
     }
 
     @Override
     public boolean onPlaceSubheaderBetweenItems(int position) {
-
             final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
             final PDF.PdfBean nextPdf = pdfBeanArrayList.get(position + 1);
             return !pdf.getCat().equals(nextPdf.getCat());
     }
 
     @Override
-    public void onBindItemViewHolder(final PDFViewHolder holder, final int position) {
+    public void onBindItemViewHolder(final RecyclerView.ViewHolder holder1, final int position) {
+        PDF.PdfBean p = pdfBeanArrayList.get(position);
+        if(p.getPid()!=-5) {
+            final PDFViewHolder holder = ((PDFViewHolder) holder1);
             final PDF.PdfBean pdf = pdfBeanArrayList.get(position);
             String output = pdf.getTitle().substring(0, 1).toUpperCase() + pdf.getTitle().substring(1).toLowerCase();
             holder.title.setText(output);
@@ -126,12 +122,19 @@ public class PDFAdapterCat extends BasePDFAdapter {
                 holder.cancel.setVisibility(View.GONE);
             }
 
-
             if (pdfListFragment.getMultiSelect_list().contains(pdf)) {
-                holder.imageView.setImageResource(R.drawable.pdf_downloaded_selected);
+                if(pdf.getAudio()!=1) {
+                    holder.imageView.setImageResource(R.drawable.pdf_downloaded_selected);
+                }   else {
+                    holder.imageView.setImageResource(R.drawable.pdf_downloaded_selected_audio);
+                }
                 holder.parentView.setBackgroundColor(Color.parseColor("#F3F4F3"));
             } else {
-                holder.imageView.setImageResource(R.drawable.pdf_downloaded);
+                if(pdf.getAudio()!=1) {
+                    holder.imageView.setImageResource(R.drawable.pdf_downloaded);
+                }else {
+                    holder.imageView.setImageResource(R.drawable.pdf_downloaded_audio);
+                }
                 holder.parentView.setBackgroundColor(Color.parseColor("#ffffff"));
             }
 
@@ -196,14 +199,33 @@ public class PDFAdapterCat extends BasePDFAdapter {
                     pdfListFragment.openDialog(holder.parentView.getContext(), position, pdf);
                 }
             });
-
+        }
 
     }
 
     @Override
     public void onBindSubheaderViewHolder(SubHeaderHolder subheaderHolder, int nextItemPosition) {
-            final PDF.PdfBean nextPDF = pdfBeanArrayList.get(nextItemPosition);
+        final PDF.PdfBean nextPDF = pdfBeanArrayList.get(nextItemPosition);
+        int count = 0;
+        for(PDF.PdfBean p : pdfBeanArrayList){
+            if(nextPDF.getCat().equals(p.getCat())){
+                count++;
+            }
+        }
+        String unit = "items";
+        if(count==1){
+            unit="item";
+        }
+        if(nextPDF.getPid()!=-5) {
             subheaderHolder.mSubHeaderText.setText(nextPDF.getCat());
+            subheaderHolder.itemCount.setText(count+" " + unit + " items" );
+            subheaderHolder.itemView.setVisibility(View.VISIBLE);
+            subheaderHolder.itemCount.setVisibility(View.VISIBLE);
+        }else {
+            subheaderHolder.mSubHeaderText.setText("Sponsored Ad");
+            subheaderHolder.itemCount.setVisibility(View.GONE);
+
+        }
     }
 
     private String getPagesString(int filePages) {

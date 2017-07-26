@@ -18,38 +18,15 @@ import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 
 public class Splash extends AppCompatActivity {
 
-    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Intent intent1 = new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent1);
-            finish();
-        }
-    };
-    private PrefManager prefManager;
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver(broadcastReceiver,new IntentFilter(BackgroundSync.ACTION));
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(broadcastReceiver);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        prefManager = new PrefManager(this);
+        PrefManager prefManager = new PrefManager(this);
         if (!prefManager.isFirstTimeLaunch()) {
             openMainScreen();
             finish();
         } else {
            openStartupScreen();
-            launchSync();
         }
     }
 
@@ -61,9 +38,5 @@ public class Splash extends AppCompatActivity {
     public void openMainScreen(){
         startActivity(new Intent(Splash.this, MainActivity  .class));
         finish();
-    }
-
-    public void launchSync(){
-        startService(new Intent(Splash.this, BackgroundSync.class));
     }
 }

@@ -9,11 +9,16 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.TimedText;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -44,11 +49,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.aspsine.multithreaddownload.util.L;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.BasePDFAdapter;
@@ -62,17 +71,19 @@ import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.BackgroundSync;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
+import com.ohoussein.playpause.PlayPauseView;
+import com.rengwuxian.materialedittext.MaterialEditText;
 import com.rey.material.widget.ProgressView;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import es.dmoral.toasty.Toasty;
-
 
 
 public class PDFListFragment extends Fragment {
@@ -90,6 +101,14 @@ public class PDFListFragment extends Fragment {
     private boolean searching;
     private ArrayList<PDF.PdfBean> newlist;
     private PDFAdapterCat sectionedRecyclerAdapter;
+    private boolean playPause;
+    private MediaPlayer mediaPlayer;
+    private boolean initialStage = true;
+    private View dialogView;
+    private InterstitialAd mInterstitialAd;
+    private MaterialDialog audioDialog
+            ;
+
 
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
@@ -120,11 +139,12 @@ public class PDFListFragment extends Fragment {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        Toasty.normal(getContext(),"File Reported!").show();
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                Toasty.normal(getContext(),"Failed to report!").show();
             }
 
         }) {
@@ -167,42 +187,6 @@ public class PDFListFragment extends Fragment {
                 }).build().show();
     }
 
-    private void showNativeAd() {
-//        AdSettings.addTestDevice("387fd295a941656b4222e5215d26babd");
-//        AdSettings.setTestAdType(AdSettings.TestAdType.VIDEO_HD_9_16_39S_APP_INSTALL);
-//        nativeAd = new NativeAd(getContext(), "324867547967949_324868507967853");
-//        nativeAd.setAdListener(new com.facebook.ads.AdListener() {
-//            @Override
-//            public void onError(Ad ad, AdError adError) {
-//                Log.e("Ad Error", adError.getErrorCode() + adError.getErrorMessage());
-//            }
-//
-//            @Override
-//            public void onAdLoaded(Ad ad) {
-//                Log.e("Ad Loaded", nativeAd.getAdRawBody());
-//            }
-//
-//            @Override
-//            public void onAdClicked(Ad ad) {
-//
-//            }
-//
-//            @Override
-//            public void onLoggingImpression(Ad ad) {
-//
-//            }
-//        });
-//        nativeAd.loadAd();
-    }
-
-    private void pause(String tag) {
-        DownloadService.intentPause(getActivity(), tag);
-    }
-
-    private void pauseAll() {
-        DownloadService.intentPauseAll(getActivity());
-    }
-
     public PDFListFragment(int position, MainActivity activity) {
         helper = new PDFHelper(activity.getApplicationContext());
         ArrayList<String> arrayList = helper.getAlbums();
@@ -224,7 +208,6 @@ public class PDFListFragment extends Fragment {
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
         progressView = (ProgressView) rootView.findViewById(R.id.progress);
-        mRecyclerView.addItemDecoration(new CustomDivider(getContext()));
         mRecyclerView.getItemAnimator().setChangeDuration(0);
         setRecyclerViewLayoutManager(mRecyclerView);
         goList = new ArrayList<>();
@@ -232,7 +215,6 @@ public class PDFListFragment extends Fragment {
 
 
         refresh(album);
-        showNativeAd();
         return rootView;
     }
 
@@ -255,6 +237,9 @@ public class PDFListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        mInterstitialAd = new InterstitialAd(getActivity());
+        mInterstitialAd.setAdUnitId(getString(R.string.ad_unit));
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
     }
 
     @Override
@@ -298,7 +283,6 @@ public class PDFListFragment extends Fragment {
 //            }
 //        });
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -354,9 +338,18 @@ public class PDFListFragment extends Fragment {
                 public void run() {
                     try {
                         arrayList = mPDFHelper.getAllPDFS(mainAlbum);
+                        final PDF.PdfBean pdfBean = new PDF.PdfBean();
+                        pdfBean.setPid(-5);
+                        pdfBean.setCat("ZeeAd");
+                        if(Utils.isConnected(getContext())) {
+                            if (arrayList.size() > 15) {
+                                arrayList.add(pdfBean);
+                            }
+                        }
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                mRecyclerView.addItemDecoration(new CustomDivider(getContext(),arrayList));
                                 progressView.setVisibility(View.GONE);
                                 mRecyclerView.setVisibility(View.VISIBLE);
                                 Collections.sort(arrayList, new Comparator<PDF.PdfBean>() {
@@ -365,6 +358,7 @@ public class PDFListFragment extends Fragment {
                                         return o1.getCat().compareTo(o2.getCat());
                                     }
                                 });
+
                                 sectionedRecyclerAdapter = new PDFAdapterCat(arrayList,getContext(),PDFListFragment.this);
                                 mRecyclerView.setAdapter(sectionedRecyclerAdapter);
                             }
@@ -443,7 +437,12 @@ public class PDFListFragment extends Fragment {
                         else {
                             Snackbar snackbar = Snackbar
                                     .make(mRecyclerView, "No Internet Connection", Snackbar.LENGTH_SHORT)
-                                    .setAction("OK", null);
+                                    .setAction("OK", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+
+                                        }
+                                    });
                             snackbar.show();
                         }
                         destory();
@@ -593,17 +592,20 @@ public class PDFListFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                newText=newText.toLowerCase();
-                newlist=new ArrayList<>();
-                for(PDF.PdfBean name:arrayList)
-                {
-                    String getName=name.getTitle().toLowerCase();
-                    if(getName.contains(newText)){
-                        newlist.add(name);
+                try {
+                    newText = newText.toLowerCase();
+                    newlist = new ArrayList<>();
+                    for (PDF.PdfBean name : arrayList) {
+                        String getName = name.getTitle().toLowerCase();
+                        if (getName.contains(newText)) {
+                            newlist.add(name);
+                        }
                     }
+                    sectionedRecyclerAdapter.filter(newlist);
+                    return true;
+                } catch (NullPointerException ignored){
+                    return false;
                 }
-                sectionedRecyclerAdapter.filter(newlist);
-                return true;
             }
         });
     }
@@ -621,16 +623,34 @@ public class PDFListFragment extends Fragment {
 
     public void openDialog(final Context context, final int position, final PDF.PdfBean pdf) {
         if(!isMultiSelect) {
-            int array = R.array.preference_values;
-            if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
-                array = R.array.preference_values_downloaded;
+            List<String> strings = new ArrayList<>();
+
+            if(pdf.getAudio()==1){
+                strings.add("Play Audio");
             }
+            if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
+                strings.add("Add to My Library");
+                strings.add("Report");
+                strings.add("Share");
+                strings.add("Delete file");
+            } else {
+                strings.add("Download");
+                strings.add("Report");
+                strings.add("Add to My Library");
+            }
+
+
+
             new MaterialDialog.Builder(context)
-                    .items(array)
+                    .title("Options")
+                    .items(strings)
                     .itemsCallback(new MaterialDialog.ListCallback() {
                         @Override
                         public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-                            if (text.equals("Download")) {
+                            if(text.equals("Play Audio")){
+                                playAudio(pdf);
+                            }
+                            else if (text.equals("Download")) {
                                 if (Utils.isConnected(context)) {
                                     pdf.setStatus(PDF.STATUS_QUEUED);
                                     sectionedRecyclerAdapter.notifyItemChangedAtPosition(position);
@@ -664,7 +684,7 @@ public class PDFListFragment extends Fragment {
                             } else if (text.equals("Report")) {
                                 reportApp(pdf);
                             }
-                            else if(text.equals("Add to My LibraryFragment")){
+                            else if(text.equals("Add to My Library")){
                                 showDialogListAdd(pdf);
                             }
                         }
@@ -672,6 +692,195 @@ public class PDFListFragment extends Fragment {
                     .show();
         } else {
             multi_select(position,pdf);
+        }
+    }
+
+    private void playAudio(PDF.PdfBean pid) {
+        mediaPlayer = new MediaPlayer();
+        audioDialog = new MaterialDialog.Builder(getActivity())
+                .customView(R.layout.audio_dialog,true)
+                .build();
+        audioDialog.show();
+        audioDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+                mediaPlayer = null;
+                initialStage = true;
+            }
+        });
+        dialogView = audioDialog.getCustomView();
+        Fonty.setFonts((ViewGroup) dialogView);
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+
+        if (initialStage)
+            new Player()
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getPid());
+    }
+
+    private class Player extends AsyncTask<String, Void, Boolean> {
+        TextView total,current;
+        private Handler mHandler = new Handler();
+        PlayPauseView view;
+        ProgressView progressView;
+        SeekBar seekbar;
+        int buffered = 0;
+        int bufferPercent;
+        private boolean pausedBySystem = false;
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            Boolean prepared;
+            try {
+                mediaPlayer.setDataSource(params[0]);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        if(!mInterstitialAd.isLoaded()){
+                            mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                        }else {
+                            mInterstitialAd.show();
+                        }
+                        initialStage = true;
+                        playPause=false;
+                        mediaPlayer.stop();
+                        mediaPlayer.reset();
+                        audioDialog.dismiss();
+                    }
+                });
+                mediaPlayer.prepare();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(mediaPlayer != null){
+                            int mCurrentPosition = mediaPlayer.getCurrentPosition() / 1000;
+                            current.setText(Utils.timeFormat(mCurrentPosition));
+                            seekbar.setProgress(mCurrentPosition);
+                        }
+                        mHandler.postDelayed(this, 1000);
+                    }
+                });
+                prepared = true;
+
+            } catch (IllegalArgumentException e) {
+                Log.d("IllegalArgument", e.getMessage());
+                prepared = false;
+                e.printStackTrace();
+            } catch (SecurityException | IllegalStateException | IOException e) {
+                prepared = false;
+                e.printStackTrace();
+            }
+            return prepared;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean result) {
+            try {
+                super.onPostExecute(result);
+                mediaPlayer.start();
+                total.setText(Utils.timeFormat(mediaPlayer.getDuration() / 1000));
+                seekbar.setMax(mediaPlayer.getDuration() / 1000);
+                seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if(progress>0 && progress<=5){
+                            showBuffering(false);
+                            if(view.isPlay()) {
+                                view.toggle(true);
+                            }
+                        }
+                        if(seekbar.getProgress()*1000>buffered*1000) {
+                            showBuffering(true);
+                        }else {
+                            showBuffering(false);
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        mediaPlayer.seekTo(seekBar.getProgress() * 1000);
+                        if(seekBar.getProgress()*1000>buffered*1000) {
+                            showBuffering(true);
+                        }else {
+                            showBuffering(false);
+                        }
+                    }
+                });
+                initialStage = false;
+
+                mediaPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+
+                    @Override
+                    public void onBufferingUpdate(MediaPlayer mp, int percent) {
+                        buffered = (percent * (mp.getDuration() / 1000) / 100);
+                        bufferPercent = percent;
+                        seekbar.setSecondaryProgress(buffered);
+                    }
+                });
+
+                mediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+                    @Override
+                    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                        if (what==MediaPlayer.MEDIA_INFO_BUFFERING_END){
+                            showBuffering(false);
+                        }
+                        else if(what==MediaPlayer.MEDIA_INFO_BUFFERING_START){
+                            showBuffering(true);
+                        }
+                        return true;
+                    }
+                });
+
+                view.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mediaPlayer != null) {
+                            if (mediaPlayer.isPlaying()) {
+                                mediaPlayer.pause();
+                                view.toggle(true);
+                            } else {
+                                mediaPlayer.start();
+                                view.toggle(true);
+                            }
+                        }
+                    }
+                });
+            }catch (NullPointerException ignored){
+                Toasty.normal(getContext(), "Some error occured").show();
+            }
+        }
+
+        Player() {
+           total = (TextView) dialogView.findViewById(R.id.total);
+           current = (TextView)dialogView.findViewById(R.id.current);
+            view = (PlayPauseView) dialogView.findViewById(R.id.play_pause_view);
+            seekbar = (SeekBar) dialogView.findViewById(R.id.seekBar);
+            progressView = (ProgressView) dialogView.findViewById(R.id.loading);
+        }
+
+        void showBuffering(boolean progressing){
+            if(progressing) {
+                    view.setVisibility(View.GONE);
+                    progressView.setVisibility(View.VISIBLE);
+
+            }else {
+                    view.setVisibility(View.VISIBLE);
+                    progressView.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showBuffering(true);
+
         }
     }
 

@@ -46,6 +46,7 @@ public class PDF {
         private String cat;
         private long time;
         private Date date;
+        private int audio;
 
         public String getStatusText() {
             switch (status) {
@@ -215,6 +216,14 @@ public class PDF {
 
         public void setDate(Date date) {
             this.date = date;
+        }
+
+        public int getAudio() {
+            return audio;
+        }
+
+        public void setAudio(int audio) {
+            this.audio = audio;
         }
     }
 }

@@ -10,7 +10,6 @@ public class PDFReq {
     public static final int APPROVE = 1;
     public static final int REJECT = -1;
     public static final int TYPE_PDF = 1;
-
     private List<Request> requests;
 
     public List<Request> getRequests() {

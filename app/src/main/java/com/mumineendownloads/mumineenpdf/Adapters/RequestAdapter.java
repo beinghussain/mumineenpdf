@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.pdf.PdfRenderer;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -40,6 +41,7 @@ import com.mumineendownloads.mumineenpdf.Model.PDFReq;
 import com.mumineendownloads.mumineenpdf.Model.SelectFile;
 import com.mumineendownloads.mumineenpdf.Model.User;
 import com.mumineendownloads.mumineenpdf.R;
+import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 
 import org.ocpsoft.prettytime.PrettyTime;
 
@@ -160,19 +162,25 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
             public void onClick(View v) {
                 if (user.getUserId() != Integer.parseInt(request.getUser_id())) {
                     if(request.getType()==PDFReq.TYPE_PDF){
-                        int pid = request.getPid();
+                        int pid = request.getResponse();
                         PDFHelper helper = new PDFHelper(mCtx);
-                        PDF.PdfBean pdfBean = helper.getPDF(pid);
+                        final PDF.PdfBean pdfBean = helper.getPDF(pid);
                         new MaterialDialog.Builder(v.getContext())
                                 .title("Download "+ pdfBean.getTitle()+" ?")
                                 .positiveText("Download")
                                 .onPositive(new MaterialDialog.SingleButtonCallback() {
                                     @Override
                                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                        FragmentManager fm = requestPage.getChildFragmentManager();
-                                        SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(requestPage);
-                                        selectFileFragment.show(fm, "");
-
+                                        if (Utils.isConnected(mCtx)) {
+                                            ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
+                                            ArrayList<Integer> positionList = new ArrayList<Integer>();
+                                            arrayList.add(pdfBean);
+                                            positionList.add(position);
+                                            DownloadService.intentDownload(positionList, arrayList, mCtx);
+                                            pdfBean.setStatus(PDF.STATUS_QUEUED);
+                                        } else {
+                                            Toasty.normal(mCtx, "No Internet Connection").show();
+                                        }
                                     }
                                 })
                                 .negativeText("Cancel")

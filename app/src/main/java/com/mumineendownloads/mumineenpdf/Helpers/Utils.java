@@ -11,6 +11,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.aspsine.multithreaddownload.util.L;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
@@ -19,7 +20,9 @@ import com.mumineendownloads.mumineenpdf.R;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -228,5 +231,39 @@ public class Utils {
         editor.putInt("user_id",id);
         editor.putBoolean("registered",true);
         editor.apply();
+    }
+
+    public static void saveCurrentLibrary(String response, Context context) {
+        SharedPreferences preferences  = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("lib",response);
+        editor.apply();
+    }
+
+    public static String getLastLibFile(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        return preferences.getString("lib","[]");
+    }
+
+    public static String timeFormat(int seconds) {
+        int hours,minutes;
+        hours = seconds / 3600;
+        minutes = (seconds % 3600) / 60;
+        seconds = seconds % 60;
+        if(hours<=0){
+            return String.format("%02d:%02d", minutes, seconds);
+        }else {
+            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        }
+    }
+
+    public static ArrayList<PDF.PdfBean> getDownloadedFiles(Context context) {
+        PDFHelper helper = new PDFHelper(context);
+        ArrayList<PDF.PdfBean> arrayList = new ArrayList<>();
+        List<String> integerList = Utils.getFiles();
+        for(String i : integerList){
+          arrayList.add(helper.getPDF(Integer.parseInt(i)));
+        }
+        return arrayList;
     }
 }

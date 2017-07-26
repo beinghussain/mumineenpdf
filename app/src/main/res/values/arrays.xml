@@ -2,12 +2,14 @@
 <resources>
     <string-array name="preference_values">
         <item>Download</item>
+        <item>Play Audio</item>
         <item>Share</item>
         <item>Report</item>
         <item>Add to My Library</item>
     </string-array>
     <string-array name="preference_values_downloaded">
         <item>Add to My Library</item>
+        <item>Play Audio</item>
         <item>Share</item>
         <item>Report</item>
         <item>Delete file</item>
@@ -21,6 +23,7 @@
     </string-array>
     <string-array name="saveItemList">
         <item>Add to My Library</item>
+        <item>Play Audio</item>
         <item>Share</item>
         <item>Report</item>
         <item>Delete</item>

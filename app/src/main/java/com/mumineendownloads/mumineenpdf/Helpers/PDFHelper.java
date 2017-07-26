@@ -36,6 +36,7 @@ public class PDFHelper extends SQLiteOpenHelper {
     private static final String KEY_PAGE = "pages";
     private static final String KEY_GO = "go";
     private static final String KEY_CAT = "sub_cat";
+    private static final String KEY_AUDIO = "audio";
     private Context context;
     private ArrayList<PDF.PdfBean> downloaded;
 
@@ -49,7 +50,7 @@ public class PDFHelper extends SQLiteOpenHelper {
         String CREATE_CONTACTS_TABLE = "CREATE TABLE " + TABLE_PDF + "("
                 + KEY_ID + " INTEGER PRIMARY KEY," + KEY_TITLE + " TEXT,"
                 + KEY_ALBUM + " TEXT," + KEY_SOURCE + " TEXT," + KEY_SIZE + " TEXT," +
-                KEY_PID  + " INTEGER UNIQUE," + KEY_STATUS + " INTEGER," + KEY_PAGE + " INTEGER,"+  KEY_GO + " INTEGER," + KEY_CAT + " TEXT" + ")";
+                KEY_PID  + " INTEGER UNIQUE," + KEY_STATUS + " INTEGER," + KEY_PAGE + " INTEGER,"+  KEY_GO + " INTEGER," + KEY_CAT + " TEXT" + ", "+ KEY_AUDIO +" INTEGER)";
         db.execSQL(CREATE_CONTACTS_TABLE);
     }
 
@@ -106,6 +107,8 @@ public class PDFHelper extends SQLiteOpenHelper {
                 } else {
                     c = cursor.getString(7);
                 }
+                contact.setCat(cursor.getString(9));
+                contact.setAudio(cursor.getInt(10));
                 contact.setPageCount(Integer.parseInt(c));
                 if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
                     contact.setStatus(Status.STATUS_NULL);
@@ -155,6 +158,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 contact.setSize(cursor.getString(4));
                 contact.setPid(Integer.parseInt(cursor.getString(5)));
                 contact.setCat(cursor.getString(9));
+                contact.setAudio(cursor.getInt(10));
                 String c;
                 if(cursor.getString(7)==null){
                    c = "0";
@@ -209,6 +213,7 @@ public class PDFHelper extends SQLiteOpenHelper {
                 initialValues.put(KEY_PID, pdf.getPid());
                 initialValues.put(KEY_CAT,pdf.getCat());
                 initialValues.put(KEY_PAGE, pdf.getPageCount());
+                initialValues.put(KEY_AUDIO, pdf.getAudio());
                 try {
                     int id = (int) db.insertWithOnConflict(TABLE_PDF, null, initialValues, SQLiteDatabase.CONFLICT_IGNORE);
                     if (id == -1) {
@@ -246,53 +251,6 @@ public class PDFHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
         return arrayList;
-    }
-
-    public ArrayList<PDF.PdfBean> getDownloaded(String album) {
-        String selectQuery;
-        switch (album) {
-            case "all":
-                selectQuery = "SELECT  * FROM " + TABLE_PDF + " where status = 6 ORDER BY title";
-                break;
-            case "Quran30":
-                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album in ('Quran30','QuranSurat') AND status = 6 ORDER BY title";
-                break;
-            default:
-                selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE album = '" + album + "' AND status = 6 ORDER BY title";
-                break;
-        }
-        ArrayList<PDF.PdfBean> arrayList = new ArrayList<>();
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
-
-            if (cursor.moveToFirst()) {
-            do {
-                PDF.PdfBean contact = new PDF.PdfBean();
-                contact.setId(Integer.parseInt(cursor.getString(0)));
-                contact.setTitle(cursor.getString(1));
-                contact.setAlbum(cursor.getString(2));
-                contact.setSource(cursor.getString(3));
-                contact.setSize(cursor.getString(4));
-                contact.setPid(Integer.parseInt(cursor.getString(5)));
-                String c;
-                if(cursor.getString(7)==null){
-                    c = "0";
-                } else {
-                    c = cursor.getString(7);
-                }
-                contact.setPageCount(Integer.parseInt(c));
-                contact.setStatus(Integer.parseInt(cursor.getString(6)));
-                if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
-                    contact.setStatus(Status.STATUS_NULL);
-                    updatePDF(contact);
-                }else {
-                    contact.setStatus(Status.STATUS_DOWNLOADED);
-                    updatePDF(contact);
-                }
-                arrayList.add(contact);
-            } while (cursor.moveToNext());
-        }
-            return arrayList;
     }
 
     public int getDownloadAlbum() {

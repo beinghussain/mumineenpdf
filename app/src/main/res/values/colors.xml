@@ -5,6 +5,7 @@
     <color name="colorGrey">#616161</color>
     <color name="colorActionMode">#d62c1a</color>
     <color name="colorActionModeDark">#bf2718</color>
+    <color name="colorAccent">#E35252</color>
 
     <!-- Screens background color-->
     <color name="bg_screen1">#f64c73</color>

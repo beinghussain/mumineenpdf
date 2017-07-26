@@ -3,12 +3,17 @@ package com.mumineendownloads.mumineenpdf.Fragments;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -28,8 +33,12 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.itextpdf.awt.geom.Rectangle;
 import com.itextpdf.text.Font;
 import com.mancj.materialsearchbar.MaterialSearchBar;
@@ -44,8 +53,10 @@ import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
+import com.ohoussein.playpause.PlayPauseView;
 import com.rey.material.widget.ProgressView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -56,8 +67,6 @@ import es.dmoral.toasty.Toasty;
 import static com.mumineendownloads.mumineenpdf.Fragments.Go.mRecyclerView;
 
 public class SearchFragment extends Fragment implements MaterialSearchBar.OnSearchActionListener {
-
-
     private PDFAdapter pdfAdapter;
     private RelativeLayout noItemFound;
     private String album;
@@ -74,6 +83,11 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
     private boolean searching;
     private ArrayList<PDF.PdfBean> newlist;
     public ArrayList<PDF.PdfBean> downloadingList = new ArrayList<>();
+    private MediaPlayer mediaPlayer;
+    private MaterialDialog audioDialog;
+    private boolean initialStage = true;
+    private View dialogView;
+    private InterstitialAd mInterstitialAd;
 
     public static SearchFragment newInstance() {
           return new SearchFragment();
@@ -291,6 +305,9 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
                     .itemsCallback(new MaterialDialog.ListCallback() {
                         @Override
                         public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                            if(text.equals("Play Audio")){
+                                playAudio(pdf);
+                            }
                             if (text.equals("Download")) {
                                 if (Utils.isConnected(context)) {
                                     pdf.setStatus(PDF.STATUS_QUEUED);
@@ -314,6 +331,14 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
                     })
                     .show();
         }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mInterstitialAd = new InterstitialAd(getActivity());
+        mInterstitialAd.setAdUnitId(getString(R.string.ad_unit));
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
     }
 
     private void startDownloading() {
@@ -366,6 +391,191 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
         dialog.show();
     }
 
+    private void playAudio(PDF.PdfBean pid) {
+        mediaPlayer = new MediaPlayer();
+        audioDialog = new MaterialDialog.Builder(getActivity())
+                .customView(R.layout.audio_dialog,true)
+                .build();
+        audioDialog.show();
+        audioDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+                mediaPlayer = null;
+                initialStage = true;
+            }
+        });
+        dialogView = audioDialog.getCustomView();
+        Fonty.setFonts((ViewGroup) dialogView);
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+
+        if (initialStage)
+            new Player()
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getPid());
+    }
+
+    private class Player extends AsyncTask<String, Void, Boolean> {
+        TextView total,current;
+        private Handler mHandler = new Handler();
+        PlayPauseView view;
+        ProgressView progressView;
+        SeekBar seekbar;
+        int buffered = 0;
+        int bufferPercent;
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            Boolean prepared;
+            try {
+                mediaPlayer.setDataSource(params[0]);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        mediaPlayer.stop();
+                        mediaPlayer.reset();
+                        audioDialog.dismiss();
+                        if(!mInterstitialAd.isLoaded()){
+                            mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                        }else {
+                            mInterstitialAd.show();
+                        }
+                    }
+                });
+                mediaPlayer.prepare();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(mediaPlayer != null){
+                            int mCurrentPosition = mediaPlayer.getCurrentPosition() / 1000;
+                            current.setText(Utils.timeFormat(mCurrentPosition));
+                            seekbar.setProgress(mCurrentPosition);
+                        }
+                        mHandler.postDelayed(this, 1000);
+                    }
+                });
+                prepared = true;
+
+            } catch (IllegalArgumentException e) {
+                Log.d("IllegalArgument", e.getMessage());
+                prepared = false;
+                e.printStackTrace();
+            } catch (SecurityException | IllegalStateException | IOException e) {
+                prepared = false;
+                e.printStackTrace();
+            }
+            return prepared;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean result) {
+            try {
+                super.onPostExecute(result);
+                mediaPlayer.start();
+                total.setText(Utils.timeFormat(mediaPlayer.getDuration() / 1000));
+                seekbar.setMax(mediaPlayer.getDuration() / 1000);
+                seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if(progress>0 && progress<=5){
+                            showBuffering(false);
+                            if(view.isPlay()) {
+                                view.toggle(true);
+                            }
+                        }
+                        if(seekbar.getProgress()*1000>buffered*1000) {
+                            showBuffering(true);
+                        }else {
+                            showBuffering(false);
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        mediaPlayer.seekTo(seekBar.getProgress() * 1000);
+                        Log.e(""+seekBar.getProgress()*1000, String.valueOf(buffered));
+                        if(seekBar.getProgress()*1000>buffered*1000) {
+                            showBuffering(true);
+                        }
+                    }
+                });
+                initialStage = false;
+
+                mediaPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+
+                    @Override
+                    public void onBufferingUpdate(MediaPlayer mp, int percent) {
+                        buffered = (percent * (mp.getDuration() / 1000) / 100);
+                        bufferPercent = percent;
+                        seekbar.setSecondaryProgress(buffered);
+                    }
+                });
+
+                mediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+                    @Override
+                    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                        if (what==MediaPlayer.MEDIA_INFO_BUFFERING_END){
+                            showBuffering(false);
+                        }
+                        else if(what==MediaPlayer.MEDIA_INFO_BUFFERING_START){
+                            showBuffering(true);
+                        }
+                        return true;
+                    }
+                });
+
+                view.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mediaPlayer != null) {
+                            if (mediaPlayer.isPlaying()) {
+                                mediaPlayer.pause();
+                                view.toggle(true);
+                            } else {
+                                mediaPlayer.start();
+                                view.toggle(true);
+                            }
+                        }
+                    }
+                });
+            }catch (NullPointerException ignored){
+                Toasty.normal(getContext(), "Some error occured").show();
+            }
+        }
+
+        Player() {
+            total = (TextView) dialogView.findViewById(R.id.total);
+            current = (TextView)dialogView.findViewById(R.id.current);
+            view = (PlayPauseView) dialogView.findViewById(R.id.play_pause_view);
+            seekbar = (SeekBar) dialogView.findViewById(R.id.seekBar);
+            progressView = (ProgressView) dialogView.findViewById(R.id.loading);
+        }
+
+        void showBuffering(boolean progressing){
+            if(progressing) {
+                view.setVisibility(View.GONE);
+                progressView.setVisibility(View.VISIBLE);
+
+            }else {
+                view.setVisibility(View.VISIBLE);
+                progressView.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showBuffering(true);
+
+        }
+    }
 
     @Override
     public void onButtonClicked(int buttonCode) {

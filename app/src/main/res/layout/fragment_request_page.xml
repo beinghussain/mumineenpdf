@@ -34,13 +34,32 @@
             android:id="@+id/progress"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_gravity="center"
             android:layout_centerInParent="true"
+            android:layout_gravity="center"
             app:pv_autostart="true"
             app:pv_circular="true"
             app:pv_progressMode="indeterminate"
             app:pv_progressStyle="@style/CircularProgressOrange" />
 
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/noInternetLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.6"
+        android:visibility="gone">
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="false"
+            android:layout_centerInParent="true"
+            android:layout_centerVertical="false"
+            android:text="No Internet Connection"
+            android:textSize="14sp" />
 
 
     </RelativeLayout>
@@ -84,18 +103,19 @@
         </LinearLayout>
 
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/messagesContainer"
-            android:layout_width="match_parent"
-            android:layout_below="@id/appBarLayout"
-            android:layout_height="match_parent"
-            android:layout_above="@id/chatControls"
-            android:layout_alignParentLeft="false"
-            android:overScrollMode="never"
-            android:layout_alignParentTop="false"
-            android:layout_marginTop="10dp"
-            android:listSelector="@android:color/transparent"
-            android:transcriptMode="alwaysScroll" />
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/messagesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/chatControls"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="false"
+        android:layout_below="@id/appBarLayout"
+        android:layout_marginTop="10dp"
+        android:listSelector="@android:color/transparent"
+        android:overScrollMode="never"
+        android:transcriptMode="alwaysScroll"
+        android:visibility="visible" />
 
 
 </RelativeLayout>

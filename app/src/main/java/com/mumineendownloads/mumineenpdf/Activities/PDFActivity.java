@@ -1,5 +1,6 @@
 package com.mumineendownloads.mumineenpdf.Activities;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -23,6 +24,8 @@ import android.webkit.WebViewClient;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnRenderListener;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomScrollHandle;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
@@ -39,17 +42,20 @@ public class PDFActivity extends AppCompatActivity {
     private WebView webView;
     private Toolbar toolbar;
     private boolean fullscreen = true;
+    private InterstitialAd mInterstitialAd;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(getString(R.string.ad_unit));
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
         setContentView(R.layout.activity_pdf);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setShowHideAnimationEnabled(true);
         Fonty.setFonts(toolbar);
-
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
@@ -57,21 +63,7 @@ public class PDFActivity extends AppCompatActivity {
         pdfView.documentFitsView();
         pdfView.setMinZoom(3f);
         pdfView.enableAnnotationRendering(true);
-        pdfView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(fullscreen) {
-                    fullscreen = false;
-                    getSupportActionBar().hide();
-                }else {
-                    fullscreen = true;
-                    getSupportActionBar().show();
-                }
-            }
-        });
 
-        getSupportActionBar().hide();
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         final PDF.PdfBean pdfBean = (PDF.PdfBean) intent.getSerializableExtra(DownloadService.EXTRA_APP_INFO);
         if(pdfBean!=null){
@@ -170,6 +162,7 @@ public class PDFActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        mInterstitialAd.show();
         finish();
     }
 
@@ -183,5 +176,18 @@ public class PDFActivity extends AppCompatActivity {
             pdfView.jumpTo(3);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void toggleFullScreen(boolean isFullscreen){
+        View decorView = getWindow().getDecorView();
+        if (getSupportActionBar().isShowing()) {
+            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorView.setSystemUiVisibility(uiOptions);
+            getSupportActionBar().hide();
+        } else {
+            int uiOptions = View.SYSTEM_UI_FLAG_VISIBLE;
+            decorView.setSystemUiVisibility(uiOptions);
+            getSupportActionBar().show();
+        }
     }
 }

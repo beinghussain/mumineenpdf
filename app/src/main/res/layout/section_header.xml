@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#fcfcfc"
+    android:id="@+id/mainView"
     android:orientation="vertical"
     android:layout_marginBottom="@dimen/card_zero_margin"
     android:layout_marginTop="8dp"
@@ -23,9 +24,9 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
+        android:layout_height="wrap_content"
         android:background="#fcfcfc"
+        android:orientation="horizontal"
         android:padding="8dp">
 
         <TextView
@@ -58,8 +59,8 @@
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:padding="8dp"
-            android:textColor="@color/colorGrey"
-            android:text="Delete" />
+            android:text="Delete"
+            android:textColor="@color/colorGrey" />
 
     </RelativeLayout>
 
