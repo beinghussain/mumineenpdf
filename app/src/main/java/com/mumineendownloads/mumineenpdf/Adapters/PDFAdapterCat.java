@@ -15,6 +15,7 @@ import android.widget.RelativeLayout;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
@@ -164,7 +165,7 @@ public class PDFAdapterCat extends BasePDFAdapter {
                 @Override
                 public void onClick(View v) {
                     if (getFilePages(pdf) != 0) {
-                        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+                        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity_.class);
                         intent.putExtra("mode", 0);
                         intent.putExtra("pid", pdf.getPid());
                         intent.putExtra("title", pdf.getTitle());

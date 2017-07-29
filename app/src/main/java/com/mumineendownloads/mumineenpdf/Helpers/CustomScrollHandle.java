@@ -1,5 +1,6 @@
 package com.mumineendownloads.mumineenpdf.Helpers;
 
+import android.util.Log;
 import android.widget.RelativeLayout;
 import com.github.barteksc.pdfviewer.scroll.ScrollHandle;
 import android.content.Context;
@@ -16,12 +17,13 @@ import android.widget.TextView;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.util.Util;
 import com.marcinorlowski.fonty.Fonty;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.R;
 
 public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
-
-    private final static int HANDLE_LONG = 25;
-    private final static int HANDLE_SHORT = 70;
+    private final static int HANDLE_LONG = 65;
+    private final static int HANDLE_SHORT = 40;
     private final static int DEFAULT_TEXT_SIZE = 16;
 
     private float relativeHandlerMiddle = 0f;
@@ -31,74 +33,73 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
     private boolean inverted;
     private PDFView pdfView;
     private float currentPos;
+    PDFActivity_ activity;
 
-    private Handler handler = new Handler();
-    private Runnable hidePageScrollerRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
-
-    public CustomScrollHandle(Context context) {
-        this(context, false);
+    public CustomScrollHandle(Context context, PDFActivity_ pdfActivity) {
+        this(context, false, pdfActivity);
+        show();
+        this.activity = pdfActivity;
     }
 
-    public CustomScrollHandle(Context context, boolean inverted) {
+    public CustomScrollHandle(Context context, boolean inverted, PDFActivity_ pdfActivity) {
         super(context);
         this.context = context;
         this.inverted = inverted;
-        textView = new TextView(context);;
+        textView = new TextView(context);
+        this.activity = pdfActivity;
         setVisibility(INVISIBLE);
-        setTextColor(ContextCompat.getColor(context,R.color.colorPrimary));
+        setTextColor(Color.BLACK);
         setTextSize(DEFAULT_TEXT_SIZE);
     }
 
     @Override
     public void setupLayout(PDFView pdfView) {
-        Fonty.setFonts(pdfView);
-        int align, width, height;
-        Drawable background;
-        if (pdfView.isSwipeVertical()) {
-            width = HANDLE_LONG;
-            height = HANDLE_SHORT;
-            if (inverted) { // left
-                align = ALIGN_PARENT_LEFT;
-                background = ContextCompat.getDrawable(context, R.drawable.default_scroll_handle_left);
-            } else { // right
-                align = ALIGN_PARENT_RIGHT;
-                background = ContextCompat.getDrawable(context, R.drawable.scroll_left);
+        if(pdfView.getPageCount()==0){
+            return;
+        }else {
+            int align, width, height;
+            Drawable background;
+            // determine handler position, default is right (when scrolling vertically) or bottom (when scrolling horizontally)
+            if (pdfView.isSwipeVertical()) {
+                width = HANDLE_LONG;
+                height = HANDLE_SHORT;
+                if (inverted) { // left
+                    align = ALIGN_PARENT_LEFT;
+                    background = ContextCompat.getDrawable(context, R.drawable.default_scroll_handle_left);
+                } else { // right
+                    align = ALIGN_PARENT_RIGHT;
+                    background = ContextCompat.getDrawable(context, R.drawable.default_scroll_handle_right);
+                }
+            } else {
+                width = HANDLE_SHORT;
+                height = HANDLE_LONG;
+                if (inverted) { // top
+                    align = ALIGN_PARENT_TOP;
+                    background = ContextCompat.getDrawable(context, R.drawable.default_scroll_handle_top);
+                } else { // bottom
+                    align = ALIGN_PARENT_BOTTOM;
+                    background = ContextCompat.getDrawable(context, R.drawable.default_scroll_handle_bottom);
+                }
             }
-        } else {
-            width = HANDLE_SHORT;
-            height = HANDLE_LONG;
-            if (inverted) { // top
-                align = ALIGN_PARENT_TOP;
-                background = ContextCompat.getDrawable(context, R.drawable.default_scroll_handle_top);
-            } else { // bottom
-                align = ALIGN_PARENT_BOTTOM;
-                background = ContextCompat.getDrawable(context, R.drawable.default_scroll_handle_bottom);
-            }
-        }
 
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            setBackgroundDrawable(background);
-        } else {
             setBackground(background);
+
+            LayoutParams lp = new LayoutParams(Util.getDP(context, width), Util.getDP(context, height));
+            lp.setMargins(0, 0, 0, 0);
+
+            LayoutParams tvlp = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            tvlp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+
+            addView(textView, tvlp);
+
+            lp.addRule(align);
+            pdfView.addView(this, lp);
+
+            this.pdfView = pdfView;
+            if(pdfView.getPageCount()==1){
+                hide();
+            }
         }
-
-        LayoutParams lp = new LayoutParams(Util.getDP(context, width), Util.getDP(context, height));
-        lp.setMargins(0, 0, 0, 0);
-
-        LayoutParams tvlp = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        tvlp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-
-       // addView(textView, tvlp);
-
-        lp.addRule(align);
-        pdfView.addView(this, lp);
-
-        this.pdfView = pdfView;
     }
 
     @Override
@@ -108,11 +109,6 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
 
     @Override
     public void setScroll(float position) {
-        if (!shown()) {
-            show();
-        } else {
-            handler.removeCallbacks(hidePageScrollerRunnable);
-        }
         setPosition((pdfView.isSwipeVertical() ? pdfView.getHeight() : pdfView.getWidth()) * position);
     }
 
@@ -120,8 +116,9 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
         if (Float.isInfinite(pos) || Float.isNaN(pos)) {
             return;
         }
-        float pdfViewSize;
+        float pdfViewSize = 0;
         if (pdfView.isSwipeVertical()) {
+            Log.e("Size", String.valueOf(pdfView.getHeight()));
             pdfViewSize = pdfView.getHeight();
         } else {
             pdfViewSize = pdfView.getWidth();
@@ -160,12 +157,13 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
 
     @Override
     public void hideDelayed() {
-        handler.postDelayed(hidePageScrollerRunnable, 1000);
+
     }
 
     @Override
     public void setPageNum(int pageNum) {
         String text = String.valueOf(pageNum);
+        Fonty.setFonts((ViewGroup) getRootView());
         if (!textView.getText().equals(text)) {
             textView.setText(text);
         }
@@ -178,11 +176,13 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
 
     @Override
     public void show() {
+        activity.showActionBar();
         setVisibility(VISIBLE);
     }
 
     @Override
     public void hide() {
+        activity.hideActionBar();
         setVisibility(INVISIBLE);
     }
 
@@ -212,7 +212,6 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN:
                 pdfView.stopFling();
-                handler.removeCallbacks(hidePageScrollerRunnable);
                 if (pdfView.isSwipeVertical()) {
                     currentPos = event.getRawY() - getY();
                 } else {
@@ -236,4 +235,6 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
 
         return super.onTouchEvent(event);
     }
+
+
 }

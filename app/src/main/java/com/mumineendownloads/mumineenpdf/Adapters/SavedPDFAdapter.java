@@ -16,6 +16,7 @@ import com.afollestad.materialdialogs.folderselector.FileChooserDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.Fragments.Saved;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
@@ -134,7 +135,7 @@ public class SavedPDFAdapter extends BaseSavedAdapter{
     }
 
     private void openPDF(PDF.PdfBean pdf) {
-        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity_.class);
         intent.putExtra("mode", 0);
         intent.putExtra("pid", pdf.getPid());
         intent.putExtra("title", pdf.getTitle());

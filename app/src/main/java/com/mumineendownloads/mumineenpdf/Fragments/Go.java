@@ -47,11 +47,9 @@ import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.BasePDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.GoSectionAdapter;
-import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapterCat;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
-import com.mumineendownloads.mumineenpdf.Helpers.SectionHeader;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
@@ -63,12 +61,10 @@ import com.rey.material.widget.ProgressView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
@@ -125,7 +121,6 @@ public class Go extends Fragment {
             @Override
             public void run() {
                 try {
-                    final ArrayList<SectionHeader> sections = new ArrayList<>();
                     List<String> sectionList = Utils.getSections(getContext());
                     if(sectionList.size()==0){
                         getActivity().runOnUiThread(new Runnable() {
@@ -145,7 +140,6 @@ public class Go extends Fragment {
                             pdf.setGo(s);
                             arrayList.add(pdf);
                         }
-                        sections.add(new SectionHeader(b, s));
                     }
 
                     getActivity().runOnUiThread(new Runnable() {
@@ -207,38 +201,7 @@ public class Go extends Fragment {
         }
     }
 
-    public void openDialog(final Context context, final PDF.PdfBean pdf, final int position) {
-        File f = new File(Environment.getExternalStorageDirectory().getAbsoluteFile()+"/Mumineen/"+pdf.getPid()+".pdf");
-        if(f.exists()) {
-            Intent intent = new Intent(context, PDFActivity.class);
-            intent.putExtra("mode", 0);
-            intent.putExtra("pid", pdf.getPid());
-            intent.putExtra("title", pdf.getTitle());
-            context.startActivity(intent);
-        }else {
-            new MaterialDialog.Builder(context).title("File not downloaded").content("Do you want to download the file")
-                    .positiveText("Download")
-                    .negativeText("Cancel")
-                    .neutralText("OPTIONS").onNeutral(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    showOptionDialog(context,pdf);
-                }
-            })
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
-                            ArrayList<Integer> positionList = new ArrayList<Integer>();
-                            arrayList.add(pdf);
-                            positionList.add(position);
-                            DownloadService.intentDownload(positionList,arrayList,context);
-                        }
-                    }).build().show();
-        }
-    }
-
-    public void showOptionDialog(final Context context, final PDF.PdfBean pdfBean) {
+    public void showOptionDialog(final Context context, final PDF.PdfBean pdfBean, final int position) {
         List<String> string = new ArrayList<>();
         if(pdfBean.getAudio()==1){
             string.add("Play Audio");
@@ -253,8 +216,10 @@ public class Go extends Fragment {
                 .items(string)
                 .itemsCallback(new MaterialDialog.ListCallback() {
                     @Override
-                    public void onSelection(MaterialDialog dialog, View itemView, int position, CharSequence text) {
+                    public void onSelection(MaterialDialog dialog, View itemView, int pos, CharSequence text) {
                          if(text.equals("Remove from library")){
+                             Utils.removeSpecificItemFromList(getContext(),pdfBean.getPid(),pdfBean.getGo());
+                             goSectionAdapter.notifyItemRemovedAtPosition(position);
                              Toasty.normal(context,"Removed from library").show();
                          }
                          else  if(text.equals("Report")){

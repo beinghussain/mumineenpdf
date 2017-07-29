@@ -23,6 +23,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -48,19 +49,14 @@ import com.google.gson.reflect.TypeToken;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
-import com.mumineendownloads.mumineenpdf.Adapters.BasePDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.LibraryAdapter;
-import com.mumineendownloads.mumineenpdf.Adapters.RequestAdapter;
-import com.mumineendownloads.mumineenpdf.Helpers.ChatDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.CstTabLayout;
 import com.mumineendownloads.mumineenpdf.Helpers.CustomDivider;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
-import com.mumineendownloads.mumineenpdf.Helpers.SectionHeader;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.Library;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
-import com.mumineendownloads.mumineenpdf.Model.PDFReq;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.ohoussein.playpause.PlayPauseView;
@@ -315,7 +311,7 @@ public class LibraryFragment extends Fragment {
                         }
 
                     });
-                } catch (InstantiationException ignored) {
+                } catch (InstantiationException | NullPointerException ignored) {
                 }
             }
         });
@@ -337,38 +333,44 @@ public class LibraryFragment extends Fragment {
         } catch (NullPointerException ignored){}
     }
 
-    public void openDialog(final Context context, final PDF.PdfBean pdf, final int position) {
-        File f = new File(Environment.getExternalStorageDirectory().getAbsoluteFile()+"/Mumineen/"+pdf.getPid()+".pdf");
-        if(f.exists()) {
-            Intent intent = new Intent(context, PDFActivity.class);
-            intent.putExtra("mode", 0);
-            intent.putExtra("pid", pdf.getPid());
-            intent.putExtra("title", pdf.getTitle());
-            context.startActivity(intent);
-        }else {
-            new MaterialDialog.Builder(context).title("File not downloaded").content("Do you want to download the file")
-                    .positiveText("Download")
-                    .negativeText("Cancel")
-                    .neutralText("OPTIONS").onNeutral(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    showOptionDialog(context,pdf);
-                }
-            })
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
-                            ArrayList<Integer> positionList = new ArrayList<Integer>();
-                            arrayList.add(pdf);
-                            positionList.add(position);
-                            DownloadService.intentDownload(positionList,arrayList,context);
+    private void showDialogListAdd(final PDF.PdfBean pdf) {
+        List<String> a = Utils.getSections(getContext());
+        a.add("Create new list");
+        final ArrayList<Integer> list = new ArrayList<>();
+        list.add(pdf.getPid());
+        MaterialDialog.Builder dialog = new MaterialDialog.Builder(getActivity());
+        dialog
+                .title("Add "+pdf.getTitle() + " to...")
+                .items(a)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                        if(text.equals("Create new list")){
+                            showNewDialog(list);
+                        } else {
+                            Utils.addToSpecificList(getContext(),list, String.valueOf(text));
+                            Toasty.normal(getContext(),"Added " + list.size() + " PDF to " + text).show();
                         }
-                    }).build().show();
-        }
+                    }
+                });
+        dialog.show();
     }
 
-    public void showOptionDialog(final Context context, final PDF.PdfBean pdfBean) {
+    private void showNewDialog(final ArrayList<Integer> pids) {
+        new MaterialDialog.Builder(getActivity())
+                .title("Enter list name")
+                .inputType(InputType.TYPE_CLASS_TEXT)
+                .input("Example: Daris Hafti", null, new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                        Utils.addSectionToList(getContext(),String.valueOf(input));
+                        Utils.addToSpecificList(getContext(),pids, String.valueOf(input));
+                        Toasty.normal(getContext(),"Added " + pids.size() + " PDF to " + String.valueOf(input)).show();
+                    }
+                }).show();
+    }
+
+    public void showOptionDialog(final Context context, final PDF.PdfBean pdfBean, final int position) {
         List<String> string = new ArrayList<>();
         if(pdfBean.getAudio()==1){
             string.add("Play Audio");
@@ -376,16 +378,17 @@ public class LibraryFragment extends Fragment {
         if(pdfBean.getStatus()!=Status.STATUS_DOWNLOADED){
             string.add("Download");
         }
-        string.add("Remove from library");
+        string.add("Add to My Library");
         string.add("Report");
         new MaterialDialog.Builder(context)
                 .title("Options")
                 .items(string)
                 .itemsCallback(new MaterialDialog.ListCallback() {
                     @Override
-                    public void onSelection(MaterialDialog dialog, View itemView, int position, CharSequence text) {
-                        if(text.equals("Remove from library")){
-                            Toasty.normal(context,"Removed from library").show();
+                    public void onSelection(MaterialDialog dialog, View itemView, int pos, CharSequence text) {
+                        if(text.equals("Add to My Library")){
+                            showDialogListAdd(pdfBean);
+                            Toasty.normal(context,"Added to my Library").show();
                         }
                         else  if(text.equals("Report")){
                             reportApp(pdfBean);

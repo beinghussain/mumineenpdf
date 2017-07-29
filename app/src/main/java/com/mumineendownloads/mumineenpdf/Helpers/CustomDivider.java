@@ -29,9 +29,13 @@ public class CustomDivider extends RecyclerView.ItemDecoration {
      * Default divider will be used
      */
     public CustomDivider(Context context, ArrayList<PDF.PdfBean> arrayList) {
-        final TypedArray styledAttributes = context.obtainStyledAttributes(ATTRS);
-        this.arrayList = arrayList;
-        styledAttributes.recycle();
+        try {
+            final TypedArray styledAttributes = context.obtainStyledAttributes(ATTRS);
+            this.arrayList = arrayList;
+            styledAttributes.recycle();
+        }catch (NullPointerException ignored){
+
+        }
     }
 
     /**

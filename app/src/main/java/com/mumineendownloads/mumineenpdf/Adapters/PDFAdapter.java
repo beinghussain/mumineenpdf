@@ -23,6 +23,7 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.marcinorlowski.fonty.Fonty;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.Fragments.SearchFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
@@ -71,10 +72,12 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         Button button;
         ImageButton cancel;
         public ImageView audio;
+        public TextView album;
 
         MyViewHolder(View view) {
             super(view);
             title = (TextView) view.findViewById(R.id.title);
+            album = (TextView) view.findViewById(R.id.album);
             size = (TextView) view.findViewById(R.id.size);
             mainView = (RelativeLayout) view.findViewById(R.id.mainView);
             imageView = (ImageView) view.findViewById(R.id.imageView);
@@ -103,7 +106,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.pdf_item, parent, false);
+                .inflate(R.layout.pdf_item_search, parent, false);
 
         Fonty.setFonts((ViewGroup) itemView);
 
@@ -132,6 +135,11 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
 
         String al = "";
         final int pdfDownloadStatus = pdf.getStatus();
+        if(pdf.getCat()!=pdf.getAlbum()) {
+            holder.album.setText(pdf.getAlbum() + " > " + pdf.getCat());
+        }else {
+            holder.album.setText(pdf.getAlbum());
+        }
         if (pdfDownloadStatus == Status.STATUS_LOADING) {
             holder.imageView.setVisibility(View.GONE);
             holder.progressBarDownload.setVisibility(View.GONE);
@@ -223,7 +231,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             @Override
             public void onClick(View v) {
                 if(getFilePages(pdf)!=0) {
-                    Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+                    Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity_.class);
                     intent.putExtra("mode",0);
                     intent.putExtra("pid", pdf.getPid());
                     intent.putExtra("title", pdf.getTitle());
@@ -251,15 +259,6 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
                 pdfListFragment.openDialog(holder.parentView.getContext(),position,pdf);
             }
         });
-    }
-
-    public void viewOnline(PDF.PdfBean pdf, int adapterPosition, BasePDFAdapter.PDFViewHolder holder) {
-        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
-        intent.putExtra("mode",1);
-        intent.putExtra("pid", pdf.getPid());
-        intent.putExtra("url",pdf.getSource());
-        intent.putExtra("title",pdf.getTitle());
-        pdfListFragment.startActivity(intent);
     }
 
     @Override

@@ -125,6 +125,8 @@ public class GoSectionAdapter extends BaseLibraryAdapter {
                 holder.cancelView.setVisibility(View.GONE);
             }
 
+            holder.album.setText(child.getAlbum());
+
             if(child .getAudio()!=1) {
                 holder.imageView.setImageResource(R.drawable.pdf_downloaded);
             }else {
@@ -149,7 +151,7 @@ public class GoSectionAdapter extends BaseLibraryAdapter {
             holder.parentView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                   pdfListFragment.showOptionDialog(v.getContext(),child);
+                   pdfListFragment.showOptionDialog(v.getContext(),child,position);
                 }
             });
 

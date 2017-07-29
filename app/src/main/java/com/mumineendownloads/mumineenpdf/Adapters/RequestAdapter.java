@@ -219,15 +219,6 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ReqViewH
         });
     }
 
-    private int findPos(int pi) {
-        for(int i = 0; i<mRequestArrayList.size(); i++){
-            if(Integer.parseInt(mRequestArrayList.get(i).getId())==pi){
-                return i;
-            }
-        }
-        return 0;
-    }
-
     private String getStatusStringUploaded(int i) {
         String s = "";
         if(i==PDFReq.APPROVE){

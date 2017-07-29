@@ -27,9 +27,8 @@
     </style>
 
     <style name="AppTheme.ThemeDark" parent="Theme.AppCompat.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@android:color/black</item>
-        <item name="colorPrimaryDark">@android:color/black</item>
+        <item name="colorPrimary">#000</item>
+        <item name="colorPrimaryDark">#000</item>
     </style>
 
     <style name="custom_tv" parent="@android:style/TextAppearance.DeviceDefault.Large">
@@ -42,6 +41,13 @@
 
     <style name="AppTheme.AppBar">
         <item name="android:textColor">#fff</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlayPDF" parent="Theme.Design.Light.NoActionBar">
+            <item name="android:textColorPrimary">#FFF</item>
+            <item name="android:textColorSecondary">#FFF</item>
+            <item name="android:labelTextSize">14sp</item>
+            <item name="actionMenuTextColor">#FFF</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

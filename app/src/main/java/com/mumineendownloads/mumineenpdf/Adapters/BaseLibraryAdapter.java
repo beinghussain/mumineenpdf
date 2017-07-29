@@ -17,8 +17,6 @@ import android.widget.TextView;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.NativeExpressAdView;
-import com.intrusoft.sectionedrecyclerview.SectionRecyclerViewAdapter;
-import com.itextpdf.text.Font;
 import com.marcinorlowski.fonty.Fonty;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
@@ -78,10 +76,12 @@ public abstract class BaseLibraryAdapter extends SectionedRecyclerViewAdapter<Ba
         public ProgressView loading;
         Button button;
         ImageButton cancel;
+        public TextView album;
 
         PDFViewHolder(View view) {
             super(view);
             Fonty.setFonts((ViewGroup) view);
+            album = (TextView) view.findViewById(R.id.album);
             title = (TextView) view.findViewById(R.id.title);
             size = (TextView) view.findViewById(R.id.size);
             mainView = (RelativeLayout) view.findViewById(R.id.mainView);
@@ -103,7 +103,7 @@ public abstract class BaseLibraryAdapter extends SectionedRecyclerViewAdapter<Ba
     @Override
     public RecyclerView.ViewHolder onCreateItemViewHolder(ViewGroup parent, int viewType) {
         if(viewType!=1) {
-            return new PDFViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.go_pdf_item, parent, false));
+            return new PDFViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.library_pdf_item, parent, false));
         }else {
             return new AdViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.ad_view, parent, false));
         }

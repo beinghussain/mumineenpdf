@@ -20,6 +20,7 @@ import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
+import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 
 import java.io.File;
@@ -111,7 +112,7 @@ public class LibraryAdapter extends BaseLibraryAdapter {
                 holder.button.setVisibility(View.GONE);
                 holder.loading.setVisibility(View.GONE);
                 holder.cancel.setVisibility(View.GONE);
-                holder.cancelView.setVisibility(View.VISIBLE);
+                holder.cancelView.setVisibility(View.GONE);
             }
 
             holder.cancel.setOnClickListener(new View.OnClickListener() {
@@ -120,6 +121,15 @@ public class LibraryAdapter extends BaseLibraryAdapter {
                     DownloadManager.getInstance().cancel(String.valueOf(child.getPid()));
                 }
             });
+
+            holder.album.setText(child.getAlbum());
+
+
+            if(child .getAudio()!=1) {
+                holder.imageView.setImageResource(R.drawable.pdf_downloaded);
+            }else {
+                holder.imageView.setImageResource(R.drawable.pdf_downloaded_audio);
+            }
 
             holder.button.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -132,7 +142,7 @@ public class LibraryAdapter extends BaseLibraryAdapter {
             holder.parentView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    pdfListFragment.showOptionDialog(context,child);
+                    pdfListFragment.showOptionDialog(context,child,position);
                 }
             });
         }

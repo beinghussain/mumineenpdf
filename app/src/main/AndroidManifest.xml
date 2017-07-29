@@ -53,9 +53,9 @@
         </service>
 
         <activity
-            android:name=".Activities.PDFActivity"
+            android:name=".Activities.PDFActivity_"
             android:label="@string/pdf_activity"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="user"
             android:theme="@style/AppTheme.ThemeDark">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

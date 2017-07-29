@@ -7,6 +7,6 @@ import com.mumineendownloads.mumineenpdf.Helpers.WidgetRemoteViewsFactory;
 public class WidgetService extends RemoteViewsService {
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
-        return (new WidgetRemoteViewsFactory(this.getApplicationContext(), intent));
+        return (new WidgetRemoteViewsFactory(this, intent));
     }
 }

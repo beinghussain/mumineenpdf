@@ -295,13 +295,23 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
 
     public void openDialog(final Context context, final int position, final PDF.PdfBean pdf) {
         if(!isMultiSelect) {
-            final PDFAdapter.MyViewHolder holder = getViewHolder(position);
-            int array = R.array.preference_values;
+            List<String> strings = new ArrayList<>();
+
+            if(pdf.getAudio()==1){
+                strings.add("Play Audio");
+            }
             if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
-                array = R.array.preference_values_downloaded;
+                strings.add("Add to My Library");
+                strings.add("Report");
+                strings.add("Share");
+                strings.add("Delete file");
+            } else {
+                strings.add("Download");
+                strings.add("Report");
+                strings.add("Add to My Library");
             }
             new MaterialDialog.Builder(context)
-                    .items(array)
+                    .items(strings)
                     .itemsCallback(new MaterialDialog.ListCallback() {
                         @Override
                         public void onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {

@@ -7,12 +7,13 @@
     android:background="#000000"
     tools:context="com.mumineendownloads.mumineenpdf.Activities.PDFActivity">
 
+
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBarPDf"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:theme="@style/AppTheme.AppBarOverlay"
-        app:elevation="0dp">
+        android:layout_height="wrap_content"
+        android:overScrollMode="always"
+        android:theme="@style/AppTheme.AppBarOverlay">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -26,13 +27,23 @@
 
     <com.github.barteksc.pdfviewer.PDFView
         android:id="@+id/pdfView"
-        android:layout_below="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="0dp"
-        android:background="#000000">
+        android:background="#000">
 
     </com.github.barteksc.pdfviewer.PDFView>
 
+    <RelativeLayout
+        android:layout_below="@+id/pdfView"
+        android:layout_width="match_parent"
+        android:layout_height="56dp">
+
+        <TextView
+            android:text="Playing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
 
 </RelativeLayout>

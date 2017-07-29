@@ -263,25 +263,6 @@ public class PDFListFragment extends Fragment {
             }
         });
 
-//        MenuItemCompat.setOnActionExpandListener(myActionMenuItem, new MenuItemCompat.OnActionExpandListener() {
-//            @Override
-//            public boolean onMenuItemActionExpand(MenuItem item) {
-//                refresh("all");
-//                MainActivity.toggle(true);
-//                Home.toggleTab(true);
-//                searching = true;
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onMenuItemActionCollapse(MenuItem item) {
-//                refresh(album);
-//                MainActivity.toggle(false);
-//                Home.toggleTab(false);
-//                searching = false;
-//                return true;
-//            }
-//        });
     }
 
     @Override
@@ -350,17 +331,22 @@ public class PDFListFragment extends Fragment {
                             @Override
                             public void run() {
                                 mRecyclerView.addItemDecoration(new CustomDivider(getContext(),arrayList));
-                                progressView.setVisibility(View.GONE);
-                                mRecyclerView.setVisibility(View.VISIBLE);
+                                final Handler handler = new Handler();
                                 Collections.sort(arrayList, new Comparator<PDF.PdfBean>() {
                                     @Override
                                     public int compare(PDF.PdfBean o1, PDF.PdfBean o2) {
                                         return o1.getCat().compareTo(o2.getCat());
                                     }
                                 });
-
                                 sectionedRecyclerAdapter = new PDFAdapterCat(arrayList,getContext(),PDFListFragment.this);
                                 mRecyclerView.setAdapter(sectionedRecyclerAdapter);
+                                handler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressView.setVisibility(View.GONE);
+                                        mRecyclerView.setVisibility(View.VISIBLE);
+                                    }
+                                }, 1000);
                             }
 
                         });
@@ -638,8 +624,6 @@ public class PDFListFragment extends Fragment {
                 strings.add("Report");
                 strings.add("Add to My Library");
             }
-
-
 
             new MaterialDialog.Builder(context)
                     .title("Options")

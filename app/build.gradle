@@ -50,14 +50,15 @@ dependencies {
     compile 'com.github.barteksc:android-pdf-viewer:2.7.0-beta'
     compile 'com.github.GrenderG:Toasty:1.2.5'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.android.support:multidex:1.0.0'
+    compile 'com.android.support:multidex:1.0.1'
     compile 'com.google.firebase:firebase-messaging:10.0.1'
     compile 'com.google.firebase:firebase-appindexing:10.0.1'
     compile 'com.google.firebase:firebase-ads:10.0.1'
     compile 'com.github.zhukic:sectioned-recyclerview:1.0.1'
     compile 'com.github.javiersantos:AppUpdater:2.6.1'
-    compile 'com.github.IntruderShanky:Sectioned-RecyclerView:2.1.1'
     compile 'com.android.support:recyclerview-v7:25.3.1'
+    provided 'org.androidannotations:androidannotations:4.0.0'
+    compile 'org.androidannotations:androidannotations-api:4.0.0'
     testCompile 'junit:junit:4.12'
 }
 

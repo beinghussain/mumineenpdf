@@ -8,13 +8,14 @@
     android:layout_margin="0dp"
     android:orientation="vertical"
     android:paddingBottom="8dp"
+    android:clickable="true"
     android:paddingLeft="12dp"
     android:paddingRight="12dp"
     android:paddingTop="8dp">
 
     <TextView
         android:id="@+id/item"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="0dp"
         android:clickable="true"
@@ -32,17 +33,6 @@
         android:layout_below="@+id/item"
         android:text="Album"
         android:textColor="@color/colorPrimary"
-        android:textSize="11sp" />
-
-    <TextView
-        android:id="@+id/downloaded"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/album"
-        android:layout_marginLeft="3dp"
-        android:layout_toEndOf="@+id/album"
-        android:layout_toRightOf="@+id/album"
-        android:text="TextView"
         android:textSize="11sp" />
 
 </RelativeLayout>

@@ -12,6 +12,7 @@ import android.widget.RemoteViewsService;
 
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
 
@@ -74,7 +75,7 @@ public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsF
 
     @Override
     public boolean hasStableIds() {
-        return false;
+        return true;
     }
 
     @Override
@@ -86,26 +87,14 @@ public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsF
     public RemoteViews getViewAt(int position) {
         RemoteViews remoteView = new RemoteViews(context.getPackageName(),
                 R.layout.list_row);
-        String downloaded = "";
-        boolean downloadBool = false;
-        if(widgetList.get(position).getStatus()==Status.STATUS_DOWNLOADED){
-            downloaded = "Downloaded";
-            downloadBool = true;
-        }else {
-            downloaded = "Not Downloaded";
-            downloadBool = false;
-        }
         remoteView.setTextViewText(R.id.item, widgetList.get(position).getTitle());
         remoteView.setTextViewText(R.id.album, widgetList.get(position).getAlbum());
-        remoteView.setTextViewText(R.id.downloaded,downloaded);
         Intent intent = new Intent();
         PDF.PdfBean pdf = widgetList.get(position);
         intent.putExtra("mode", 2);
         intent.putExtra("pid", pdf.getPid());
         intent.putExtra("title", pdf.getTitle());
-        if(downloadBool) {
-            remoteView.setOnClickFillInIntent(R.id.mainView, intent);
-        }
+        remoteView.setOnClickFillInIntent(R.id.mainView, intent);
         return remoteView;
     }
 

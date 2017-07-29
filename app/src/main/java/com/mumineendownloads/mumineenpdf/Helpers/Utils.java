@@ -234,10 +234,14 @@ public class Utils {
     }
 
     public static void saveCurrentLibrary(String response, Context context) {
-        SharedPreferences preferences  = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("lib",response);
-        editor.apply();
+        try {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString("lib", response);
+            editor.apply();
+        }catch (NullPointerException ignored){
+
+        }
     }
 
     public static String getLastLibFile(Context context) {
