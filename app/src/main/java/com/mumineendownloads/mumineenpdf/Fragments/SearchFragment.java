@@ -67,6 +67,7 @@ import es.dmoral.toasty.Toasty;
 import static com.mumineendownloads.mumineenpdf.Fragments.Go.mRecyclerView;
 
 public class SearchFragment extends Fragment implements MaterialSearchBar.OnSearchActionListener {
+    private final String what;
     private PDFAdapter pdfAdapter;
     private RelativeLayout noItemFound;
     private String album;
@@ -89,8 +90,8 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
     private View dialogView;
     private InterstitialAd mInterstitialAd;
 
-    public static SearchFragment newInstance() {
-          return new SearchFragment();
+    public static SearchFragment newInstance(String saved) {
+          return new SearchFragment(saved);
     }
 
     class DownloadReceiver extends BroadcastReceiver {
@@ -197,16 +198,12 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
         return first <= position && position <= last;
     }
 
-    public SearchFragment() {
-    }
-
-    private PDFAdapter.MyViewHolder getViewHolder(int position) {
-        return (PDFAdapter.MyViewHolder) mRecyclerView.findViewHolderForLayoutPosition(position);
+    public SearchFragment(String saved) {
+        this.what = saved;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_search, container, false);
         MaterialSearchBar searchBar = (MaterialSearchBar) view.findViewById(R.id.searchBar);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.searchRecycler);
@@ -274,16 +271,29 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
             @Override
             public void run() {
                 try {
-                    arrayList = mPDFHelper.getAllPDFS("all");
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mRecyclerView.setVisibility(View.VISIBLE);
-                            pdfAdapter = new PDFAdapter(arrayList,getContext(),SearchFragment.this);
-                            mRecyclerView.setAdapter(pdfAdapter);
-                        }
+                    if(what.equals("saved")){
+                        arrayList  = Utils.getDownloadedFiles(getContext());
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mRecyclerView.setVisibility(View.VISIBLE);
+                                pdfAdapter = new PDFAdapter(arrayList,getContext(),SearchFragment.this);
+                                mRecyclerView.setAdapter(pdfAdapter);
+                            }
 
-                    });
+                        });
+                    }else {
+                        arrayList = mPDFHelper.getAllPDFS("all");
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mRecyclerView.setVisibility(View.VISIBLE);
+                                pdfAdapter = new PDFAdapter(arrayList, getContext(), SearchFragment.this);
+                                mRecyclerView.setAdapter(pdfAdapter);
+                            }
+
+                        });
+                    }
                 } catch (NullPointerException ignored) {
 
                 }

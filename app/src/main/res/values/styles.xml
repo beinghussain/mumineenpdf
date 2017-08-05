@@ -29,6 +29,7 @@
     <style name="AppTheme.ThemeDark" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">#000</item>
         <item name="colorPrimaryDark">#000</item>
+        <item name="colorAccent">@color/colorPrimary</item>
     </style>
 
     <style name="custom_tv" parent="@android:style/TextAppearance.DeviceDefault.Large">

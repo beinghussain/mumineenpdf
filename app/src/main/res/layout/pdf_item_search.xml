@@ -100,13 +100,16 @@
                         android:id="@+id/album"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="1dp"
-                        android:textStyle="bold"
-                        android:layout_weight="1"
                         android:layout_marginRight="8dp"
+                        android:layout_marginTop="1dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:lines="1"
+                        android:maxWidth="150dp"
                         android:text="2017 KB"
                         android:textColor="@color/colorPrimary"
-                        android:textSize="13sp" />
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/size"

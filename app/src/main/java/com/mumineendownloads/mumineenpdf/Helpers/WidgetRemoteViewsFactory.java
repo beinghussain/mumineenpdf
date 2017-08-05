@@ -87,14 +87,20 @@ public class WidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsF
     public RemoteViews getViewAt(int position) {
         RemoteViews remoteView = new RemoteViews(context.getPackageName(),
                 R.layout.list_row);
+        if(widgetList.get(position).getStatus()==Status.STATUS_DOWNLOADED){
+            remoteView.setViewVisibility(R.id.openButton,View.VISIBLE);
+        }else {
+            remoteView.setViewVisibility(R.id.openButton,View.GONE);
+        }
         remoteView.setTextViewText(R.id.item, widgetList.get(position).getTitle());
         remoteView.setTextViewText(R.id.album, widgetList.get(position).getAlbum());
+        remoteView.setTextViewText(R.id.size, Utils.fileSize(widgetList.get(position).getSize()));
         Intent intent = new Intent();
         PDF.PdfBean pdf = widgetList.get(position);
         intent.putExtra("mode", 2);
         intent.putExtra("pid", pdf.getPid());
         intent.putExtra("title", pdf.getTitle());
-        remoteView.setOnClickFillInIntent(R.id.mainView, intent);
+        remoteView.setOnClickFillInIntent(R.id.openButton, intent);
         return remoteView;
     }
 

@@ -9,11 +9,15 @@ import android.graphics.drawable.LayerDrawable;
 import android.net.ConnectivityManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 
 import com.aspsine.multithreaddownload.util.L;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.Model.User;
 import com.mumineendownloads.mumineenpdf.R;
@@ -269,5 +273,12 @@ public class Utils {
           arrayList.add(helper.getPDF(Integer.parseInt(i)));
         }
         return arrayList;
+    }
+
+    public static void showSnack(String text, String buttonText, View.OnClickListener onClickListener) {
+        final Snackbar snackbar = Snackbar
+                .make(MainActivity.cor, text, Snackbar.LENGTH_LONG)
+                .setAction(buttonText, onClickListener);
+        snackbar.show();
     }
 }

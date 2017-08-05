@@ -96,9 +96,7 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
             pdfView.addView(this, lp);
 
             this.pdfView = pdfView;
-            if(pdfView.getPageCount()==1){
-                hide();
-            }
+
         }
     }
 
@@ -118,7 +116,6 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
         }
         float pdfViewSize = 0;
         if (pdfView.isSwipeVertical()) {
-            Log.e("Size", String.valueOf(pdfView.getHeight()));
             pdfViewSize = pdfView.getHeight();
         } else {
             pdfViewSize = pdfView.getWidth();
@@ -177,7 +174,9 @@ public class CustomScrollHandle extends RelativeLayout implements ScrollHandle {
     @Override
     public void show() {
         activity.showActionBar();
-        setVisibility(VISIBLE);
+        if(pdfView!=null && pdfView.getPageCount()>1) {
+            setVisibility(VISIBLE);
+        }
     }
 
     @Override

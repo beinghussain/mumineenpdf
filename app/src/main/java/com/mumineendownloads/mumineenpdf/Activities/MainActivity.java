@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -19,6 +20,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.github.javiersantos.appupdater.AppUpdater;
 import com.github.javiersantos.appupdater.enums.Display;
@@ -45,6 +48,8 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class MainActivity extends AppCompatActivity {
 
 
+    public static FrameLayout cor;
+
     public MainActivity(){
 
     }
@@ -56,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     };
     private static final int RC_STORAGE = 1;
     public static BottomNavigationView bottomNavigationView;
+    public static FrameLayout frameLayout;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -154,6 +160,8 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(bottomNavigationListener);
         BottomNavigationViewHelper.disableShiftMode(bottomNavigationView);
+
+        cor = (FrameLayout) findViewById(R.id.fragment);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         Home home = new Home(MainActivity.this);

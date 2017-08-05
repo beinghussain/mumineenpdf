@@ -250,12 +250,11 @@ public class PDFListFragment extends Fragment {
 
         MenuItem myActionMenuItem = menu.findItem( R.id.action_search);
         final SearchView searchView = (SearchView) myActionMenuItem.getActionView();
-        search(searchView);
 
         searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SearchFragment selectedFragment = SearchFragment.newInstance();
+                SearchFragment selectedFragment = SearchFragment.newInstance("main");
                 FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
                 transaction.replace(R.id.fragment, selectedFragment);
                 transaction.addToBackStack("pdfList");
@@ -264,6 +263,7 @@ public class PDFListFragment extends Fragment {
         });
 
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -455,7 +455,12 @@ public class PDFListFragment extends Fragment {
                                             showNewDialog(goList);
                                         } else {
                                             Utils.addToSpecificList(getContext(),goList, String.valueOf(text));
-                                            Toasty.normal(getContext(),"Added " + goList.size() + " PDF to " + text).show();
+                                            Utils.showSnack(goList.size() + " pdf added to "+text, "VIEW LIBRARY", new View.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(View v) {
+                                                            MainActivity.bottomNavigationView.setSelectedItemId(R.id.navigation_upload);
+                                                        }
+                                                    });
                                         }
                                     }
                                 });
@@ -492,7 +497,12 @@ public class PDFListFragment extends Fragment {
                     public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
                         Utils.addSectionToList(getContext(),String.valueOf(input));
                         Utils.addToSpecificList(getContext(),pids, String.valueOf(input));
-                        Toasty.normal(getContext(),"Added " + pids.size() + " PDF to " + String.valueOf(input)).show();
+                        Utils.showSnack(goList.size() + " pdf added to " + input, "View Library", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                MainActivity.bottomNavigationView.setSelectedItemId(R.id.navigation_upload);
+                            }
+                        });
                     }
                 }).show();
     }
@@ -569,7 +579,6 @@ public class PDFListFragment extends Fragment {
     }
 
     private void search(SearchView searchView) {
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -884,7 +893,12 @@ public class PDFListFragment extends Fragment {
                             showNewDialog(list);
                         } else {
                             Utils.addToSpecificList(getContext(),list, String.valueOf(text));
-                            Toasty.normal(getContext(),"Added " + list.size() + " PDF to " + text).show();
+                            Utils.showSnack("Added " + list.size() + " PDF to " + text, "View Library", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    MainActivity.bottomNavigationView.setSelectedItemId(R.id.navigation_upload);
+                                }
+                            });
                         }
                     }
                 });

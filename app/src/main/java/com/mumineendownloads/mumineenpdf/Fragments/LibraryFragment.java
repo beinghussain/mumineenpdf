@@ -349,7 +349,12 @@ public class LibraryFragment extends Fragment {
                             showNewDialog(list);
                         } else {
                             Utils.addToSpecificList(getContext(),list, String.valueOf(text));
-                            Toasty.normal(getContext(),"Added " + list.size() + " PDF to " + text).show();
+                            Utils.showSnack(list.size() + " pdf added to "+text, "VIEW LIBRARY", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    MainActivity.bottomNavigationView.setSelectedItemId(R.id.navigation_upload);
+                                }
+                            });
                         }
                     }
                 });
@@ -365,7 +370,12 @@ public class LibraryFragment extends Fragment {
                     public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
                         Utils.addSectionToList(getContext(),String.valueOf(input));
                         Utils.addToSpecificList(getContext(),pids, String.valueOf(input));
-                        Toasty.normal(getContext(),"Added " + pids.size() + " PDF to " + String.valueOf(input)).show();
+                        Utils.showSnack(pids.size() + " pdf added to "+input, "VIEW LIBRARY", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                MainActivity.bottomNavigationView.setSelectedItemId(R.id.navigation_upload);
+                            }
+                        });
                     }
                 }).show();
     }
@@ -388,7 +398,6 @@ public class LibraryFragment extends Fragment {
                     public void onSelection(MaterialDialog dialog, View itemView, int pos, CharSequence text) {
                         if(text.equals("Add to My Library")){
                             showDialogListAdd(pdfBean);
-                            Toasty.normal(context,"Added to my Library").show();
                         }
                         else  if(text.equals("Report")){
                             reportApp(pdfBean);

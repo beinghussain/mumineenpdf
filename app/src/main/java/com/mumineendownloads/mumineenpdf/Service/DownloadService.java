@@ -4,7 +4,9 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -31,6 +33,7 @@ import com.google.gson.reflect.TypeToken;
 import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Helpers.OnTheWidget;
 import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
@@ -277,7 +280,10 @@ public class DownloadService extends Service {
                 if(i==1){
                     downloadNext(1);
                 }
-
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getApplicationContext());
+                int appWidgetIds[] = appWidgetManager.getAppWidgetIds(
+                        new ComponentName(getApplicationContext(), OnTheWidget.class));
+                appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds,R.id.list_view);
                 appInfo.setStatus(Status.STATUS_DOWNLOADED);
                 sendBroadCast(appInfo,position);
                 clearNotification();

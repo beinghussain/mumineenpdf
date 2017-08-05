@@ -70,7 +70,7 @@ public class OnTheWidget extends AppWidgetProvider {
             rv.setTextViewText(R.id.list_title,s);
 
             Intent startActivityIntent = new Intent(context, PDFActivity_.class);
-            PendingIntent startActivityPendingIntent = PendingIntent.getActivity(context, 0, startActivityIntent, PendingIntent.FLAG_ONE_SHOT);
+            PendingIntent startActivityPendingIntent = PendingIntent.getActivity(context,0,startActivityIntent,PendingIntent.FLAG_CANCEL_CURRENT);
             rv.setPendingIntentTemplate(R.id.list_view, startActivityPendingIntent);
 
             appWidgetManager.updateAppWidget(appWidgetId, rv);

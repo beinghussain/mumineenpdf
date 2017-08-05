@@ -25,25 +25,57 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <com.github.barteksc.pdfviewer.PDFView
-        android:id="@+id/pdfView"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="0dp"
-        android:background="#000">
+        android:background="#ddd">
 
-    </com.github.barteksc.pdfviewer.PDFView>
+        <com.github.barteksc.pdfviewer.PDFView
+            android:id="@+id/pdfView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#000">
 
-    <RelativeLayout
-        android:layout_below="@+id/pdfView"
-        android:layout_width="match_parent"
-        android:layout_height="56dp">
-
-        <TextView
-            android:text="Playing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        </com.github.barteksc.pdfviewer.PDFView>
 
     </RelativeLayout>
+
+
+    <LinearLayout
+        android:id="@+id/player"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
+        android:background="#000"
+        android:orientation="horizontal">
+
+
+        <TextView
+            android:id="@+id/current"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="00:00"
+            android:textColor="@android:color/white" />
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="8"
+            android:padding="5dp" />
+
+        <TextView
+            android:id="@+id/total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="00:00"
+            android:textColor="@android:color/white" />
+
+
+    </LinearLayout>
 
 </RelativeLayout>
