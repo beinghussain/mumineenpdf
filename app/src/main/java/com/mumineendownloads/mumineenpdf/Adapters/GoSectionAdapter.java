@@ -13,9 +13,9 @@ import android.view.View;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
-import com.itextpdf.text.pdf.PdfReader;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
+import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.Fragments.Go;
 import com.mumineendownloads.mumineenpdf.Fragments.LibraryFragment;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
@@ -127,7 +127,7 @@ public class GoSectionAdapter extends BaseLibraryAdapter {
 
             holder.album.setText(child.getAlbum());
 
-            if(child .getAudio()!=1) {
+            if(child .getAudio()==0) {
                 holder.imageView.setImageResource(R.drawable.pdf_downloaded);
             }else {
                 holder.imageView.setImageResource(R.drawable.pdf_downloaded_audio);
@@ -162,7 +162,7 @@ public class GoSectionAdapter extends BaseLibraryAdapter {
     private void openPDF(final PDF.PdfBean pdf) {
         File f = new File(Environment.getExternalStorageDirectory().getAbsoluteFile()+"/Mumineen/"+pdf.getPid()+".pdf");
         if(f.exists()) {
-            Intent intent = new Intent(context, PDFActivity.class);
+            Intent intent = new Intent(context, PDFActivity_.class);
             intent.putExtra("mode", 0);
             intent.putExtra("pid", pdf.getPid());
             intent.putExtra("title", pdf.getTitle());
@@ -240,19 +240,4 @@ public class GoSectionAdapter extends BaseLibraryAdapter {
         pdfBeanArrayList = newList;
         notifyDataChanged();
     }
-
-    private int getFilePages(PDF.PdfBean pdf){
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid() + ".pdf");
-        int count;
-        try {
-            PdfReader pdfReader = new PdfReader(String.valueOf(file));
-            count = pdfReader.getNumberOfPages();
-            return count;
-        } catch (IOException ignored) {
-            return 0;
-        } catch (NoClassDefFoundError ignored){
-            return 0;
-        }
-    }
-
 }

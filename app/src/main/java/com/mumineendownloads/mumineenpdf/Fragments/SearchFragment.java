@@ -11,7 +11,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -36,13 +38,19 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
-import com.itextpdf.awt.geom.Rectangle;
-import com.itextpdf.text.Font;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.marcinorlowski.fonty.Fonty;
+import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Adapters.BasePDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapter;
 import com.mumineendownloads.mumineenpdf.Adapters.PDFAdapterCat;
@@ -56,18 +64,21 @@ import com.mumineendownloads.mumineenpdf.Service.DownloadService;
 import com.ohoussein.playpause.PlayPauseView;
 import com.rey.material.widget.ProgressView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import es.dmoral.toasty.Toasty;
 
 import static com.mumineendownloads.mumineenpdf.Fragments.Go.mRecyclerView;
 
 public class SearchFragment extends Fragment implements MaterialSearchBar.OnSearchActionListener {
-    private final String what;
+    private String what;
     private PDFAdapter pdfAdapter;
     private RelativeLayout noItemFound;
     private String album;
@@ -90,9 +101,6 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
     private View dialogView;
     private InterstitialAd mInterstitialAd;
 
-    public static SearchFragment newInstance(String saved) {
-          return new SearchFragment(saved);
-    }
 
     class DownloadReceiver extends BroadcastReceiver {
         @Override
@@ -109,7 +117,6 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
             if (tmpPdf == null || position == -1) {
                 return;
             }
-            if(isCurrentListViewItemVisible(position)) {
                 final PDF.PdfBean pdf = getPDF(tmpPdf.getPid());
                 final int status = tmpPdf.getStatus();
                 if(status!=Status.STATUS_DOWNLOADING){
@@ -139,7 +146,6 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
                     }
                 }
             }
-        }
     }
 
     private PDF.PdfBean getPDF(int pid){
@@ -198,8 +204,8 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
         return first <= position && position <= last;
     }
 
-    public SearchFragment(String saved) {
-        this.what = saved;
+    public SearchFragment() {
+
     }
 
     @Override
@@ -229,8 +235,7 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
                 String newText = s.toString();
                 newText=newText.toLowerCase();
                 newlist=new ArrayList<>();
-                for(PDF.PdfBean name:arrayList)
-                {
+                for(PDF.PdfBean name:arrayList) {
                     String getName=name.getTitle().toLowerCase();
                     if(getName.contains(newText)){
                         newlist.add(name);
@@ -307,7 +312,7 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
         if(!isMultiSelect) {
             List<String> strings = new ArrayList<>();
 
-            if(pdf.getAudio()==1){
+            if(pdf.getAudio()!=0){
                 strings.add("Play Audio");
             }
             if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
@@ -347,18 +352,123 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
                             } if(text.equals("Add to My LibraryFragment")){
                                 showDialogListAdd(pdf);
                             }
+                            else if(text.equals("Delete file")) {
+                                dialog.dismiss();
+                                delete(pdf, context, position);
+                            } else if (text.equals("Share")) {
+                                if(getFile(pdf.getPid()).exists()) {
+                                    Uri uri = FileProvider.getUriForFile(getActivity(),
+                                            getActivity().getApplicationContext().getPackageName() + ".provider", getFile(pdf.getPid()));
+                                    Intent share = new Intent();
+                                    share.setAction(Intent.ACTION_SEND);
+                                    share.setType("application/pdf");
+                                    share.putExtra(Intent.EXTRA_STREAM, uri);
+                                    startActivity(Intent.createChooser(share, "Share File"));
+                                } else {
+                                    Toasty.normal(getContext(), "File not downloaded yet").show();
+                                }
+                            } else if (text.equals("Report")) {
+                                reportApp(pdf);
+                            }
+                            else if(text.equals("Add to My Library")){
+                                showDialogListAdd(pdf);
+                            }
                         }
                     })
                     .show();
         }
     }
 
+    private void reportApp(final PDF.PdfBean pdfBean){
+        new MaterialDialog.Builder(getActivity())
+                .title("Report "+pdfBean.getTitle())
+                .items(R.array.reportItems)
+                .itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
+                    @Override
+                    public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                        sendReport(pdfBean.getPid(), text);
+                        return true;
+                    }
+                })
+                .positiveText("Choose")
+                .show();
+    }
+
+    private void sendReport(final int pid, final CharSequence text) {
+        final RequestQueue queue = Volley.newRequestQueue(getContext());
+        String url = "http://mumineendownloads.com/app/pdf_error.php";
+
+        final StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Toasty.normal(getContext(),"File Reported!").show();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toasty.normal(getContext(),"Failed to report!").show();
+            }
+
+        }) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                String deviceId = Settings.Secure.getString(getContext().getContentResolver(),
+                        Settings.Secure.ANDROID_ID);
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("pdf_id", String.valueOf(pid));
+                params.put("error", (String) text);
+                params.put("device_id", deviceId);
+
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Bundle bundle = getArguments();
+        if(bundle!=null){
+            this.what = bundle.getString("what");
+        }
         mInterstitialAd = new InterstitialAd(getActivity());
         mInterstitialAd.setAdUnitId(getString(R.string.ad_unit));
         mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        MainActivity.bottomNavigationView.setVisibility(View.GONE);
+    }
+
+    private File getFile(int pid) {
+        return new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pid+".pdf");
+    }
+
+    private void delete(final PDF.PdfBean pdf, final Context context, final int position) {
+        new MaterialDialog.Builder(context)
+                .title("Delete file")
+                .negativeText("Cancel")
+                .positiveText("Delete")
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                    }
+                })
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdf.getPid() + ".pdf");
+                        if (file.exists()) {
+                            file.delete();
+                            pdf.setStatus(Status.STATUS_NULL);
+                            pdfAdapter.notifyItemChanged(position);
+                            mPDFHelper.updatePDF(pdf);
+                            Toasty.normal(context,"File Deleted Successfully").show();
+                        }
+                    }
+                })
+                .content("Do you really want to delete this file?").build().show();
     }
 
     private void startDownloading() {
@@ -433,7 +543,7 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
 
         if (initialStage)
             new Player()
-                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getPid());
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getAudio());
     }
 
     private class Player extends AsyncTask<String, Void, Boolean> {
@@ -600,5 +710,11 @@ public class SearchFragment extends Fragment implements MaterialSearchBar.OnSear
     @Override
     public void onButtonClicked(int buttonCode) {
          Log.e("ButtonCode", String.valueOf(buttonCode));
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        MainActivity.bottomNavigationView.setVisibility(View.VISIBLE);
     }
 }

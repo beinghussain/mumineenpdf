@@ -87,6 +87,7 @@ import es.dmoral.toasty.Toasty;
 
 
 public class PDFListFragment extends Fragment {
+    private int position;
     private String album;
     private ArrayList<PDF.PdfBean> arrayList;
     private RecyclerView mRecyclerView;
@@ -106,15 +107,13 @@ public class PDFListFragment extends Fragment {
     private boolean initialStage = true;
     private View dialogView;
     private InterstitialAd mInterstitialAd;
-    private MaterialDialog audioDialog
-            ;
-
+    private MaterialDialog audioDialog;
 
     public ArrayList<PDF.PdfBean> getMultiSelect_list(){
         return multiSelect_list;
     }
+
     public ArrayList<PDF.PdfBean> downloadingList = new ArrayList<>();
-    PDFHelper helper;
 
     private void reportApp(final PDF.PdfBean pdfBean){
         new MaterialDialog.Builder(getActivity())
@@ -187,23 +186,25 @@ public class PDFListFragment extends Fragment {
                 }).build().show();
     }
 
-    public PDFListFragment(int position, MainActivity activity) {
-        helper = new PDFHelper(activity.getApplicationContext());
-        ArrayList<String> arrayList = helper.getAlbums();
+    public PDFListFragment() {
+
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        View rootView = inflater.inflate(R.layout.fragment_pdflist, container, false);
+        Fonty.setFonts((ViewGroup) rootView);
+
+        mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
+        ArrayList<String> arrayList = mPDFHelper.getAlbums();
         multiSelect_list = new ArrayList<>();
         for(int i =0; i<arrayList.size();i++){
             if(position==i){
                 album=arrayList.get(i);
             }
         }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_pdflist, container, false);
-        Fonty.setFonts((ViewGroup) rootView);
-        mPDFHelper= new PDFHelper(getActivity().getApplicationContext());
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -211,9 +212,6 @@ public class PDFListFragment extends Fragment {
         mRecyclerView.getItemAnimator().setChangeDuration(0);
         setRecyclerViewLayoutManager(mRecyclerView);
         goList = new ArrayList<>();
-
-
-
         refresh(album);
         return rootView;
     }
@@ -237,6 +235,13 @@ public class PDFListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        position = 0;
+        Bundle bundle = this.getArguments();
+
+        if(bundle != null){
+            Log.e("Bundle", String.valueOf(bundle));
+            position = bundle.getInt("position");
+        }
         mInterstitialAd = new InterstitialAd(getActivity());
         mInterstitialAd.setAdUnitId(getString(R.string.ad_unit));
         mInterstitialAd.loadAd(new AdRequest.Builder().build());
@@ -254,7 +259,10 @@ public class PDFListFragment extends Fragment {
         searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SearchFragment selectedFragment = SearchFragment.newInstance("main");
+                SearchFragment selectedFragment = new SearchFragment();
+                Bundle bundle = new Bundle();
+                bundle.putString("what","pdfList");
+                selectedFragment.setArguments(bundle);
                 FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
                 transaction.replace(R.id.fragment, selectedFragment);
                 transaction.addToBackStack("pdfList");
@@ -286,7 +294,7 @@ public class PDFListFragment extends Fragment {
                 i.setType("text/plain");
                 i.putExtra(Intent.EXTRA_SUBJECT, "Mumineen PDF");
                 String sAux = "\nPDF app for Zakreins and all the mumineens.\n\n";
-                sAux = sAux + "https://play.google.com/store/apps/details?id=Orion.Soft \n\n";
+                sAux = sAux + "http://play.google.com/store/apps/details?id=" + getActivity().getPackageName();
                 i.putExtra(Intent.EXTRA_TEXT, sAux);
                 startActivity(Intent.createChooser(i, "Share this using"));
             } catch(Exception ignored) {
@@ -295,12 +303,10 @@ public class PDFListFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void openRatings() {
         Uri uri = Uri.parse("market://details?id=" + getActivity().getPackageName());
         Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
         goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
                 Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         try {
             startActivity(goToMarket);
@@ -314,47 +320,47 @@ public class PDFListFragment extends Fragment {
         try {
             mRecyclerView.setVisibility(View.GONE);
             progressView.setVisibility(View.VISIBLE);
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        arrayList = mPDFHelper.getAllPDFS(mainAlbum);
-                        final PDF.PdfBean pdfBean = new PDF.PdfBean();
-                        pdfBean.setPid(-5);
-                        pdfBean.setCat("ZeeAd");
-                        if(Utils.isConnected(getContext())) {
-                            if (arrayList.size() > 15) {
-                                arrayList.add(pdfBean);
-                            }
-                        }
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
+                        new Thread(new Runnable() {
                             public void run() {
-                                mRecyclerView.addItemDecoration(new CustomDivider(getContext(),arrayList));
-                                final Handler handler = new Handler();
-                                Collections.sort(arrayList, new Comparator<PDF.PdfBean>() {
-                                    @Override
-                                    public int compare(PDF.PdfBean o1, PDF.PdfBean o2) {
-                                        return o1.getCat().compareTo(o2.getCat());
+                                arrayList = mPDFHelper.getAllPDFS(mainAlbum);
+                                final PDF.PdfBean pdfBean = new PDF.PdfBean();
+                                pdfBean.setPid(-5);
+                                pdfBean.setCat("ZeeAd");
+                                if(Utils.isConnected(getContext())) {
+                                    if (arrayList.size() > 15) {
+                                        arrayList.add(pdfBean);
                                     }
-                                });
-                                sectionedRecyclerAdapter = new PDFAdapterCat(arrayList,getContext(),PDFListFragment.this);
-                                mRecyclerView.setAdapter(sectionedRecyclerAdapter);
-                                handler.postDelayed(new Runnable() {
+                                }
+
+                                getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        progressView.setVisibility(View.GONE);
-                                        mRecyclerView.setVisibility(View.VISIBLE);
+                                        mRecyclerView.addItemDecoration(new CustomDivider(getContext(),arrayList));
+                                        Collections.sort(arrayList, new Comparator<PDF.PdfBean>() {
+                                            @Override
+                                            public int compare(PDF.PdfBean o1, PDF.PdfBean o2) {
+                                                return o1.getCat().compareTo(o2.getCat());
+                                            }
+                                        });
+                                        sectionedRecyclerAdapter = new PDFAdapterCat(arrayList,getContext(),PDFListFragment.this);
+
+                                        new Handler().postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mRecyclerView.setAdapter(sectionedRecyclerAdapter);
+                                                mRecyclerView.setVisibility(View.VISIBLE);
+                                                progressView.setVisibility(View.INVISIBLE);
+                                            }
+                                        },1000);
+
                                     }
-                                }, 1000);
+
+                                });
                             }
+                        }).start();
 
-                        });
-                    } catch (NullPointerException ignored) {
 
-                    }
-                }
-            });
+
         }catch (NullPointerException ignored){
 
         }
@@ -620,7 +626,7 @@ public class PDFListFragment extends Fragment {
         if(!isMultiSelect) {
             List<String> strings = new ArrayList<>();
 
-            if(pdf.getAudio()==1){
+            if(pdf.getAudio()!=0){
                 strings.add("Play Audio");
             }
             if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
@@ -649,8 +655,8 @@ public class PDFListFragment extends Fragment {
                                     sectionedRecyclerAdapter.notifyItemChangedAtPosition(position);
                                     downloadingList.clear();
                                     positionList.clear();
-                                    downloadingList.add(pdf);
-                                    positionList.add(position);
+                                    downloadingList.add(pdf);positionList.add(position);
+                                    Log.e("Sending position", String.valueOf(position));
                                     startDownloading();
                                 } else {
                                     Snackbar snackbar = Snackbar
@@ -710,7 +716,7 @@ public class PDFListFragment extends Fragment {
 
         if (initialStage)
             new Player()
-                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getPid());
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getAudio());
     }
 
     private class Player extends AsyncTask<String, Void, Boolean> {
@@ -995,7 +1001,7 @@ public class PDFListFragment extends Fragment {
             if (tmpPdf == null || position == -1) {
                 return;
             }
-            if(isCurrentListViewItemVisible(position)) {
+            Log.e("Receiving", String.valueOf(position));
                 final PDF.PdfBean pdf = getPDF(tmpPdf.getPid());
                 final int status = tmpPdf.getStatus();
                 if(status!=Status.STATUS_DOWNLOADING){
@@ -1007,6 +1013,7 @@ public class PDFListFragment extends Fragment {
                         sectionedRecyclerAdapter.notifyItemChangedAtPosition(position);
                     } else if (status == Status.STATUS_DOWNLOADING) {
                         pdf.setStatus(Status.STATUS_DOWNLOADING);
+                        Log.e("PDF",pdf.getTitle());
                         pdf.setDownloadPerSize(tmpPdf.getDownloadPerSize());
                         pdf.setProgress(tmpPdf.getProgress());
                         sectionedRecyclerAdapter.notifyDataSetChanged();
@@ -1026,7 +1033,6 @@ public class PDFListFragment extends Fragment {
                     }
                 }
             }
-       }
     }
 
     private void register() {

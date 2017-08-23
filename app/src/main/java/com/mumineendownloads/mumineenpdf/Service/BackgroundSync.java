@@ -113,7 +113,6 @@ public class BackgroundSync extends Service {
                 public void onErrorResponse(VolleyError error) {
                 }
             });
-
             queue.add(stringRequest);
         }
 
@@ -122,7 +121,7 @@ public class BackgroundSync extends Service {
 
     private void updateRefresh() {
         Intent intent = new Intent(
-        ACTION);
+                ACTION);
         intent.putExtra("setting", true);
         sendBroadcast(intent);
     }
@@ -136,4 +135,3 @@ public class BackgroundSync extends Service {
         });
     }
 }
-

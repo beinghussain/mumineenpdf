@@ -19,7 +19,6 @@ import com.aspsine.multithreaddownload.CallBack;
 import com.aspsine.multithreaddownload.DownloadException;
 import com.aspsine.multithreaddownload.DownloadManager;
 import com.aspsine.multithreaddownload.DownloadRequest;
-import com.itextpdf.text.pdf.PdfReader;
 import com.marcinorlowski.fonty.Fonty;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
@@ -114,19 +113,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         return new MyViewHolder(itemView);
     }
 
-    private int getFilePages(PDF.PdfBean pdf){
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid() + ".pdf");
-        int count;
-        try {
-            PdfReader pdfReader = new PdfReader(String.valueOf(file));
-            count = pdfReader.getNumberOfPages();
-            return count;
-        } catch (IOException ignored) {
-            return 0;
-        } catch (NoClassDefFoundError ignored){
-            return 0;
-        }
-    }
+
 
     @Override
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
@@ -199,7 +186,7 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             holder.cancel.setVisibility(View.GONE);
         }
 
-        if(pdf.getAudio()!=1) {
+        if(pdf.getAudio()==0) {
             holder.imageView.setImageResource(R.drawable.pdf_downloaded);
         }else {
             holder.imageView.setImageResource(R.drawable.pdf_downloaded_audio);
@@ -209,18 +196,12 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
             @Override
             public void onClick(View v) {
                 if(pdfDownloadStatus==Status.STATUS_DOWNLOADED) {
-                    if (getFilePages(pdf) != 0) {
-                        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+                        Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity_.class);
                         intent.putExtra("mode", 0);
                         intent.putExtra("pid", pdf.getPid());
                         intent.putExtra("title", pdf.getTitle());
                         pdfListFragment.startActivity(intent);
-                    } else {
-                        Toasty.error(context, "Invalid file").show();
-                        pdf.setStatus(Status.STATUS_NULL);
-                        notifyDataSetChanged();
-                        pdfHelper.updatePDF(pdf);
-                    }
+
                 } else {
                     DownloadManager.getInstance().cancel(String.valueOf(pdf.getPid()));
                 }
@@ -230,18 +211,12 @@ public class PDFAdapter extends RecyclerView.Adapter<PDFAdapter.MyViewHolder>  {
         holder.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(getFilePages(pdf)!=0) {
                     Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity_.class);
                     intent.putExtra("mode",0);
                     intent.putExtra("pid", pdf.getPid());
                     intent.putExtra("title", pdf.getTitle());
                     pdfListFragment.startActivity(intent);
-                } else {
-                    Toasty.error(context,"Invalid file").show();
-                    pdf.setStatus(Status.STATUS_NULL);
-                    notifyDataSetChanged();
-                    pdfHelper.updatePDF(pdf);
-                }
+
             }
         });
 

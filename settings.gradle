@@ -1,2 +1,1 @@
-include ':app', ':DownloadMan'
-project(':DownloadMan').projectDir = new File('app/libs/DownloadMan')
+include ':app', 'PDF', ':PDFView'

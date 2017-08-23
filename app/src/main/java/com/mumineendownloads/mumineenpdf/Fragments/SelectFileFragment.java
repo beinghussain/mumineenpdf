@@ -44,7 +44,6 @@ import java.util.Objects;
 public class SelectFileFragment extends DialogFragment {
 
     public static final int RESULT_FILE = 1;
-    private final RequestPage requestPage;
     private ArrayList<SelectFile> files;
     private RecyclerView mRecyclerView;
     private ArrayList<SelectFile> arrayListFiles =new ArrayList<>();
@@ -53,15 +52,13 @@ public class SelectFileFragment extends DialogFragment {
     private MaterialSearchBar searchBar;
     private ArrayList<SelectFile> newlist;
     private SelectFileAdapter selectAdapter;
-    private Toolbar mActivityActionBarToolbar;
 
     public static SelectFileFragment newInstance(RequestPage requestPage){
-        return new SelectFileFragment(requestPage);
+        return new SelectFileFragment();
     }
 
+    public SelectFileFragment() {
 
-    public SelectFileFragment(RequestPage requestPage) {
-        this.requestPage = requestPage;
     }
 
 
@@ -106,7 +103,7 @@ public class SelectFileFragment extends DialogFragment {
         mLoading = (RelativeLayout) view.findViewById(R.id.loading);
         mNoItem = (RelativeLayout) view.findViewById(R.id.noItemFound);
 
-        mActivityActionBarToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        Toolbar mActivityActionBarToolbar = (Toolbar) view.findViewById(R.id.toolbar);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mActivityActionBarToolbar);
         Fonty.setFonts(mActivityActionBarToolbar);
         mActivityActionBarToolbar.setTitle("Select file to upload");
@@ -196,7 +193,7 @@ public class SelectFileFragment extends DialogFragment {
     }
 
     public void end(SelectFile file) {
-        requestPage.setFile(file);
+        RequestPage.setFile(file,getContext());
         getDialog().dismiss();
     }
 

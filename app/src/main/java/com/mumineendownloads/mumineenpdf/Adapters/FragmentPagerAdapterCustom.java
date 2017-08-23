@@ -1,5 +1,6 @@
 package com.mumineendownloads.mumineenpdf.Adapters;
 
+import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
@@ -12,17 +13,19 @@ import java.util.Objects;
 public class FragmentPagerAdapterCustom extends FragmentPagerAdapter {
 
     private final ArrayList<String> arrayTabList;
-    private MainActivity activity;
 
     public FragmentPagerAdapterCustom(FragmentManager fm, MainActivity activity, ArrayList<String> arrayTabList) {
         super(fm);
-        this.activity = activity;
         this.arrayTabList = arrayTabList;
     }
 
     @Override
     public PDFListFragment getItem(int position) {
-        return new PDFListFragment(position,activity);
+        Bundle bundle = new Bundle();
+        bundle.putInt("position",position);
+        PDFListFragment pdfListFragment = new PDFListFragment();
+        pdfListFragment.setArguments(bundle);
+        return pdfListFragment;
     }
 
     @Override

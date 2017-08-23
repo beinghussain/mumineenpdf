@@ -27,8 +27,9 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
+        android:id="@+id/viewer"
         android:layout_height="match_parent"
-        android:background="#ddd">
+        android:background="#000">
 
         <com.github.barteksc.pdfviewer.PDFView
             android:id="@+id/pdfView"

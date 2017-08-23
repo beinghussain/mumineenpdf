@@ -2,12 +2,14 @@ package com.mumineendownloads.mumineenpdf.Activities;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.design.widget.AppBarLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -21,11 +23,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
+import com.github.barteksc.pdfviewer.listener.OnErrorListener;
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
 import com.github.barteksc.pdfviewer.listener.OnPageScrollListener;
 import com.github.barteksc.pdfviewer.listener.OnRenderListener;
@@ -33,6 +37,7 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.marcinorlowski.fonty.Fonty;
 import com.mumineendownloads.mumineenpdf.Helpers.PDFHelper;
+import com.mumineendownloads.mumineenpdf.Helpers.Status;
 import com.mumineendownloads.mumineenpdf.Helpers.Utils;
 import com.mumineendownloads.mumineenpdf.Model.PDF;
 import com.mumineendownloads.mumineenpdf.R;
@@ -50,9 +55,10 @@ import java.io.File;
 import java.io.IOException;
 
 import es.dmoral.toasty.Toasty;
+
 @EActivity(R.layout.activity_pdf)
 @OptionsMenu(R.menu.pdf_menu)
-public class PDFActivity extends AppCompatActivity implements OnPageChangeListener {
+public class PDFActivity extends AppCompatActivity implements OnPageChangeListener, OnErrorListener {
 
     private static final String TAG = PDFActivity.class.getSimpleName();
     private InterstitialAd mInterstitialAd;
@@ -76,23 +82,15 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
     private MediaPlayer mediaPlayer;
     private boolean initialStage = true;
     private boolean isPlaying= false;
+    private RelativeLayout viewer;
 
     @AfterViews
     void afterViews() {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        String title = getIntent().getStringExtra("title");
 
         setSupportActionBar(toolbar);
-        setTitle(title);
-        Fonty.setFonts(toolbar);
-        player.bringToFront();
-        appBarPDf.bringToFront();
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId(getString(R.string.ad_unit));
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
 
         pdfView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,6 +103,15 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
             }
         });
 
+        Fonty.setFonts(toolbar);
+        player.bringToFront();
+        appBarPDf.bringToFront();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(getString(R.string.ad_unit));
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+
+        viewer = (RelativeLayout) findViewById(R.id.viewer);
         String action = getIntent().getAction();
         Intent intent = getIntent();
         String type = intent.getType();
@@ -117,11 +124,12 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
             PDFHelper pdfHelper = new PDFHelper(getApplicationContext());
             pdfBean = pdfHelper.getPDF(id);
             File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + id + ".pdf");
+            String title = getIntent().getStringExtra("title");
+            setTitle(title);
             displayFromFile(file);
-        }
-
-        if(pdfBean.getAudio()!=1){
-            player.setVisibility(View.GONE);
+            if(pdfBean.getAudio()==0){
+                player.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -129,6 +137,7 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
         pdfView.fromFile(file)
                 .defaultPage(pageNumber)
                 .onPageChange(this)
+                .onError(this)
                 .enableSwipe(true)
                 .enableAnnotationRendering(true)
                 .onRender(new OnRenderListener() {
@@ -154,22 +163,26 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
         setTitle(new File(getRealPathFromURI(getApplicationContext(),uri)).getName());
         pdfView.useBestQuality(true);
         pdfView.enableSwipe(true);
+
     }
 
     public String getRealPathFromURI(Context context, Uri contentUri) {
-//        Cursor cursor = null;
-//        try {
-//            String[] proj = { MediaStore.Images.Media.DATA };
-//            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
-////            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-//            cursor.moveToFirst();
-//            return cursor.getString(column_index);
-//        } finally {
-//            if (cursor != null) {
-//                cursor.close();
-//            }
-//        }
-        return "";
+        try {
+            Cursor cursor = null;
+            try {
+                String[] proj = {MediaStore.Images.Media.DATA};
+                cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                cursor.moveToFirst();
+                return cursor.getString(column_index);
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }catch (IllegalArgumentException ignored){
+            return "";
+        }
     }
 
     @Override
@@ -182,7 +195,7 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
     public boolean onPrepareOptionsMenu(Menu menu) {
         menuItem = menu.findItem(R.id.play);
         try {
-            if (pdfBean.getAudio() == 1) {
+            if (pdfBean.getAudio() != 0) {
                 menuItem.setVisible(true);
             } else {
                 menuItem.setVisible(false);
@@ -231,7 +244,7 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
     public void onBackPressed() {
         super.onBackPressed();
         try {
-          //  mInterstitialAd.show();
+            mInterstitialAd.show();
             if(mediaPlayer!=null){
                 mediaPlayer.reset();
             }
@@ -245,7 +258,7 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
         int pid = getIntent().getIntExtra("pid",0);
         PDFHelper helper = new PDFHelper(getApplicationContext());
         PDF.PdfBean pdfBean = helper.getPDF(pid);
-        if(pdfBean.getAudio()==1){
+        if(pdfBean.getAudio()!=0){
             playAudio();
         }
     }
@@ -264,8 +277,16 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             new Player()
-                    .execute("http://pdf.mumineendownloads.com/audio.php?id=" + pdfBean.getPid());
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pdfBean.getAudio());
         }
+    }
+
+    @Override
+    public void onError(Throwable t) {
+        Toasty.normal(getApplicationContext(),"Error in loading PDF").show();
+        PDFHelper helper = new PDFHelper(getApplicationContext());
+        pdfBean.setStatus(Status.STATUS_NULL);
+        helper.updatePDF(pdfBean);
     }
 
     private class Player extends AsyncTask<String, Void, Boolean> {
@@ -284,13 +305,15 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
-                        initialStage = true;
-                        mediaPlayer.stop();
-                        mediaPlayer.reset();
-                        isPlaying = false;
-                        mediaPlayer = null;
-                        player.setVisibility(View.GONE);
-                        menuItem.setIcon(R.drawable.ic_play_circle_outline_black_24dp);
+                        if(mediaPlayer!=null) {
+                            initialStage = true;
+                            mediaPlayer.stop();
+                            mediaPlayer.reset();
+                            isPlaying = false;
+                            mediaPlayer = null;
+                            player.setVisibility(View.GONE);
+                            menuItem.setIcon(R.drawable.ic_play_circle_outline_black_24dp);
+                        }
                     }
                 });
                 mediaPlayer.prepare();
@@ -456,9 +479,9 @@ public class PDFActivity extends AppCompatActivity implements OnPageChangeListen
     @Override
     protected void onDestroy() {
         super.onDestroy();
-//        if(mediaPlayer!=null){
-//            mediaPlayer.stop();
-//            mediaPlayer = null;
-//        }
+        if(mediaPlayer!=null){
+            mediaPlayer.stop();
+            mediaPlayer = null;
+        }
     }
 }

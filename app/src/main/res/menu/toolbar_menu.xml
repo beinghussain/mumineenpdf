@@ -16,10 +16,6 @@
         app:showAsAction="never"
         android:title="Refresh"/>
 
-    <item android:title="Backup/Restore"
-        app:showAsAction="never"
-        android:id="@+id/action_bckupRstr"/>
-
     <item android:id="@+id/action_rate"
         app:showAsAction="never"
         android:title="Rate this app"/>

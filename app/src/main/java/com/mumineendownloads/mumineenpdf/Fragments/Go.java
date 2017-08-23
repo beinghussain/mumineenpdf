@@ -122,15 +122,8 @@ public class Go extends Fragment {
             public void run() {
                 try {
                     List<String> sectionList = Utils.getSections(getContext());
-                    if(sectionList.size()==0){
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                empty.setVisibility(View.VISIBLE);
-                                progress.setVisibility(View.GONE);
-                            }
-                        });
-                    }
+                    Log.e("secitonList.size", String.valueOf(sectionList.size()));
+
                     for(String s : sectionList){
                         ArrayList<Integer> a = Utils.loadArray(getContext(),s);
                         ArrayList<PDF.PdfBean> b = new ArrayList<PDF.PdfBean>();
@@ -140,6 +133,17 @@ public class Go extends Fragment {
                             pdf.setGo(s);
                             arrayList.add(pdf);
                         }
+                    }
+
+                    if(arrayList.size()==0){
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mRecyclerView.setVisibility(View.GONE);
+                                empty.setVisibility(View.VISIBLE);
+                                progress.setVisibility(View.GONE);
+                            }
+                        });
                     }
 
                     getActivity().runOnUiThread(new Runnable() {
@@ -203,7 +207,7 @@ public class Go extends Fragment {
 
     public void showOptionDialog(final Context context, final PDF.PdfBean pdfBean, final int position) {
         List<String> string = new ArrayList<>();
-        if(pdfBean.getAudio()==1){
+        if(pdfBean.getAudio()!=0){
             string.add("Play Audio");
         }
         if(pdfBean.getStatus()!=Status.STATUS_DOWNLOADED){
@@ -219,7 +223,9 @@ public class Go extends Fragment {
                     public void onSelection(MaterialDialog dialog, View itemView, int pos, CharSequence text) {
                          if(text.equals("Remove from library")){
                              Utils.removeSpecificItemFromList(getContext(),pdfBean.getPid(),pdfBean.getGo());
+                             arrayList.remove(position);
                              goSectionAdapter.notifyItemRemovedAtPosition(position);
+
                              Toasty.normal(context,"Removed from library").show();
                          }
                          else  if(text.equals("Report")){
@@ -266,7 +272,7 @@ public class Go extends Fragment {
 
         if (initialStage)
             new Player()
-                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getPid());
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getAudio());
     }
 
     private void reportApp(final PDF.PdfBean pdfBean){
@@ -493,7 +499,6 @@ public class Go extends Fragment {
             if (tmpPdf == null || position == -1) {
                 return;
             }
-            if(isCurrentListViewItemVisible(position)) {
                 final PDF.PdfBean pdf = getPDF(tmpPdf.getPid());
                 final int status = tmpPdf.getStatus();
                 if(status!=Status.STATUS_DOWNLOADING){
@@ -521,7 +526,7 @@ public class Go extends Fragment {
                 }
             }
         }
-    }
+
 
     private boolean isCurrentListViewItemVisible(int position) {
         LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();

@@ -22,7 +22,6 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.NativeExpressAdView;
-import com.itextpdf.text.Font;
 import com.marcinorlowski.fonty.Fonty;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
@@ -137,7 +136,7 @@ public abstract class BasePDFAdapter extends SectionedRecyclerViewAdapter<BasePD
             adView.setAdSize(new AdSize(AdSize.FULL_WIDTH,80));
             cardView.addView(adView);
             Fonty.setFonts((ViewGroup) inflate);
-            AdRequest request = new AdRequest.Builder().addTestDevice("265F30F3EA52FBFB7782FEE86B7DE645").build();
+            AdRequest request = new AdRequest.Builder().build();
             adView.loadAd(request);
         }
     }

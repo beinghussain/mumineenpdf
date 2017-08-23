@@ -14,7 +14,6 @@ import android.view.View;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.folderselector.FileChooserDialog;
 import com.aspsine.multithreaddownload.DownloadManager;
-import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.Fragments.Saved;
@@ -29,10 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import es.dmoral.toasty.Toasty;
-
-
-
 
 public class SavedPDFAdapter extends BaseSavedAdapter{
 
@@ -45,7 +40,6 @@ public class SavedPDFAdapter extends BaseSavedAdapter{
         super(itemList);
         pdfHelper = new PDFHelper(context);
         this.pdfBeanArrayList = itemList;
-
         this.context = context;
         this.pdfListFragment = pdfListFragment;
     }
@@ -67,7 +61,7 @@ public class SavedPDFAdapter extends BaseSavedAdapter{
             String output = pdf.getTitle().substring(0, 1).toUpperCase() + pdf.getTitle().substring(1).toLowerCase();
             holder.title.setText(output);
             String al = "";
-            if(pdf.getAudio()!=1) {
+            if(pdf.getAudio()==0) {
                 holder.imageView.setImageResource(R.drawable.pdf_downloaded);
             }else {
                 holder.imageView.setImageResource(R.drawable.pdf_downloaded_audio);
@@ -178,19 +172,4 @@ public class SavedPDFAdapter extends BaseSavedAdapter{
         pdfBeanArrayList = newList;
         notifyDataSetChanged();
     }
-
-    private int getFilePages(PDF.PdfBean pdf){
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid() + ".pdf");
-        int count;
-        try {
-            PdfReader pdfReader = new PdfReader(String.valueOf(file));
-            count = pdfReader.getNumberOfPages();
-            return count;
-        } catch (IOException ignored) {
-            return 0;
-        } catch (NoClassDefFoundError ignored){
-            return 0;
-        }
-    }
-
 }

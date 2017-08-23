@@ -1,5 +1,6 @@
 package com.mumineendownloads.mumineenpdf.Service;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -16,6 +17,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
@@ -30,7 +32,6 @@ import com.aspsine.multithreaddownload.DownloadRequest;
 import com.aspsine.multithreaddownload.util.L;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Activities.MainActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Helpers.OnTheWidget;
@@ -48,6 +49,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import es.dmoral.toasty.Toasty;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
+
+import static com.mumineendownloads.mumineenpdf.Activities.MainActivity.RC_STORAGE;
 
 public class DownloadService extends Service {
 
@@ -118,6 +123,8 @@ public class DownloadService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {

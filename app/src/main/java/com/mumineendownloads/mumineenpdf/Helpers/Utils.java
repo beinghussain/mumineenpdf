@@ -269,9 +269,12 @@ public class Utils {
         PDFHelper helper = new PDFHelper(context);
         ArrayList<PDF.PdfBean> arrayList = new ArrayList<>();
         List<String> integerList = Utils.getFiles();
-        for(String i : integerList){
-          arrayList.add(helper.getPDF(Integer.parseInt(i)));
-        }
+            for (String i : integerList) {
+                PDF.PdfBean p = helper.getPDF(Integer.parseInt(i));
+                if (p != null) {
+                    arrayList.add(helper.getPDF(Integer.parseInt(i)));
+                }
+            }
         return arrayList;
     }
 
@@ -281,4 +284,5 @@ public class Utils {
                 .setAction(buttonText, onClickListener);
         snackbar.show();
     }
+
 }

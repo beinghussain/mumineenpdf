@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabaseLockedException;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -80,47 +82,51 @@ public class PDFHelper extends SQLiteOpenHelper {
     }
 
     public PDF.PdfBean getPDF(int pid) {
-        ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
-        String selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE pid = " + pid;
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        try {
+            ArrayList<PDF.PdfBean> arrayList = new ArrayList<PDF.PdfBean>();
+            String selectQuery = "SELECT  * FROM " + TABLE_PDF + " WHERE pid = " + pid;
+            SQLiteDatabase db = this.getWritableDatabase();
+            Cursor cursor = db.rawQuery(selectQuery, null);
 
-        if (cursor.moveToFirst()) {
-            do {
-                String title = cursor.getString(1);
-                String album1 = cursor.getString(2);
-                PDF.PdfBean contact = new PDF.PdfBean();
-                contact.setId(Integer.parseInt(cursor.getString(0)));
-                contact.setTitle(title);
-                contact.setAlbum(album1);
-                try {
-                    contact.setStatus(Integer.parseInt(cursor.getString(6)));
-                }catch (NumberFormatException ignored){
-                    contact.setStatus(0);
-                }
-                contact.setSource(cursor.getString(3));
-                contact.setSize(cursor.getString(4));
-                contact.setPid(Integer.parseInt(cursor.getString(5)));
-                String c;
-                if(cursor.getString(7)==null){
-                    c = "0";
-                } else {
-                    c = cursor.getString(7);
-                }
-                contact.setCat(cursor.getString(9));
-                contact.setAudio(cursor.getInt(10));
-                contact.setPageCount(Integer.parseInt(c));
-                if(!isDownloaded(cursor.getInt(5),Integer.parseInt(cursor.getString(4)))){
-                    contact.setStatus(Status.STATUS_NULL);
-                    updatePDF(contact);
-                }else {
-                    contact.setStatus(Status.STATUS_DOWNLOADED);
-                    updatePDF(contact);
-                }
-                arrayList.add(contact);
-            } while (cursor.moveToNext());
+            if (cursor.moveToFirst()) {
+                do {
+                    String title = cursor.getString(1);
+                    String album1 = cursor.getString(2);
+                    PDF.PdfBean contact = new PDF.PdfBean();
+                    contact.setId(Integer.parseInt(cursor.getString(0)));
+                    contact.setTitle(title);
+                    contact.setAlbum(album1);
+                    try {
+                        contact.setStatus(Integer.parseInt(cursor.getString(6)));
+                    } catch (NumberFormatException ignored) {
+                        contact.setStatus(0);
+                    }
+                    contact.setSource(cursor.getString(3));
+                    contact.setSize(cursor.getString(4));
+                    contact.setPid(Integer.parseInt(cursor.getString(5)));
+                    String c;
+                    if (cursor.getString(7) == null) {
+                        c = "0";
+                    } else {
+                        c = cursor.getString(7);
+                    }
+                    contact.setCat(cursor.getString(9));
+                    contact.setAudio(cursor.getInt(10));
+                    contact.setPageCount(Integer.parseInt(c));
+                    if (!isDownloaded(cursor.getInt(5), Integer.parseInt(cursor.getString(4)))) {
+                        contact.setStatus(Status.STATUS_NULL);
+                        updatePDF(contact);
+                    } else {
+                        contact.setStatus(Status.STATUS_DOWNLOADED);
+                        updatePDF(contact);
+                    }
+                    arrayList.add(contact);
+                } while (cursor.moveToNext());
+            }
+            return arrayList.get(0);
+        }catch (IndexOutOfBoundsException ignored){
+            return null;
         }
-        return arrayList.get(0);
     }
 
     public ArrayList<PDF.PdfBean> getAllPDFS(String album) {
@@ -241,14 +247,29 @@ public class PDFHelper extends SQLiteOpenHelper {
 
     public ArrayList<String> getAlbums(){
         ArrayList<String> arrayList = new ArrayList<>();
-        String selectQuery = "SELECT distinct album FROM " + TABLE_PDF;
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        try {
+            String selectQuery = "SELECT distinct album FROM " + TABLE_PDF;
+            SQLiteDatabase db = this.getWritableDatabase();
+            Cursor cursor = db.rawQuery(selectQuery, null);
 
-        if (cursor.moveToFirst()) {
-            do {
-                arrayList.add(cursor.getString(0));
-            } while (cursor.moveToNext());
+            if (cursor.moveToFirst()) {
+                do {
+                    arrayList.add(cursor.getString(0));
+                } while (cursor.moveToNext());
+            }
+        }catch (Exception ignored) {
+           arrayList.add("Marasiya");
+            arrayList.add("Madeh");
+            arrayList.add("Noha");
+            arrayList.add("Matami Noha");
+            arrayList.add("Other");
+            arrayList.add("Dua");
+            arrayList.add("Quran");
+            arrayList.add("Salaam");
+            arrayList.add("Qasaid");
+            arrayList.add("Naat");
+            arrayList.add("Manqabat");
+            arrayList.add("Mutafarrat");
         }
         return arrayList;
     }

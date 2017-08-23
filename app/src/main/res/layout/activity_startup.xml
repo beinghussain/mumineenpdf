@@ -34,6 +34,7 @@
         android:layout_below="@+id/text"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="false"
+
         android:layout_marginTop="24dp"
         android:visibility="visible"
         app:pv_autostart="true"

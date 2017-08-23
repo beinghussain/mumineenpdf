@@ -8,9 +8,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
-
-import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.R;
 import com.mumineendownloads.mumineenpdf.Service.WidgetService;
@@ -68,11 +65,9 @@ public class OnTheWidget extends AppWidgetProvider {
             rv.setRemoteAdapter(R.id.list_view, intent);
             CharSequence s  = OnTheWidgetConfigureActivity.loadTitlePref(context,appWidgetId);
             rv.setTextViewText(R.id.list_title,s);
-
             Intent startActivityIntent = new Intent(context, PDFActivity_.class);
             PendingIntent startActivityPendingIntent = PendingIntent.getActivity(context,0,startActivityIntent,PendingIntent.FLAG_CANCEL_CURRENT);
             rv.setPendingIntentTemplate(R.id.list_view, startActivityPendingIntent);
-
             appWidgetManager.updateAppWidget(appWidgetId, rv);
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds);
@@ -87,7 +82,7 @@ public class OnTheWidget extends AppWidgetProvider {
 
     @Override
     public void onEnabled(Context context) {
-        // Enter relevant functionality for when the first widget is created
+
     }
 
     @Override

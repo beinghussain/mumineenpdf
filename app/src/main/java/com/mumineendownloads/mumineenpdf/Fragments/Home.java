@@ -38,11 +38,12 @@ public class Home extends Fragment {
 
 
     public Home newInstance(MainActivity activity) {
-        return new Home(activity);
+        return new Home();
     }
 
-    public Home(MainActivity activity) {
-        this.activity = activity;
+
+    public Home(){
+
     }
 
     public static Toolbar mActivityActionBarToolbar;

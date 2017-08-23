@@ -154,13 +154,78 @@ public class Saved extends Fragment {
         searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SearchFragment selectedFragment = SearchFragment.newInstance("saved");
+                SearchFragment selectedFragment = new SearchFragment();
+                Bundle bundle = new Bundle();
+                bundle.putString("what","saved");
+                selectedFragment.setArguments(bundle);
                 FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
                 transaction.replace(R.id.fragment, selectedFragment);
-                transaction.addToBackStack("savedList");
+                transaction.addToBackStack("pdfList");
                 transaction.commit();
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id==R.id.action_info){
+            showAppInfo();
+        }
+        if(id==R.id.action_rate){
+            openRatings();
+        }
+        if(id==R.id.action_share){
+            try {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_SUBJECT, "Mumineen PDF");
+                String sAux = "\nPDF app for Zakreins and all the mumineens.\n\n";
+                sAux = sAux +"http://play.google.com/store/apps/details?id=" + getActivity().getPackageName();
+                i.putExtra(Intent.EXTRA_TEXT, sAux);
+                startActivity(Intent.createChooser(i, "Share this using"));
+            } catch(Exception ignored) {
+            }
+        }
+        return super.onOptionsItemSelected(item);
+
+    }
+
+    private void showAppInfo(){
+        new MaterialDialog.Builder(getActivity())
+                .title("Mumineen PDF")
+                .content("App for all Zakereins and Mumineen. App developed by Hussain Idrish Dehgamwala")
+                .negativeText("OK")
+                .positiveText("CONTACT HUSSAIN")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        String url = "http://www.hddevelopers.com";
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setData(Uri.parse(url));
+                        startActivity(i);
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
+                    }
+                }).build().show();
+    }
+
+
+    private void openRatings() {
+        Uri uri = Uri.parse("market://details?id=" + getActivity().getPackageName());
+        Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+        goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        try {
+            startActivity(goToMarket);
+        } catch (ActivityNotFoundException e) {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://play.google.com/store/apps/details?id=" + getActivity().getPackageName())));
+        }
     }
 
     public void refresh(final String mainAlbum){
@@ -209,7 +274,7 @@ public class Saved extends Fragment {
     public void openDialog(final PDF.PdfBean pdf, final int position) {
         List<String> strings = new ArrayList<>();
 
-        if(pdf.getAudio()==1){
+        if(pdf.getAudio()!=0){
             strings.add("Play Audio");
         }
         if (pdf.getStatus() == Status.STATUS_DOWNLOADED) {
@@ -233,7 +298,7 @@ public class Saved extends Fragment {
                         }
                         else if(text.equals("Delete file")) {
                             dialog.dismiss();
-                            delete(pdf, getContext(), position);
+                            delete(pdf, getContext());
                         } else if (text.equals("Share")) {
                             if(getFile(pdf.getPid()).exists()) {
                                 Uri uri = FileProvider.getUriForFile(getActivity(),
@@ -279,7 +344,7 @@ public class Saved extends Fragment {
 
         if (initialStage)
             new Player()
-                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getPid());
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getAudio());
     }
 
     private class Player extends AsyncTask<String, Void, Boolean> {
@@ -470,7 +535,7 @@ public class Saved extends Fragment {
         return new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pid+".pdf");
     }
 
-    private void delete(final PDF.PdfBean pdf, final Context context, final int position) {
+    private void delete(final PDF.PdfBean pdf, final Context context) {
         new MaterialDialog.Builder(context)
                 .title("Delete file")
                 .negativeText("Cancel")
@@ -487,7 +552,8 @@ public class Saved extends Fragment {
                         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Mumineen/" + pdf.getPid() + ".pdf");
                         if (file.exists()) {
                             file.delete();
-                            arrayList.remove(pdf);
+                            int position = arrayList.indexOf(pdf);
+                            arrayList.remove(position);
                             pdf.setStatus(Status.STATUS_NULL);
                             mPDFAdapter.notifyItemRemovedAtPosition(position);
                             mPDFHelper.updatePDF(pdf);

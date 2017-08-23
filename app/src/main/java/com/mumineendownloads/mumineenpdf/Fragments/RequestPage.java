@@ -67,12 +67,12 @@ import static com.mumineendownloads.mumineenpdf.Fragments.SelectFileFragment.RES
 
 
 public class RequestPage extends Fragment {
-    public RecyclerView mRecyclerView;
-    private RequestAdapter mRequestAdapter;
-    ArrayList<PDFReq.Request> mRequests;
+    public static RecyclerView mRecyclerView;
+    private static RequestAdapter mRequestAdapter;
+    static ArrayList<PDFReq.Request> mRequests;
     private Toolbar mActivityActionBarToolbar;
     private EditText editText;
-    private User user;
+    private static User user;
     private boolean isUpload;
     private ImageButton imageButton;
     private RelativeLayout loading;
@@ -113,7 +113,7 @@ public class RequestPage extends Fragment {
                     SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
                     selectFileFragment.show(fm, "");
                 }else {
-                    showRegister("");
+                    showRegister("", true);
                 }
             }
         });
@@ -155,7 +155,7 @@ public class RequestPage extends Fragment {
                         SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
                         selectFileFragment.show(fm, "");
                     }else {
-                        showRegister("");
+                        showRegister("", true);
                     }
                 }
             });
@@ -165,14 +165,14 @@ public class RequestPage extends Fragment {
                 @Override
                 public void onClick(View v) {
                     if(editText.getText().toString().length()!=0) {
-                        submitRequest(editText.getText().toString(),editText,user);
+                        submitRequest(editText.getText().toString(),editText,user, false);
                     }
                 }
             });
         }
     }
 
-    private void submitRequest(String message, EditText editText, User user) {
+    private void submitRequest(String message, EditText editText, User user, boolean pdf) {
         if(Utils.isLogged(getContext())) {
             PDFReq.Request request = new PDFReq.Request();
             request.setUser_id(String.valueOf(user.getUserId()));
@@ -186,17 +186,17 @@ public class RequestPage extends Fragment {
             request.setDate(System.currentTimeMillis());
             request.setType(0);
             request.setUser_name(user.getName());
-            sendRequest(request);
+            sendRequest(request,getContext());
             mRequests.add(0,request);
             mRecyclerView.scrollToPosition(0);
             mRequestAdapter.notifyItemInserted(0);
             editText.setText("");
         }else {
-            showRegister(message);
+            showRegister(message, pdf);
         }
     }
 
-    private void showRegister(final String message){
+    private void showRegister(final String message, final boolean pdf){
         final MaterialDialog dialog =
                 new MaterialDialog.Builder(getActivity())
                         .typeface("myfonts.ttf","myfonts.ttf")
@@ -208,7 +208,7 @@ public class RequestPage extends Fragment {
                             @Override
                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                 dialog.dismiss();
-                                showLoginDialog(message);
+                                showLoginDialog(message, pdf);
                             }
                         })
                         .negativeText(android.R.string.cancel)
@@ -223,12 +223,12 @@ public class RequestPage extends Fragment {
         dialog.getActionButton(DialogAction.POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                register(dialog,message);
+                register(dialog,message,pdf);
             }
         });
     }
 
-    private void showLoginDialog(final String message) {
+    private void showLoginDialog(final String message, final boolean pdf) {
         final MaterialDialog dialog = new MaterialDialog.Builder(getActivity())
                 .title("Login")
                 .customView(R.layout.login_form,true)
@@ -238,7 +238,7 @@ public class RequestPage extends Fragment {
                 .onNeutral(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        showRegister(message);
+                        showRegister(message, pdf);
                     }
                 })
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
@@ -255,12 +255,12 @@ public class RequestPage extends Fragment {
             MaterialEditText pass = (MaterialEditText) view.findViewById(R.id.pass);
             @Override
             public void onClick(View v) {
-                login(dialog,email,pass,message);
+                login(dialog,email,pass,message, pdf);
             }
         });
     }
 
-    private void login(final MaterialDialog dialog, final MaterialEditText email, final MaterialEditText pass, final String message) {
+    private void login(final MaterialDialog dialog, final MaterialEditText email, final MaterialEditText pass, final String message, final boolean pdf) {
         final String emailString = email.getText().toString();
         final String passString = pass.getText().toString();
         final RequestQueue queue = Volley.newRequestQueue(getContext());
@@ -284,7 +284,7 @@ public class RequestPage extends Fragment {
                                 user1.setName(a[1]);
                                 user1.setEmail(a[2]);
                                 dialog.dismiss();
-                                registerLocally(user1.getUserId(), user1.getEmail(), user1.getName());
+                                registerLocally(user1.getUserId(), user1.getEmail(), user1.getName(), pdf);
                                 break;
                         }
                     }
@@ -315,7 +315,7 @@ public class RequestPage extends Fragment {
         return m.matches();
     }
 
-    private void register(final MaterialDialog dialog, final String message) {
+    private void register(final MaterialDialog dialog, final String message, final boolean pdf) {
         View v = dialog.getCustomView();
         final MaterialEditText name = (MaterialEditText) v.findViewById(R.id.name);
         final MaterialEditText email = (MaterialEditText) v.findViewById(R.id.email);
@@ -368,7 +368,7 @@ public class RequestPage extends Fragment {
                                     dialog.dismiss();
                                     try {
                                         int id = Integer.parseInt(response);
-                                        registerLocally(id, email.getText().toString(), name.getText().toString());
+                                        registerLocally(id, email.getText().toString(), name.getText().toString(), pdf);
                                     }catch (NumberFormatException ignored){
 
                                     }
@@ -397,24 +397,31 @@ public class RequestPage extends Fragment {
 
     }
 
-    private void registerLocally(int id, String email, String name) {
-        Utils.registerUser(name,email,id,getContext());
-        PDFReq.Request request = new PDFReq.Request();
-        request.setUser_id(String.valueOf(id));
-        request.setRequest(editText.getText().toString());
-        request.setId(mRequests.get(mRequests.size()-1).getId()+1);
-        request.setStatus(String.valueOf(PDFReq.PENDING));
-        request.setDate(System.currentTimeMillis());
-        request.setType(0);
-        sendRequest(request);
-        mRequests.add(0,request);
-        mRecyclerView.scrollToPosition(0);
-        mRequestAdapter.notifyItemInserted(0);
-        editText.setText("");
+    private void registerLocally(int id, String email, String name, boolean pdf) {
+            Utils.registerUser(name,email,id,getContext());
+            Log.e("User",name+" "+email+" "+id);
+            if(!pdf) {
+                PDFReq.Request request = new PDFReq.Request();
+                request.setUser_id(String.valueOf(id));
+                request.setRequest(editText.getText().toString());
+                request.setId(mRequests.get(mRequests.size() - 1).getId() + 1);
+                request.setStatus(String.valueOf(PDFReq.PENDING));
+                request.setDate(System.currentTimeMillis());
+                request.setType(0);
+                sendRequest(request, getContext());
+                mRequests.add(0, request);
+                mRecyclerView.scrollToPosition(0);
+                mRequestAdapter.notifyItemInserted(0);
+                editText.setText("");
+            }else {
+                FragmentManager fm = getChildFragmentManager();
+                SelectFileFragment selectFileFragment = SelectFileFragment.newInstance(RequestPage.this);
+                selectFileFragment.show(fm, "");
+            }
     }
 
-    private void sendRequest(final PDFReq.Request request) {
-        final RequestQueue queue = Volley.newRequestQueue(getContext());
+    private static void sendRequest(final PDFReq.Request request, Context context) {
+        final RequestQueue queue = Volley.newRequestQueue(context);
         final String url = "http://mumineendownloads.com/app/sendRequest.php";
 
         final StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
@@ -482,19 +489,20 @@ public class RequestPage extends Fragment {
         mRecyclerView.setAdapter(mRequestAdapter);
     }
 
-    public void setFile(final SelectFile file) {
-        new MaterialDialog.Builder(getActivity()).content("Do you want to upload "+file.getFilename() + "?")
+    public static void setFile(final SelectFile file, final Context context)    {
+        new MaterialDialog.Builder(context).content("Do you want to upload "+file.getFilename() + "?")
                 .positiveText("UPLOAD")
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        uploadPDF(file);
+                        uploadPDF(file, context);
                     }
                 })
                 .negativeText("Cancel").build().show();
     }
 
-    private void uploadPDF(SelectFile file) {
+    private static void uploadPDF(SelectFile file, Context context) {
+        user = Utils.getUser(context);
         PDFReq.Request request = new PDFReq.Request();
         request.setUser_name(user.getName());
         request.setUser_id(String.valueOf(user.getUserId()));
@@ -502,19 +510,17 @@ public class RequestPage extends Fragment {
         request.setRequest("PDF File Uploaded : " + file.getFilename());
         request.setType(PDFReq.TYPE_PDF);
         request.setStatus(String.valueOf(PDFReq.PENDING));
-
-        uploadFileToServer(file);
-
-        sendRequest(request);
+        uploadFileToServer(file, context);
+        sendRequest(request, context);
         mRequests.add(0,request);
         mRequestAdapter.notifyItemInserted(0);
         mRecyclerView.scrollToPosition(0);
     }
 
-    private void uploadFileToServer(SelectFile file) {
+    private static void uploadFileToServer(SelectFile file, Context context) {
         try {
             String uploadId =
-                    new MultipartUploadRequest(getContext(), "http://mumineendownloads.com/app/upload.php")
+                    new MultipartUploadRequest(context, "http://mumineendownloads.com/app/upload.php")
                             .addFileToUpload(file.getFileUrl(), "uploaded_file")
                             .setNotificationConfig(new UploadNotificationConfig()
                                     .setIcon(android.R.drawable.stat_sys_upload)

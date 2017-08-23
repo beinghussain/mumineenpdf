@@ -7,25 +7,24 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v13.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-
-import com.github.javiersantos.appupdater.AppUpdater;
-import com.github.javiersantos.appupdater.enums.Display;
-import com.github.javiersantos.appupdater.enums.UpdateFrom;
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.Actions;
@@ -59,24 +58,11 @@ public class MainActivity extends AppCompatActivity {
           refresh();
         }
     };
-    private static final int RC_STORAGE = 1;
+    public static final int RC_STORAGE = 1;
     public static BottomNavigationView bottomNavigationView;
     public static FrameLayout frameLayout;
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-    }
 
-    @AfterPermissionGranted(RC_STORAGE)
-    private void methodRequiresTwoPermission() {
-        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-        if (!EasyPermissions.hasPermissions(this, perms)) {
-            EasyPermissions.requestPermissions(this, getString(R.string.title_request),
-                    RC_STORAGE, perms);
-        }
-    }
 
     @Override
     protected void onDestroy() {
@@ -90,11 +76,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             Fragment selectedFragment = null;
-            Home home = new Home(MainActivity.this);
+            Home home = new Home();
             Saved savedFragment = new Saved();
             RequestPage requestPage = new RequestPage();
             Go goFragment = new Go();
-            LibraryFragment library =new LibraryFragment();
+            LibraryFragment library = new LibraryFragment();
 
             switch (item.getItemId()) {
                 case R.id.navigation_home:
@@ -136,6 +122,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(),
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+                // Here, thisActivity is the current activity
+                if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    // Should we show an explanation?
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                        ActivityCompat.requestPermissions(MainActivity.this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                RC_STORAGE);
+
+                    }
+                }
+            }
+        },10000);
+
         Fonty.setFonts(this);
         Intent intent = getIntent();
         try {
@@ -144,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
                 Uri uri = Uri.parse("market://details?id=" + getPackageName());
                 Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
                 goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
                         Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
                 try {
                     startActivity(goToMarket);
@@ -156,7 +167,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (NullPointerException ignored) {
 
         }
-        methodRequiresTwoPermission();
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(bottomNavigationListener);
         BottomNavigationViewHelper.disableShiftMode(bottomNavigationView);
@@ -164,16 +174,9 @@ public class MainActivity extends AppCompatActivity {
         cor = (FrameLayout) findViewById(R.id.fragment);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        Home home = new Home(MainActivity.this);
+        Home home = new Home();
         transaction.replace(R.id.fragment, home.newInstance(MainActivity.this));
         transaction.commit();
-
-        AppUpdater appUpdater = new AppUpdater(this);
-        appUpdater
-                .setUpdateFrom(UpdateFrom.GOOGLE_PLAY)
-                .setDisplay(Display.DIALOG)
-                .setTitleOnUpdateAvailable("Update Available")
-                .start();
 
         if(!Utils.isConnected(getApplicationContext())){
             Snackbar snackbar = Snackbar
@@ -198,6 +201,8 @@ public class MainActivity extends AppCompatActivity {
         Home.viewPager.getAdapter().notifyDataSetChanged();
         Fonty.setFonts(Home.tabLayout);
     }
+
+
 
     @Override
     protected void onResume() {

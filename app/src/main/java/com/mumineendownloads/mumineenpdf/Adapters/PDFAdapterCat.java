@@ -13,7 +13,6 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import com.aspsine.multithreaddownload.DownloadManager;
-import com.itextpdf.text.pdf.PdfReader;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity;
 import com.mumineendownloads.mumineenpdf.Activities.PDFActivity_;
 import com.mumineendownloads.mumineenpdf.Fragments.PDFListFragment;
@@ -124,14 +123,14 @@ public class PDFAdapterCat extends BasePDFAdapter {
             }
 
             if (pdfListFragment.getMultiSelect_list().contains(pdf)) {
-                if(pdf.getAudio()!=1) {
+                if(pdf.getAudio()==0) {
                     holder.imageView.setImageResource(R.drawable.pdf_downloaded_selected);
                 }   else {
                     holder.imageView.setImageResource(R.drawable.pdf_downloaded_selected_audio);
                 }
                 holder.parentView.setBackgroundColor(Color.parseColor("#F3F4F3"));
             } else {
-                if(pdf.getAudio()!=1) {
+                if(pdf.getAudio()==0) {
                     holder.imageView.setImageResource(R.drawable.pdf_downloaded);
                 }else {
                     holder.imageView.setImageResource(R.drawable.pdf_downloaded_audio);
@@ -143,18 +142,11 @@ public class PDFAdapterCat extends BasePDFAdapter {
                 @Override
                 public void onClick(View v) {
                     if (pdfDownloadStatus == Status.STATUS_DOWNLOADED) {
-                        if (getFilePages(pdf) != 0) {
-                            Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity.class);
+                            Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity_.class);
                             intent.putExtra("mode", 0);
                             intent.putExtra("pid", pdf.getPid());
                             intent.putExtra("title", pdf.getTitle());
                             pdfListFragment.startActivity(intent);
-                        } else {
-                            Toasty.error(context, "Invalid file").show();
-                            pdf.setStatus(Status.STATUS_NULL);
-                            notifyDataSetChanged();
-                            pdfHelper.updatePDF(pdf);
-                        }
                     } else {
                         DownloadManager.getInstance().cancel(String.valueOf(pdf.getPid()));
                     }
@@ -164,18 +156,11 @@ public class PDFAdapterCat extends BasePDFAdapter {
             holder.button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (getFilePages(pdf) != 0) {
                         Intent intent = new Intent(pdfListFragment.getActivity(), PDFActivity_.class);
                         intent.putExtra("mode", 0);
                         intent.putExtra("pid", pdf.getPid());
                         intent.putExtra("title", pdf.getTitle());
                         pdfListFragment.startActivity(intent);
-                    } else {
-                        Toasty.error(context, "Invalid file").show();
-                        pdf.setStatus(Status.STATUS_NULL);
-                        notifyDataSetChanged();
-                        pdfHelper.updatePDF(pdf);
-                    }
                 }
             });
 
@@ -243,19 +228,4 @@ public class PDFAdapterCat extends BasePDFAdapter {
         pdfBeanArrayList = newList;
         notifyDataChanged();
     }
-
-    private int getFilePages(PDF.PdfBean pdf){
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/Mumineen/"+pdf.getPid() + ".pdf");
-        int count;
-        try {
-            PdfReader pdfReader = new PdfReader(String.valueOf(file));
-            count = pdfReader.getNumberOfPages();
-            return count;
-        } catch (IOException ignored) {
-            return 0;
-        } catch (NoClassDefFoundError ignored){
-            return 0;
-        }
-    }
-
 }

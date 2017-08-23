@@ -32,6 +32,59 @@ public class HandleMessage extends FirebaseMessagingService {
             Intent intent = new Intent(getApplicationContext(),BackgroundSync.class);
             startService(intent);
         }
+        if(message_type.equals("rateNotification")){
+            showUpdateNotificationWithMessageRate();
+        }
+        if(message_type.equals("messageNotification")){
+            showUpdateNotificationWithMessage(remoteMessage.getData().get("title"),remoteMessage.getData().get("content"));
+        }
+    }
+
+    private void showUpdateNotificationWithMessageRate() {
+        Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        resultIntent.putExtra(UPDATE_APP,"update");
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        NotificationCompat.Builder  mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setContentTitle("Salaam, Mumineen PDF App Users")
+                        .setAutoCancel(true)
+                        .setSound(uri)
+                        .setColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary))
+                        .setContentText("Hope you liked this app. Please take a minute to rate the app and help us grow");
+        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(0, mBuilder.build());
+    }
+
+    private void showUpdateNotificationWithMessage(String messageTitle,String messageContent) {
+        Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+        NotificationCompat.Builder  mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setContentTitle(messageTitle)
+                        .setAutoCancel(true)
+                        .setSound(uri)
+                        .setColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary))
+                        .setContentText(messageContent);
+        mBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(0, mBuilder.build());
     }
 
     private void showUpdateNotification() {

@@ -178,7 +178,6 @@ public class LibraryFragment extends Fragment {
             if (tmpPdf == null || position == -1) {
                 return;
             }
-            if(isCurrentListViewItemVisible(position)) {
                 final PDF.PdfBean pdf = getPDF(tmpPdf.getPid());
                 final int status = tmpPdf.getStatus();
                 if(status!=Status.STATUS_DOWNLOADING){
@@ -206,7 +205,7 @@ public class LibraryFragment extends Fragment {
                     }
                 }
             }
-        }
+
     }
 
     private boolean isCurrentListViewItemVisible(int position) {
@@ -382,7 +381,7 @@ public class LibraryFragment extends Fragment {
 
     public void showOptionDialog(final Context context, final PDF.PdfBean pdfBean, final int position) {
         List<String> string = new ArrayList<>();
-        if(pdfBean.getAudio()==1){
+        if(pdfBean.getAudio()!=0){
             string.add("Play Audio");
         }
         if(pdfBean.getStatus()!=Status.STATUS_DOWNLOADED){
@@ -443,7 +442,7 @@ public class LibraryFragment extends Fragment {
 
         if (initialStage)
             new Player()
-                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getPid());
+                    .execute("http://pdf.mumineendownloads.com/audio.php?id="+pid.getAudio());
     }
 
     private void reportApp(final PDF.PdfBean pdfBean){
